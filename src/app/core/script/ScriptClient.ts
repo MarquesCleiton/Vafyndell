@@ -1,14 +1,17 @@
 import { AuthService } from '../auth/AuthService';
 
 export class ScriptClient {
-  private static ENDPOINT = '/api';
+  // alterna automaticamente entre dev (proxy) e prod (endpoint real)
+  private static ENDPOINT =
+    window.location.hostname === 'localhost'
+      ? '/api'
+      : 'https://script.google.com/macros/s/AKfycbyTLkU5F0bsSWnSJSUD95p96sGgoyyFYxaY_FwIIpJD3_cUMg6vjzTn_VLw2MbRJofL/exec';
 
   private static SHEET_ID =
     '19B2aMGrajvhPJfOvYXt059-fECytaN38iFsP8GInD_g';
 
   /** Método interno genérico */
   private static async call<T>(action: string, payload: any): Promise<T> {
-
     const idToken = AuthService.getIdToken();
     if (!idToken) throw new Error('Usuário não autenticado.');
 
@@ -22,7 +25,8 @@ export class ScriptClient {
       },
     };
 
-    console.log('POST to GAS:', this.ENDPOINT, body);
+    console.log('➡️ Enviando para Script:', this.ENDPOINT, body);
+
     const res = await fetch(this.ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -31,16 +35,21 @@ export class ScriptClient {
 
     const text = await res.text();
     if (!res.ok) {
+      console.error('❌ Erro bruto do Script:', text);
       throw new Error(`Erro no Script: ${res.status} - ${res.statusText}\n${text}`);
     }
-    return JSON.parse(text) as T;
 
+    try {
+      return JSON.parse(text) as T;
+    } catch (err) {
+      console.error('❌ Resposta não-JSON:', text);
+      throw err;
+    }
   }
 
   // ========================
   // SHEET CLIENT
   // ========================
-
   static createRow<T = any>(payload: { tab: string; attrs: Record<string, any> }): Promise<T> {
     return this.call<T>('sheet.createRow', payload);
   }
@@ -72,7 +81,6 @@ export class ScriptClient {
   // ========================
   // DRIVE CLIENT
   // ========================
-
   static upload<T = any>(payload: { folderId: string; base64: string; name: string; mimeType: string }): Promise<T> {
     return this.call<T>('drive.upload', payload);
   }
@@ -88,7 +96,6 @@ export class ScriptClient {
   // ========================
   // CONTROLLER
   // ========================
-
   static controllerCreate<T = any>(payload: { tab: string; attrs: Record<string, any>; folderId?: string }): Promise<T> {
     return this.call<T>('controller.create', payload);
   }
