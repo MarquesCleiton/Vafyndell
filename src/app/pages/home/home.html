@@ -1,2 +1,15 @@
-<h1>🏠 Home</h1>
-<a routerLink="/login">Ir para Login</a>
+<div class="d-flex vh-100 justify-content-center align-items-center bg-dark">
+  <div class="card shadow text-center p-4" style="width: 24rem;">
+    <img [src]="user?.picture"
+         alt="Foto do usuário"
+         class="rounded-circle mb-3 mx-auto"
+         style="width: 96px; height: 96px; object-fit: cover;" />
+
+    <h3 class="text-light mb-1">{{ user?.name }}</h3>
+    <p class="text-secondary mb-4">{{ user?.email }}</p>
+
+    <button class="btn btn-outline-light w-100" (click)="logout()">
+      Sair
+    </button>
+  </div>
+</div>
