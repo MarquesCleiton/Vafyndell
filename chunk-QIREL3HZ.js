@@ -1,1 +1,0 @@
-import{Ga as t,Ha as o,Ia as n,pa as i}from"./chunk-6MA5ICAN.js";var a=class m{static \u0275fac=function(e){return new(e||m)};static \u0275cmp=i({type:m,selectors:[["app-home"]],decls:4,vars:0,consts:[["routerLink","/login"]],template:function(e,r){e&1&&(t(0,"h1"),n(1,"\u{1F3E0} Home"),o(),t(2,"a",0),n(3,"Ir para Login"),o())},encapsulation:2})};export{a as Home};
