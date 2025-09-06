@@ -5,7 +5,7 @@ export class ScriptClient {
   private static ENDPOINT =
     window.location.hostname === 'localhost'
       ? '/api'
-      : 'https://script.google.com/macros/s/AKfycbyTLkU5F0bsSWnSJSUD95p96sGgoyyFYxaY_FwIIpJD3_cUMg6vjzTn_VLw2MbRJofL/exec';
+      : 'https://script.google.com/macros/s/AKfycbwWpOoo_x5YkfmGZekfE9PAULxV_4xjkUrHVm2IKuS-JXSHUiDKpPsLQjmQyY0Bjx4/exec';
 
   private static SHEET_ID =
     '19B2aMGrajvhPJfOvYXt059-fECytaN38iFsP8GInD_g';
