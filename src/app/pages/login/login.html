@@ -1,13 +1,9 @@
-<div class="d-flex vh-100 justify-content-center align-items-center bg-dark">
-  <div class="text-center">
-    <h1 class="mb-2 text-light fw-bold">Vafyndell</h1>
-    <p class="mb-4 text-secondary">Seu RPG na palma de suas mãos</p>
+<div class="d-flex flex-column justify-content-center align-items-center vh-100 bg-light">
+  <h1 class="mb-2 fw-bold">Vafyndell</h1>
+  <p class="text-muted mb-4">Seu RPG na palma de suas mãos</p>
 
-    <!-- Botão único, estilizado -->
-    <button class="btn btn-light btn-lg px-4" (click)="login()">
-      <img src="https://developers.google.com/identity/images/g-logo.png" 
-           alt="Google" class="me-2" style="width:20px; height:20px;" />
-      Entrar com Google
-    </button>
-  </div>
+  <button class="btn btn-dark px-4 py-2 rounded-pill d-flex align-items-center gap-2" (click)="login()">
+    <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" width="20" height="20" />
+    Entrar com Google
+  </button>
 </div>

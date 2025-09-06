@@ -1,0 +1,37 @@
+<div class="container mt-5">
+  @if (!loading) {
+    <h2 class="text-center">{{ jogador?.nome_do_jogador }}</h2>
+    <p class="text-center text-muted">{{ jogador?.email }}</p>
+
+    @if (jogador?.imagem) {
+      <img
+        [src]="jogador?.imagem"
+        alt="Avatar"
+        class="img-thumbnail mb-3"
+        style="max-width: 150px; display: block; margin: auto;"
+      />
+    }
+
+    <div class="card mt-4 shadow-sm">
+      <div class="card-body">
+        <p><strong>Personagem:</strong> {{ jogador?.personagem }}</p>
+        <p><strong>Classe de Armadura:</strong> {{ jogador?.classe_de_armadura }}</p>
+        <p><strong>Pontos de Vida:</strong> {{ jogador?.pontos_de_vida }}</p>
+        <p><strong>Nível:</strong> {{ jogador?.nivel }}</p>
+        <p><strong>XP:</strong> {{ jogador?.xp }}</p>
+        <p><strong>Força:</strong> {{ jogador?.forca }}</p>
+        <p><strong>Destreza:</strong> {{ jogador?.destreza }}</p>
+        <p><strong>Constituição:</strong> {{ jogador?.constituicao }}</p>
+        <p><strong>Inteligência:</strong> {{ jogador?.inteligencia }}</p>
+        <p><strong>Sabedoria:</strong> {{ jogador?.sabedoria }}</p>
+        <p><strong>Carisma:</strong> {{ jogador?.carisma }}</p>
+      </div>
+    </div>
+  } @else {
+    <div class="text-center mt-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Carregando...</span>
+      </div>
+    </div>
+  }
+</div>

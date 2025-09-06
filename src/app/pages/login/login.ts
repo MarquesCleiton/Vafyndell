@@ -12,13 +12,16 @@ export class Login {
   constructor(private router: Router) { }
 
   async login() {
+    if (AuthService.isAuthenticated()) {
+      this.router.navigate(['/jogador']);
+      return;
+    }
+
     const user = await AuthService.signInWithGoogle();
     if (user) {
-      console.log('Usuário logado:', user);
-      this.router.navigate(['/home']);
+      this.router.navigate(['/jogador']);
     } else {
-      console.error('Falha no login');
+      alert('Falha no login, tente novamente.');
     }
   }
-
 }

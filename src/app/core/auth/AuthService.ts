@@ -3,7 +3,6 @@ export interface User {
   email: string;
   picture: string;
   idToken: string;
-  accessToken: string;
 }
 
 declare const google: any;
@@ -12,11 +11,9 @@ export class AuthService {
   private static STORAGE_KEY = 'user';
   private static CLIENT_ID =
     '338305920567-bhd608ebcip1u08qf0gb5f08o4je4dnp.apps.googleusercontent.com';
-  private static SCOPES =
-    'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file openid email profile';
 
   /**
-   * Login único com Google → devolve User completo
+   * Tenta login silencioso, se falhar abre popup
    */
   static signInWithGoogle(): Promise<User | null> {
     return new Promise((resolve) => {
@@ -26,72 +23,79 @@ export class AuthService {
         return;
       }
 
-      const client = google.accounts.oauth2.initTokenClient({
+      google.accounts.id.initialize({
         client_id: this.CLIENT_ID,
-        scope: this.SCOPES,
-        callback: async (response: any) => {
-          if (response && response.access_token) {
-            try {
-              // 1. Perfil do usuário
-              const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                headers: { Authorization: `Bearer ${response.access_token}` },
-              });
-              const profile = await profileRes.json();
-
-              // 2. ID Token (validação no backend)
-              const tokenInfoRes = await fetch(
-                `https://oauth2.googleapis.com/tokeninfo?access_token=${response.access_token}`
-              );
-              const tokenInfo = await tokenInfoRes.json();
-              const idToken = tokenInfo.id_token || '';
-
-              const user: User = {
-                name: profile.name,
-                email: profile.email,
-                picture: profile.picture,
-                accessToken: response.access_token,
-                idToken,
-              };
-
-              localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
-              resolve(user);
-            } catch (err) {
-              console.error('Erro ao buscar perfil/token:', err);
-              resolve(null);
-            }
-          } else {
-            console.error('Não foi possível obter access_token');
+        auto_select: true, // tenta usar conta já logada
+        callback: (response: any) => {
+          const idToken = response.credential;
+          if (!idToken) {
             resolve(null);
+            return;
           }
+
+          const payload = this.parseJwt(idToken);
+          const user: User = {
+            name: payload.name,
+            email: payload.email,
+            picture: payload.picture,
+            idToken,
+          };
+
+          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
+          resolve(user);
         },
       });
 
-      client.requestAccessToken(); // abre popup
+      // Primeiro tenta login silencioso
+      google.accounts.id.prompt((notification: any) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          // 👇 Se não rolou silencioso, abre popup
+          google.accounts.id.renderButton(
+            document.createElement('div'), // hack → botão não visível
+            { type: 'standard', theme: 'outline' }
+          );
+          google.accounts.id.prompt(); // força popup
+        }
+      });
     });
   }
 
-  /** Recupera usuário salvo no localStorage */
+  /** Recupera usuário salvo */
   static getUser(): User | null {
     const raw = localStorage.getItem(this.STORAGE_KEY);
     return raw ? (JSON.parse(raw) as User) : null;
-  }
-
-  /** Retorna tokens separadamente */
-  static getAccessToken(): string | null {
-    return this.getUser()?.accessToken || null;
   }
 
   static getIdToken(): string | null {
     return this.getUser()?.idToken || null;
   }
 
-  /** Remove usuário da sessão */
   static logout(): void {
     localStorage.removeItem(this.STORAGE_KEY);
   }
 
-  /** Verifica se há usuário autenticado */
   static isAuthenticated(): boolean {
-    return this.getUser() !== null;
+    const user = this.getUser();
+    if (!user) return false;
+
+    try {
+      const payload = this.parseJwt(user.idToken);
+      const now = Math.floor(Date.now() / 1000);
+      return payload.exp && Number(payload.exp) > now;
+    } catch {
+      return false;
+    }
+  }
+
+  private static parseJwt(token: string): any {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
   }
 }
