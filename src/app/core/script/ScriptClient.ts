@@ -1,14 +1,14 @@
 import { AuthService } from '../auth/AuthService';
 
 export class ScriptClient {
-  private static ENDPOINT =
-    'https://script.google.com/macros/s/AKfycbwXF5mzI1eYZATAS3DmGVsUiUirnW5AurHZcorH6zYt-PO-5wFqMM3lN7Z9aISbbQZO/exec';
+  private static ENDPOINT = '/api';
 
   private static SHEET_ID =
     '19B2aMGrajvhPJfOvYXt059-fECytaN38iFsP8GInD_g';
 
   /** Método interno genérico */
   private static async call<T>(action: string, payload: any): Promise<T> {
+
     const idToken = AuthService.getIdToken();
     if (!idToken) throw new Error('Usuário não autenticado.');
 
@@ -22,17 +22,19 @@ export class ScriptClient {
       },
     };
 
+    console.log('POST to GAS:', this.ENDPOINT, body);
     const res = await fetch(this.ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
 
+    const text = await res.text();
     if (!res.ok) {
-      throw new Error(`Erro no Script: ${res.status} - ${res.statusText}`);
+      throw new Error(`Erro no Script: ${res.status} - ${res.statusText}\n${text}`);
     }
+    return JSON.parse(text) as T;
 
-    return res.json() as Promise<T>;
   }
 
   // ========================
