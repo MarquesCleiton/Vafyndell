@@ -13,32 +13,42 @@ export class Jogador implements OnInit {
   jogador: JogadorDomain | null = null;
   loading = true;
 
-  constructor(private router: Router) { }
+  constructor(private router: Router) {}
 
   async ngOnInit() {
+    console.log('[Jogador] ngOnInit → carregando jogador...');
+
     try {
-      const user = AuthService.getUser();
-      if (!user) {
-        this.router.navigate(['/login']);
-        return;
+      // 1. Busca local primeiro
+      let jogadorLocal = await JogadorRepository.getLocalJogador();
+      console.log(jogadorLocal)
+      if (jogadorLocal) {
+        console.log('[Jogador] Jogador local encontrado:', jogadorLocal);
+        this.jogador = jogadorLocal;
+        this.loading = false;
+
+        // 2. Em paralelo, valida online
+        JogadorRepository.syncJogadores().then(async updated => {
+          if (updated) {
+            console.log('[Jogador] Cache atualizado. Recarregando jogador...');
+            this.jogador = await JogadorRepository.getLocalJogador();
+          }
+        });
+      } else {
+        console.log('[Jogador] Nenhum jogador local. Tentando buscar online...');
+        // 3. Se não tem local, busca online
+        const jogadorOnline = await JogadorRepository.forceFetchJogador();
+        if (jogadorOnline) {
+          this.jogador = jogadorOnline;
+          this.loading = false;
+        } else {
+          console.warn('[Jogador] Nenhum jogador encontrado online → redirecionando para o cadastro');
+          this.router.navigate(['/cadastro_jogador']);
+        }
       }
-
-      // Buscar jogador atual (com fallback para sync online)
-      const jogadorAtual = await JogadorRepository.getCurrentJogador();
-
-      if (!jogadorAtual) {
-        // ✅ Só redireciona se confirmou que nem no online existe
-        this.router.navigate(['/cadastro']);
-        return;
-      }
-
-      // Exibir jogador
-      this.jogador = jogadorAtual;
-      this.loading = false;
     } catch (err) {
-      console.error('Erro ao carregar Jogador:', err);
+      console.error('[Jogador] Erro ao carregar Jogador:', err);
       this.router.navigate(['/login']);
     }
   }
-
 }

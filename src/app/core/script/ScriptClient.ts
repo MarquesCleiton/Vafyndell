@@ -2,10 +2,7 @@ import { AuthService } from '../auth/AuthService';
 
 export class ScriptClient {
   // alterna automaticamente entre dev (proxy) e prod (endpoint real)
-  private static ENDPOINT =
-    window.location.hostname === 'localhost'
-      ? '/api'
-      : 'https://script.google.com/macros/s/AKfycbwWpOoo_x5YkfmGZekfE9PAULxV_4xjkUrHVm2IKuS-JXSHUiDKpPsLQjmQyY0Bjx4/exec';
+  private static ENDPOINT ='https://script.google.com/macros/s/AKfycby-ec_h6sljntLAgoWhpeyBFGTkWygqS7Xx1Yvkx8RKDKiXDHPxtHZ8hhh6vrN91JEL/exec';
 
   private static SHEET_ID =
     '19B2aMGrajvhPJfOvYXt059-fECytaN38iFsP8GInD_g';
@@ -29,7 +26,7 @@ export class ScriptClient {
 
     const res = await fetch(this.ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      //headers: { 'text/plain': 'charset=UTF-8' },
       body: JSON.stringify(body),
     });
 

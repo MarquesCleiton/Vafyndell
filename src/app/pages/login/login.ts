@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/AuthService';
 
@@ -8,8 +8,15 @@ import { AuthService } from '../../core/auth/AuthService';
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
-export class Login {
-  constructor(private router: Router) { }
+export class Login implements OnInit {
+  constructor(private router: Router) {}
+
+  async ngOnInit() {
+    // 👇 Checa se já tem sessão ativa
+    if (AuthService.isAuthenticated()) {
+      this.router.navigate(['/jogador']);
+    }
+  }
 
   async login() {
     if (AuthService.isAuthenticated()) {
