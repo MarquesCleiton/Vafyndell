@@ -30,15 +30,19 @@
         </ul>
 
         <!-- atributos -->
+        <!-- atributos -->
         <div class="row row-cols-2 g-2 mt-3">
           @for (attr of atributos; track attr.label) {
           <div class="col">
-            <div class="p-2 rounded bg-secondary text-light text-center fw-bold">
-              {{ attr.label }}: {{ attr.value }}
+            <div class="p-2 rounded bg-secondary text-light text-center fw-bold d-flex flex-column align-items-center">
+              <div>{{ attr.icon }} {{ attr.label }}</div>
+              <div>{{ attr.value }} <small>({{ attr.mod >= 0 ? '+' + attr.mod : attr.mod }})</small></div>
             </div>
           </div>
           }
         </div>
+
+
       </div>
     </div>
 

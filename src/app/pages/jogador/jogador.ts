@@ -58,34 +58,38 @@ export class Jogador implements OnInit {
   }
 
   /** Prepara jogador e atributos */
-  private setJogador(jogador: JogadorDomain) {
-    // cálculos derivados
-    const vida = jogador.energia + jogador.constituicao;
-    const fatorCura = Math.floor(jogador.energia / 3);
-    const vidaTotal = vida + jogador.classe_de_armadura;
-    const deslocamento = Math.floor(jogador.destreza / 3);
+private setJogador(jogador: JogadorDomain) {
+  // cálculos derivados
+  const vida = jogador.energia + jogador.constituicao;
+  const fatorCura = Math.floor(jogador.energia / 3);
+  const vidaTotal = vida + jogador.classe_de_armadura;
+  const deslocamento = Math.floor(jogador.destreza / 3);
 
-    this.jogador = {
-      ...jogador,
-      pontos_de_vida: vida,
-      fator_cura: fatorCura,
-      vida_total: vidaTotal,
-      deslocamento: deslocamento,
-    };
+  this.jogador = {
+    ...jogador,
+    pontos_de_vida: vida,
+    fator_cura: fatorCura,
+    vida_total: vidaTotal,
+    deslocamento: deslocamento,
+  };
 
-    this.atributos = [
-      { label: 'Força', value: jogador.forca, icon: 'bi bi-hand-thumbs-up' },
-      { label: 'Destreza', value: jogador.destreza, icon: 'bi bi-lightning' },
-      { label: 'Constituição', value: jogador.constituicao, icon: 'bi bi-shield' },
-      { label: 'Inteligência', value: jogador.inteligencia, icon: 'bi bi-motherboard' },
-      { label: 'Sabedoria', value: jogador.sabedoria, icon: 'bi bi-eye' },
-      { label: 'Carisma', value: jogador.carisma, icon: 'bi bi-emoji-smile' },
-      { label: 'Energia', value: jogador.energia, icon: 'bi bi-lightning-charge' },
-      { label: 'Deslocamento', value: deslocamento, icon: 'bi bi-arrow-right' },
-    ];
+  // função auxiliar para calcular modificador
+  const calcMod = (valor: number) => Math.floor((valor - 10) / 2);
 
-    this.loading = false;
-  }
+  this.atributos = [
+    { label: 'Força', value: jogador.forca, mod: calcMod(jogador.forca), icon: '💪' },
+    { label: 'Destreza', value: jogador.destreza, mod: calcMod(jogador.destreza), icon: '🤸‍♂️' },
+    { label: 'Constituição', value: jogador.constituicao, mod: calcMod(jogador.constituicao), icon: '🪨' },
+    { label: 'Inteligência', value: jogador.inteligencia, mod: calcMod(jogador.inteligencia), icon: '🧠' },
+    { label: 'Sabedoria', value: jogador.sabedoria, mod: calcMod(jogador.sabedoria), icon: '📖' },
+    { label: 'Carisma', value: jogador.carisma, mod: calcMod(jogador.carisma), icon: '😎' },
+    { label: 'Energia', value: jogador.energia, mod: calcMod(jogador.energia), icon: '⚡' },
+    { label: 'Deslocamento', value: deslocamento, mod: calcMod(deslocamento), icon: '🚶‍♂️‍➡️' },
+  ];
+
+  this.loading = false;
+}
+
 
   editarJogador() {
     this.router.navigate(['/edicao-jogador']);

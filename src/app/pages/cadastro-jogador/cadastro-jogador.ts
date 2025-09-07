@@ -9,7 +9,8 @@ import { AuthService } from '../../core/auth/AuthService';
 type AtributoChave = keyof Pick<
   JogadorDomain,
   'forca' | 'destreza' | 'constituicao' | 'inteligencia' |
-  'sabedoria' | 'carisma' | 'energia' | 'classe_de_armadura'
+  'sabedoria' | 'carisma' | 'energia' | 'classe_de_armadura' | 
+  'nivel' | 'xp'
 >;
 
 @Component({
@@ -46,6 +47,8 @@ export class CadastroJogador {
   };
 
   atributosNumericos = [
+    { key: 'nivel' as AtributoChave, label: 'Nível', icon: '🏅' },
+    { key: 'xp' as AtributoChave, label: 'XP', icon: '⭐' },
     { key: 'forca' as AtributoChave, label: 'Força', icon: '💪' },
     { key: 'destreza' as AtributoChave, label: 'Destreza', icon: '🏃' },
     { key: 'constituicao' as AtributoChave, label: 'Constituição', icon: '🛡️' },
@@ -53,7 +56,7 @@ export class CadastroJogador {
     { key: 'sabedoria' as AtributoChave, label: 'Sabedoria', icon: '📖' },
     { key: 'carisma' as AtributoChave, label: 'Carisma', icon: '😎' },
     { key: 'energia' as AtributoChave, label: 'Energia', icon: '⚡' },
-    { key: 'classe_de_armadura' as AtributoChave, label: 'Classe de Armadura', icon: '🛡️' },
+    { key: 'classe_de_armadura' as AtributoChave, label: 'Armadura', icon: '🛡️' },
   ];
 
   salvando = false; // estado de loading no botão salvar

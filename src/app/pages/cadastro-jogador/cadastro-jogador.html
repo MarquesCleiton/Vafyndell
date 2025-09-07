@@ -1,22 +1,19 @@
 <div class="d-flex flex-column min-vh-100 bg-dark text-light">
   <div class="flex-grow-1 pb-5">
     <form #form="ngForm" (ngSubmit)="salvar(form)">
-      
+
       <!-- Upload da imagem -->
       <div class="position-relative text-center mb-3">
         <ng-container *ngIf="jogador.imagem; else uploadBox">
-          <img [src]="jogador.imagem"
-               class="w-100 rounded shadow-sm"
-               alt="Preview"
-               style="height: 250px; object-fit: cover;" />
+          <img [src]="jogador.imagem" class="w-100 rounded shadow-sm" alt="Preview"
+            style="height: 250px; object-fit: cover;" />
           <button type="button"
-                  class="btn btn-danger rounded-circle position-absolute d-flex align-items-center justify-content-center"
-                  style="top: 10px; right: 10px; width: 40px; height: 40px;"
-                  (click)="removerImagem()">✖</button>
+            class="btn btn-danger rounded-circle position-absolute d-flex align-items-center justify-content-center"
+            style="top: 10px; right: 10px; width: 40px; height: 40px;" (click)="removerImagem()">✖</button>
         </ng-container>
         <ng-template #uploadBox>
           <label class="d-flex align-items-center justify-content-center border rounded w-100"
-                 style="height: 150px; background: #1e1e1e; cursor: pointer;">
+            style="height: 150px; background: #1e1e1e; cursor: pointer;">
             <span class="text-success fs-1">📷</span>
             <input type="file" class="d-none" (change)="onFileChange($event)" accept="image/*" />
           </label>
@@ -31,28 +28,20 @@
           <!-- Campos obrigatórios -->
           <div class="mb-3">
             <label class="form-label text-white">🙍 Nome do Jogador *</label>
-            <input type="text"
-                   class="form-control bg-dark text-light border-light"
-                   [(ngModel)]="jogador.nome_do_jogador"
-                   name="nomeJogador"
-                   required />
+            <input type="text" class="form-control bg-dark text-light border-light"
+              [(ngModel)]="jogador.nome_do_jogador" name="nomeJogador" required />
           </div>
 
           <div class="mb-3">
             <label class="form-label text-white">🧙 Nome do Personagem *</label>
-            <input type="text"
-                   class="form-control bg-dark text-light border-light"
-                   [(ngModel)]="jogador.personagem"
-                   name="personagem"
-                   required />
+            <input type="text" class="form-control bg-dark text-light border-light" [(ngModel)]="jogador.personagem"
+              name="personagem" required />
           </div>
 
           <div class="mb-3">
             <label class="form-label text-white">⚖️ Alinhamento *</label>
-            <select class="form-select bg-dark text-light border-light "
-                    [(ngModel)]="jogador.alinhamento"
-                    name="alinhamento"
-                    required>
+            <select class="form-select bg-dark text-light border-light " [(ngModel)]="jogador.alinhamento"
+              name="alinhamento" required>
               <option value="" disabled selected>Selecione...</option>
               <option>Leal e Bom</option>
               <option>Neutro</option>
@@ -63,10 +52,8 @@
 
           <div class="mb-3">
             <label class="form-label text-white">🎭 Tipo de Jogador *</label>
-            <select class="form-select bg-dark text-light border-light"
-                    [(ngModel)]="jogador.tipo_jogador"
-                    name="tipoJogador"
-                    required>
+            <select class="form-select bg-dark text-light border-light" [(ngModel)]="jogador.tipo_jogador"
+              name="tipoJogador" required>
               <option value="" disabled selected>Selecione...</option>
               <option>Aventureiro</option>
               <option>Mestre</option>
@@ -78,19 +65,12 @@
             <div class="col" *ngFor="let attr of atributosNumericos">
               <label class="form-label text-white">{{attr.icon}} {{attr.label}}</label>
               <div class="input-group">
-                <input type="number"
-                       class="form-control text-center bg-dark text-white border-light fw-bold"
-                       [ngModel]="getValor(attr.key)"
-                       (ngModelChange)="setValor(attr.key, $event)"
-                       name="{{attr.key}}"
-                       min="0" />
+                <input type="number" class="form-control text-center bg-dark text-white border-light fw-bold"
+                  [ngModel]="getValor(attr.key)" (ngModelChange)="setValor(attr.key, $event)" name="{{attr.key}}"
+                  min="0" />
                 <div class="d-flex">
-                  <button type="button"
-                          class="btn btn-outline-light"
-                          (click)="ajustarValor(attr.key, -1)">−</button>
-                  <button type="button"
-                          class="btn btn-outline-light"
-                          (click)="ajustarValor(attr.key, 1)">+</button>
+                  <button type="button" class="btn btn-outline-light" (click)="ajustarValor(attr.key, -1)">−</button>
+                  <button type="button" class="btn btn-outline-light" (click)="ajustarValor(attr.key, 1)">+</button>
                 </div>
               </div>
             </div>
@@ -100,10 +80,10 @@
           <div class="card bg-secondary text-light mt-4">
             <div class="card-body">
               <h5 class="fw-bold">⚔️ Atributos calculados</h5>
-              <p>❤️ Vida: <b>{{ vida }}</b> <small>(Energia + Constituição)</small></p>
-              <p>💖 Vida Total: <b>{{ vidaTotal }}</b> <small>(Vida + Armadura)</small></p>
-              <p>✨ Fator de Cura: <b>{{ fatorCura }}</b> <small>(Energia / 3)</small></p>
-              <p>🏃 Deslocamento: <b>{{ deslocamento }}</b> <small>(Destreza / 3)</small></p>
+              <p>❤️ Vida: <b>{{ vida }}</b> <small> (Energia + Constituição)</small></p>
+              <p>💖 Vida Total: <b>{{ vidaTotal }}</b> <small> (Vida + Armadura)</small></p>
+              <p>✨ Fator de Cura: <b>{{ fatorCura }}</b> <small> (Energia / 3)</small></p>
+              <p>🏃 Deslocamento: <b>{{ deslocamento }}</b> <small> (Destreza / 3)</small></p>
             </div>
           </div>
         </div>
@@ -111,9 +91,7 @@
 
       <!-- Botão salvar -->
       <div class="text-end mt-4">
-        <button type="submit"
-                class="btn btn-success px-4"
-                [disabled]="form.invalid || salvando">
+        <button type="submit" class="btn btn-success px-4" [disabled]="form.invalid || salvando">
           <ng-container *ngIf="!salvando">💾 Salvar</ng-container>
           <ng-container *ngIf="salvando">
             <span class="spinner-border spinner-border-sm me-2"></span>
