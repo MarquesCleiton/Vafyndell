@@ -1,0 +1,6 @@
+textarea.auto-expand {
+  min-height: 60px;     /* altura inicial */
+  max-height: 200px;    /* altura máxima antes da rolagem */
+  overflow-y: auto;     
+  resize: none;         /* evita redimensionar manual */
+}

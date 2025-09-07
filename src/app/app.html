@@ -22,12 +22,10 @@
       </button>
     </mat-toolbar>
 
-    <!-- Área de rotas -->
-    <div class="page-content" [@routeAnimations]="o?.activatedRouteData?.['animation']">
+    <!-- Área de rotas com espaçamento automático -->
+    <div class="page-content">
       <router-outlet #o="outlet"></router-outlet>
     </div>
-
-
 
     <!-- Botão flutuante (só aparece em /jogador) -->
     <button *ngIf="showFab()" mat-fab color="primary" class="fab-edit" (click)="editarJogador()">
@@ -44,11 +42,12 @@
         <mat-icon>psychology</mat-icon>
         <small>Skills</small>
       </button>
-      <button mat-button (click)="navigateTo('/inventario')" class="nav-item d-flex flex-column align-items-center">
+      <button mat-button (click)="navigateTo('/cadastro-item-catalogo')"
+        class="nav-item d-flex flex-column align-items-center">
         <mat-icon>inventory</mat-icon>
         <small>Inventário</small>
       </button>
-      <button mat-button (click)="navigateTo('/criar')" class="nav-item d-flex flex-column align-items-center">
+      <button mat-button (click)="navigateTo('/catalogo')" class="nav-item d-flex flex-column align-items-center">
         <mat-icon>build</mat-icon>
         <small>Criar</small>
       </button>

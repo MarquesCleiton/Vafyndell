@@ -35,7 +35,7 @@ mat-sidenav .mat-icon {
 mat-sidenav .mat-mdc-list-item:hover {
   background-color: #333 !important;
 }
-
+.page-content
 /* ===== NAVBAR INFERIOR ===== */
 .bottom-nav {
   background: #1e1e1e;
@@ -83,8 +83,13 @@ mat-sidenav .mat-mdc-list-item:hover {
 
 /* garante que as rotas animem sem quebrar layout */
 .page-content {
+  padding: 0;                /* 🔥 sem padding */
+  margin-top: 56px;          /* altura do mat-toolbar */
+  margin-bottom: 56px;       /* altura da navbar inferior */
   position: relative;
-  overflow: hidden;
-  min-height: calc(100vh - 112px); /* altura menos topbar e navbar */
+  overflow: auto;
+  min-height: calc(100vh - 112px); /* altura menos header e footer */
 }
+
+
 

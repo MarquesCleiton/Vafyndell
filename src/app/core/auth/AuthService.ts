@@ -13,7 +13,7 @@ export class AuthService {
     '338305920567-bhd608ebcip1u08qf0gb5f08o4je4dnp.apps.googleusercontent.com';
 
   /**
-   * Tenta login silencioso, se falhar abre popup
+   * Sempre abre popup de login Google
    */
   static signInWithGoogle(): Promise<User | null> {
     return new Promise((resolve) => {
@@ -23,44 +23,49 @@ export class AuthService {
         return;
       }
 
-      google.accounts.id.initialize({
-        client_id: this.CLIENT_ID,
-        auto_select: true, // tenta usar conta já logada
-        callback: (response: any) => {
-          const idToken = response.credential;
-          if (!idToken) {
-            resolve(null);
-            return;
-          }
+      // cria container oculto para o botão oficial do Google
+      let btn = document.getElementById('gsi-hidden-btn') as HTMLDivElement;
+      if (!btn) {
+        btn = document.createElement('div');
+        btn.id = 'gsi-hidden-btn';
+        btn.style.display = 'none'; // não aparece na tela
+        document.body.appendChild(btn);
 
-          const payload = this.parseJwt(idToken);
-          const user: User = {
-            name: payload.name,
-            email: payload.email,
-            picture: payload.picture,
-            idToken,
-          };
+        google.accounts.id.initialize({
+          client_id: this.CLIENT_ID,
+          auto_select: false,
+          callback: (response: any) => {
+            const idToken = response.credential;
+            if (!idToken) {
+              resolve(null);
+              return;
+            }
 
-          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
-          resolve(user);
-        },
-      });
+            const payload = this.parseJwt(idToken);
+            const user: User = {
+              name: payload.name,
+              email: payload.email,
+              picture: payload.picture,
+              idToken,
+            };
 
-      // Primeiro tenta login silencioso
-      google.accounts.id.prompt((notification: any) => {
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          // 👇 Se não rolou silencioso, abre popup
-          google.accounts.id.renderButton(
-            document.createElement('div'), // hack → botão não visível
-            { type: 'standard', theme: 'outline' }
-          );
-          google.accounts.id.prompt(); // força popup
-        }
-      });
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
+            resolve(user);
+          },
+        });
+
+        google.accounts.id.renderButton(btn, {
+          type: 'standard',
+          theme: 'outline',
+          size: 'large',
+        });
+      }
+
+      // força o clique → abre popup tradicional do Google
+      (btn.querySelector('div[role=button]') as HTMLDivElement)?.click();
     });
   }
 
-  /** Recupera usuário salvo */
   static getUser(): User | null {
     const raw = localStorage.getItem(this.STORAGE_KEY);
     return raw ? (JSON.parse(raw) as User) : null;
@@ -99,11 +104,6 @@ export class AuthService {
     return JSON.parse(jsonPayload);
   }
 
-  /**
- * Força uma atualização do idToken
- * - Tenta silencioso
- * - Se não rolar, pede interação
- */
   static async refreshIdToken(): Promise<User | null> {
     try {
       const user = await this.signInWithGoogle();

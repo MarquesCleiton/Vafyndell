@@ -1,0 +1,118 @@
+<div class="d-flex flex-column min-vh-100 bg-dark text-light mb-5">
+  <div class="flex-grow-1">
+    <form #form="ngForm" (ngSubmit)="salvar(form)">
+
+      <!-- Upload da imagem -->
+      <div class="position-relative text-center mb-3">
+        <ng-container *ngIf="item.imagem; else uploadBox">
+          <img [src]="item.imagem" class="w-100 rounded shadow-sm" alt="Preview"
+            style="height: 250px; object-fit: cover;" />
+          <button type="button"
+            class="btn btn-danger rounded-circle position-absolute d-flex align-items-center justify-content-center"
+            style="top: 10px; right: 10px; width: 40px; height: 40px;" (click)="removerImagem()">✖</button>
+        </ng-container>
+        <ng-template #uploadBox>
+          <label class="d-flex align-items-center justify-content-center border rounded w-100"
+            style="height: 150px; background: #1e1e1e; cursor: pointer;">
+            <span class="text-success fs-1">📷</span>
+            <input type="file" class="d-none" (change)="onFileChange($event)" accept="image/*" />
+          </label>
+        </ng-template>
+      </div>
+
+      <!-- Card principal -->
+      <div class="card bg-dark border-0 shadow-sm">
+        <div class="card-body">
+          <h4 class="fw-bold mb-3 text-white">📦 Cadastro de Item do Catálogo</h4>
+
+          <!-- Nome -->
+          <div class="mb-3">
+            <label class="form-label text-white">🏷️ Nome *</label>
+            <input type="text" class="form-control bg-dark text-light border-light" [(ngModel)]="item.nome" name="nome"
+              required />
+          </div>
+
+          <!-- Unidade de medida -->
+          <div class="mb-3">
+            <label class="form-label text-white">⚖️ Unidade de Medida *</label>
+            <select class="form-select bg-dark text-light border-light" [(ngModel)]="item.unidade_medida"
+              name="unidadeMedida" required>
+              <option value="" disabled selected>Selecione...</option>
+              <option *ngFor="let u of unidadesMedida">{{u}}</option>
+            </select>
+          </div>
+
+          <!-- Peso -->
+          <div class="mb-3">
+            <label class="form-label text-white">⚖️ Peso</label>
+            <input type="number" class="form-control bg-dark text-light border-light" [(ngModel)]="item.peso"
+              name="peso" min="0" />
+          </div>
+
+          <!-- Categoria -->
+          <div class="mb-3">
+            <label class="form-label text-white">📂 Categoria *</label>
+            <select class="form-select bg-dark text-light border-light" [(ngModel)]="item.categoria" name="categoria"
+              required>
+              <option value="" disabled selected>Selecione...</option>
+              <option *ngFor="let c of categorias">{{c}}</option>
+            </select>
+          </div>
+
+          <!-- Origem -->
+          <div class="mb-3">
+            <label class="form-label text-white">🌱 Origem *</label>
+            <select class="form-select bg-dark text-light border-light" [(ngModel)]="item.origem" name="origem"
+              required>
+              <option value="" disabled selected>Selecione...</option>
+              <option *ngFor="let o of origens">{{o}}</option>
+            </select>
+          </div>
+
+          <!-- Raridade -->
+          <div class="mb-3">
+            <label class="form-label text-white">💎 Raridade *</label>
+            <select class="form-select bg-dark text-light border-light" [(ngModel)]="item.raridade" name="raridade"
+              required>
+              <option value="" disabled selected>Selecione...</option>
+              <option *ngFor="let r of raridades">{{r}}</option>
+            </select>
+          </div>
+
+          <!-- Descrição -->
+          <div class="mb-3">
+            <label class="form-label text-white">📝 Descrição</label>
+            <textarea class="form-control bg-dark text-light border-light auto-expand" [(ngModel)]="item.descricao"
+              name="descricao"></textarea>
+          </div>
+
+          <!-- Efeito -->
+          <div class="mb-3">
+            <label class="form-label text-white">✨ Efeito</label>
+            <textarea class="form-control bg-dark text-light border-light auto-expand" [(ngModel)]="item.efeito"
+              name="efeito"></textarea>
+          </div>
+
+          <!-- Colateral -->
+          <div class="mb-3">
+            <label class="form-label text-white">⚠️ Colateral</label>
+            <textarea class="form-control bg-dark text-light border-light auto-expand" [(ngModel)]="item.colateral"
+              name="colateral"></textarea>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Botão salvar -->
+      <div class="text-end mt-4">
+        <button type="submit" class="btn btn-success px-4" [disabled]="form.invalid || salvando">
+          <ng-container *ngIf="!salvando">💾 Salvar</ng-container>
+          <ng-container *ngIf="salvando">
+            <span class="spinner-border spinner-border-sm me-2"></span>
+            Salvando...
+          </ng-container>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
