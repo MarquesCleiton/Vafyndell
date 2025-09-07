@@ -18,38 +18,63 @@ export class Catalogo implements OnInit {
   carregando = true;
   filtro = '';
 
-  constructor(private router: Router) { }
+  constructor(private router: Router) {}
 
   async ngOnInit() {
-
     try {
+      console.log('[Catalogo] Iniciando carregamento...');
       this.carregando = true;
-      await CatalogoRepository.syncItens();
-      const itens = await CatalogoRepository.getLocalItens();
 
-      // Agrupa por categoria
-      const mapa = new Map<string, CatalogoDomain[]>();
-      itens.forEach(i => {
-        if (!mapa.has(i.categoria)) {
-          mapa.set(i.categoria || 'Outros', []);
+      // 1. Carrega itens locais primeiro
+      let itens = await CatalogoRepository.getLocalItens();
+      if (itens.length) {
+        console.log('[Catalogo] Itens locais encontrados:', itens.length);
+        this.processarItens(itens);
+        this.carregando = false; // já libera a UI
+      }
+
+      // 2. Em paralelo, sincroniza catálogo
+      CatalogoRepository.syncItens().then(async updated => {
+        if (updated) {
+          console.log('[Catalogo] Sync trouxe alterações. Recarregando...');
+          const atualizados = await CatalogoRepository.getLocalItens();
+          this.processarItens(atualizados);
+        } else {
+          console.log('[Catalogo] Sync concluído. Nenhuma alteração detectada.');
         }
-        mapa.get(i.categoria || 'Outros')!.push(i);
       });
 
-      this.categorias = Array.from(mapa.entries())
-        .sort((a, b) => String(a[0]).localeCompare(String(b[0])))
-        .map(([nome, itens]) => ({
-          nome: String(nome || 'Outros'),
-          itens,
-          expandido: false,
-        }));
-
-      this.categoriasFiltradas = [...this.categorias];
+      // 3. Se não havia nada local, força buscar online
+      if (!itens.length) {
+        console.log('[Catalogo] Nenhum item local. Buscando online...');
+        const online = await CatalogoRepository.forceFetchItens();
+        this.processarItens(online);
+        this.carregando = false;
+      }
     } catch (err) {
       console.error('[Catalogo] Erro ao carregar itens:', err);
-    } finally {
       this.carregando = false;
     }
+  }
+
+  /** 🔄 Função auxiliar para agrupar itens por categoria */
+  private processarItens(itens: CatalogoDomain[]) {
+    const mapa = new Map<string, CatalogoDomain[]>();
+    itens.forEach(i => {
+      const cat = i.categoria || 'Outros';
+      if (!mapa.has(cat)) mapa.set(cat, []);
+      mapa.get(cat)!.push(i);
+    });
+
+    this.categorias = Array.from(mapa.entries())
+      .sort((a, b) => String(a[0]).localeCompare(String(b[0])))
+      .map(([nome, itens]) => ({
+        nome: String(nome || 'Outros'),
+        itens,
+        expandido: false,
+      }));
+
+    this.categoriasFiltradas = [...this.categorias];
   }
 
   toggleCategoria(cat: any) {
@@ -80,13 +105,12 @@ export class Catalogo implements OnInit {
       .filter(c => c.itens.length > 0);
   }
 
-
   /** ✅ Método seguro para retornar classe de raridade */
   getRaridadeClass(raridade: any): string {
     if (!raridade) return 'comum';
     return String(raridade).toLowerCase();
   }
-  
+
   abrirItem(item: any) {
     this.router.navigate(['/item-catalogo', item.id]);
   }

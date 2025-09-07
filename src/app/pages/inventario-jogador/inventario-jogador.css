@@ -1,0 +1,50 @@
+.inventario-card {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 12px;
+  transition: all 0.2s ease-in-out;
+}
+
+.inventario-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+}
+
+/* Quantidade + unidade + peso */
+.item-info {
+  color: #d0d0d0 !important;
+  font-size: 0.85rem;
+}
+
+/* Texto efeito e colateral */
+.efeito-text {
+  color: #e6e6e6 !important;
+}
+
+.colateral {
+  color: #c97a7a !important;
+}
+
+.fab {
+  position: fixed;
+  bottom: 80px;
+  /* acima do navbar inferior */
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  z-index: 100;
+  background: #0d6efd;
+  /* azul bootstrap */
+  border: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.fab:hover {
+  transform: scale(1.1);
+  background: #0b5ed7;
+  /* azul mais escuro no hover */
+}

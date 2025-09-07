@@ -1,0 +1,68 @@
+<div class="d-flex flex-column min-vh-100 bg-dark text-light p-3">
+  <form #form="ngForm" (ngSubmit)="salvar(form)">
+
+    <!-- Item com autocomplete -->
+    <div class="mb-3">
+      <label class="form-label text-light">Item *</label>
+      <mat-form-field appearance="outline" class="w-100">
+        <input type="text" matInput placeholder="Selecione ou pesquise..." [(ngModel)]="filtro" name="filtro"
+          [matAutocomplete]="auto" (input)="filtrarItens()" [readonly]="editando" class="text-light" />
+
+
+        <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selecionarItem($event.option.value)">
+          <!-- Só mostra "Novo" se não estiver editando -->
+          <mat-option *ngIf="!editando" (click)="novoItem()" class="text-success bg-dark">
+            <mat-icon class="me-2">add_circle</mat-icon> Novo
+          </mat-option>
+
+          <!-- Lista filtrada -->
+          <mat-option *ngFor="let c of catalogoFiltrado" [value]="c" class="bg-dark text-light">
+            <div class="d-flex align-items-center">
+              <img *ngIf="c.imagem" [src]="c.imagem" class="me-2 rounded"
+                style="width: 28px; height: 28px; object-fit: cover;">
+              <span>{{ c.nome }}</span>
+            </div>
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+    </div>
+
+    <!-- Preview sempre exibido -->
+    <div *ngIf="selecionado" class="card bg-dark border-secondary shadow-sm mb-3 p-2">
+      <div class="d-flex align-items-center">
+        <img *ngIf="selecionado.imagem" [src]="selecionado.imagem" class="me-3 rounded"
+          style="width: 50px; height: 50px; object-fit: cover;">
+        <div>
+          <h6 class="fw-bold text-light mb-1">{{ selecionado.nome }}</h6>
+          <small class="text-muted">
+            {{ selecionado.categoria }} | {{ selecionado.raridade }}
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quantidade -->
+    <div class="mb-3">
+      <label class="form-label text-light">Quantidade *</label>
+      <div class="input-group">
+        <input type="number" class="form-control bg-dark text-light border-light text-center fw-bold"
+          [(ngModel)]="quantidade" name="quantidade" min="1" required />
+
+        <button type="button" class="btn btn-outline-light" (click)="decrementar()">−</button>
+        <button type="button" class="btn btn-outline-light" (click)="incrementar()">+</button>
+      </div>
+    </div>
+
+    <!-- Botões -->
+    <div class="d-flex justify-content-between mt-4">
+      <button type="button" class="btn btn-secondary px-4" (click)="cancelar()">Cancelar</button>
+
+      <button type="submit" class="btn btn-success px-4" [disabled]="form.invalid || salvando">
+        <ng-container *ngIf="!salvando">Salvar</ng-container>
+        <ng-container *ngIf="salvando">
+          <span class="spinner-border spinner-border-sm me-2"></span> Salvando...
+        </ng-container>
+      </button>
+    </div>
+  </form>
+</div>

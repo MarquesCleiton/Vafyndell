@@ -1,0 +1,92 @@
+<div class="d-flex flex-column min-vh-100 bg-dark text-light">
+
+  <!-- Barra de pesquisa -->
+  <div class="p-3 bg-black border-bottom position-sticky top-0" style="z-index: 10;">
+    <input type="text" class="form-control bg-dark text-light border-light rounded-pill px-3"
+      placeholder="🔍 Pesquisar no inventário..." [(ngModel)]="filtro" (input)="aplicarFiltro()" />
+  </div>
+
+  <div class="flex-grow-1 p-3">
+    <h4 class="fw-bold mb-3">🎒 Inventário</h4>
+
+    <!-- Resumo -->
+    <div *ngIf="!carregando && categoriasFiltradas.length > 0" class="card bg-secondary text-light p-3 mb-4">
+      <p class="mb-1">📦 Quantidade de itens: <b>{{ resumo.tipos }}</b></p>
+      <p class="mb-1">⚖️ Peso total: <b>{{ resumo.pesoTotal | number:'1.0-2' }} kg</b></p>
+      <p class="mb-0">📂 Categorias: <b>{{ resumo.categorias }}</b></p>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="carregando" class="text-center py-5">
+      <div class="spinner-border text-light" role="status"></div>
+      <p class="mt-2">Carregando inventário...</p>
+    </div>
+
+    <!-- Vazio -->
+    <div *ngIf="!carregando && categoriasFiltradas.length === 0" class="text-center text-muted py-5">
+      Nenhum item encontrado.
+    </div>
+
+    <!-- Categorias -->
+    <div *ngIf="!carregando">
+      <div *ngFor="let cat of categoriasFiltradas" class="mb-3">
+
+        <!-- Cabeçalho da categoria -->
+        <button class="btn btn-outline-light w-100 text-start d-flex justify-content-between align-items-center"
+          (click)="toggleCategoria(cat)">
+          <span class="fw-bold">{{ cat.nome }}</span>
+          <span>{{ cat.expandido ? '−' : '+' }}</span>
+        </button>
+
+        <!-- Itens da categoria -->
+        <div *ngIf="cat.expandido" class="mt-2">
+          <div class="row row-cols-1 g-2">
+            <div class="col" *ngFor="let inv of cat.itens">
+              <div class="card inventario-card shadow-sm h-100 p-3" (click)="abrirItem(inv.id)"
+                style="cursor: pointer;">
+
+                <!-- Cabeçalho -->
+                <div class="d-flex align-items-center mb-2">
+                  <img *ngIf="inv.itemDetalhe?.imagem" [src]="inv.itemDetalhe?.imagem" alt="{{ inv.itemDetalhe?.nome }}"
+                    class="rounded me-3" style="width: 55px; height: 55px; object-fit: cover;" />
+                  <div>
+                    <h6 class="fw-bold text-white mb-1">{{ inv.itemDetalhe?.nome || 'Item desconhecido' }}</h6>
+                    <small class="item-info">
+                      {{ inv.quantidade }} {{ inv.itemDetalhe?.unidade_medida || '' }}
+                      | {{ inv.itemDetalhe?.peso || 0 }} kg
+                    </small>
+                  </div>
+                </div>
+
+                <!-- Detalhes extras -->
+                <p *ngIf="inv.itemDetalhe?.efeito" class="small mt-2 efeito-text">
+                  ✨ {{ inv.itemDetalhe?.efeito }}
+                </p>
+                <p *ngIf="inv.itemDetalhe?.colateral" class="small colateral">
+                  ⚠️ {{ inv.itemDetalhe?.colateral }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+  <!-- Inventário do jogador -->
+  <div class="d-flex flex-column min-vh-100 bg-dark text-light">
+
+    <!-- Resumo + lista de categorias (já implementado) -->
+    <div class="flex-grow-1 p-3 pb-5">
+      <!-- ... aqui já estão os cards de itens do inventário ... -->
+    </div>
+
+    <!-- Botão flutuante para adicionar novo item -->
+    <button class="fab btn btn-primary rounded-circle shadow-lg" (click)="novoItemInventario()">
+      <span class="fs-4">＋</span>
+    </button>
+
+  </div>
+
+</div>

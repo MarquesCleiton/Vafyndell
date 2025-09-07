@@ -26,25 +26,52 @@ export class ItemCatalogo implements OnInit {
   ) {}
 
   async ngOnInit() {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (!id) {
-      this.router.navigate(['/catalogo']);
-      return;
-    }
-
     try {
+      console.log('[ItemCatalogo] Iniciando carregamento...');
       this.carregando = true;
-      await CatalogoRepository.syncItens();
-      const itens = await CatalogoRepository.getLocalItens();
-      this.item = itens.find(i => String(i.id) === String(id)) || null;
 
-      if (!this.item) {
-        console.warn('[ItemCatalogo] Item não encontrado');
+      const id = this.route.snapshot.paramMap.get('id');
+      if (!id) {
         this.router.navigate(['/catalogo']);
+        return;
+      }
+
+      // 1. Carrega primeiro do cache local
+      let itensLocais = await CatalogoRepository.getLocalItens();
+      let encontrado = itensLocais.find(i => String(i.id) === String(id)) || null;
+
+      if (encontrado) {
+        this.item = encontrado;
+        this.carregando = false; // já mostra algo
+      }
+
+      // 2. Em paralelo, sincroniza e reprocessa se houver update
+      CatalogoRepository.syncItens().then(async updated => {
+        if (updated) {
+          console.log('[ItemCatalogo] Sync trouxe alterações. Recarregando...');
+          const itensAtualizados = await CatalogoRepository.getLocalItens();
+          const atualizado = itensAtualizados.find(i => String(i.id) === String(id)) || null;
+          if (atualizado) this.item = atualizado;
+        } else {
+          console.log('[ItemCatalogo] Sync concluído. Nenhuma alteração detectada.');
+        }
+      });
+
+      // 3. Se não havia nada local, força buscar online
+      if (!encontrado) {
+        console.log('[ItemCatalogo] Item não encontrado localmente. Forçando fetch online...');
+        const online = await CatalogoRepository.forceFetchItens();
+        const achadoOnline = online.find(i => String(i.id) === String(id)) || null;
+        if (achadoOnline) {
+          this.item = achadoOnline;
+        } else {
+          console.warn('[ItemCatalogo] Item não encontrado nem online.');
+          this.router.navigate(['/catalogo']);
+        }
+        this.carregando = false;
       }
     } catch (err) {
       console.error('[ItemCatalogo] Erro ao carregar item:', err);
-    } finally {
       this.carregando = false;
     }
   }
@@ -57,7 +84,6 @@ export class ItemCatalogo implements OnInit {
     if (!this.item) return;
     this.processandoEditar = true;
 
-    // Simples loading até redirecionar
     setTimeout(() => {
       this.router.navigate(['/cadastro-item-catalogo', this.item!.id], {
         queryParams: { returnUrl: this.router.url },

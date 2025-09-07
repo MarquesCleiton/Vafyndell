@@ -31,21 +31,21 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
   };
 
   salvando = false;
-  editMode = false; // 🔑 indica se é edição ou cadastro
+  editMode = false;
 
   unidadesMedida = ['g', 'kg', 'ml', 'l', 'cm', 'm', 'unidade'];
   origens = ['Fabricável', 'Natural'];
   raridades = ['Comum', 'Incomum', 'Raro', 'Épico', 'Lendário'];
   categorias = [
-    'Recursos botânicos','Mineral','Equipamento','Moeda','Tesouro',
-    'Componentes bestiais e animalescos','Poção de Cura – Regenera vida, cicatriza feridas',
+    'Recursos botânicos', 'Mineral', 'Equipamento', 'Moeda', 'Tesouro',
+    'Componentes bestiais e animalescos', 'Poção de Cura – Regenera vida, cicatriza feridas',
     'Poção Mental – Calmante, foco, memória, sono, esquecimento',
     'Poção de Aprimoramento Físico – Força, resistência, agilidade',
     'Poção Sensorial – Visão, audição, percepção, voz, respiração',
     'Poção de Furtividade – Camuflagem, passos suaves, silêncio',
     'Poção de Energia – Percepção da energia fundamental',
-    'Veneno – Sonolência, confusão ou morte','Utilitário – Bombas, armadilhas, luz, som, gás, adesivos',
-    'Ferramentas','Outros',
+    'Veneno – Sonolência, confusão ou morte', 'Utilitário – Bombas, armadilhas, luz, som, gás, adesivos',
+    'Ferramentas', 'Outros',
   ];
 
   constructor(
@@ -59,11 +59,28 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
     if (id) {
       this.editMode = true;
       try {
-        await CatalogoRepository.syncItens();
-        const itens = await CatalogoRepository.getLocalItens();
-        const existente = itens.find(i => String(i.id) === id);
+        // 1. Carrega local primeiro
+        const itensLocais = await CatalogoRepository.getLocalItens();
+        const existente = itensLocais.find(i => String(i.id) === id);
         if (existente) {
           this.item = { ...existente };
+        }
+
+        // 2. Em paralelo, sincroniza
+        CatalogoRepository.syncItens().then(async updated => {
+          if (updated) {
+            console.log('[CadastroItemCatalogo] Sync trouxe alterações. Recarregando item...');
+            const itensAtualizados = await CatalogoRepository.getLocalItens();
+            const atualizado = itensAtualizados.find(i => String(i.id) === id);
+            if (atualizado) this.item = { ...atualizado };
+          }
+        });
+
+        // 3. Se não havia local, força buscar online
+        if (!existente) {
+          const online = await CatalogoRepository.forceFetchItens();
+          const achadoOnline = online.find(i => String(i.id) === id);
+          if (achadoOnline) this.item = { ...achadoOnline };
         }
       } catch (err) {
         console.error('[CadastroItemCatalogo] Erro ao carregar item:', err);
@@ -72,7 +89,6 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    // 🔹 Auto-ajuste dos textareas
     const textareas = this.el.nativeElement.querySelectorAll('textarea.auto-expand');
     textareas.forEach((ta: HTMLTextAreaElement) => {
       const resize = () => {
@@ -102,40 +118,39 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
   }
 
   // Salvar
-async salvar(form: NgForm) {
-  if (form.invalid) return;
+  async salvar(form: NgForm) {
+    if (form.invalid) return;
 
-  try {
-    this.salvando = true;
+    try {
+      this.salvando = true;
 
-    const user = AuthService.getUser();
-    if (!user?.email) throw new Error('Usuário não autenticado');
-    this.item.email = user.email;
+      const user = AuthService.getUser();
+      if (!user?.email) throw new Error('Usuário não autenticado');
+      this.item.email = user.email;
 
-    if (this.editMode) {
-      await CatalogoRepository.updateItem(this.item);
-      window.alert('✅ Item atualizado com sucesso!');
-    } else {
-      await CatalogoRepository.syncItens();
-      const todos = await CatalogoRepository.getAllItens();
-      let maxIndex = todos.length > 0 ? Math.max(...todos.map(i => i.index || 0)) : 0;
-      this.item.index = maxIndex + 1;
-      this.item.id = maxIndex + 1;
+      if (this.editMode) {
+        await CatalogoRepository.updateItem(this.item);
+        window.alert('✅ Item atualizado com sucesso!');
+      } else {
+        // 1. Usa local para calcular próximo índice
+        const todosLocais = await CatalogoRepository.getLocalItens();
+        const maxIndex = todosLocais.length > 0 ? Math.max(...todosLocais.map(i => i.index || 0)) : 0;
+        this.item.index = maxIndex + 1;
+        this.item.id = maxIndex + 1;
 
-      await CatalogoRepository.createItem(this.item);
-      window.alert('✅ Item criado com sucesso!');
+        await CatalogoRepository.createItem(this.item);
+        window.alert('✅ Item criado com sucesso!');
+      }
+
+      // 🔑 Volta para origem
+      const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/catalogo';
+      this.router.navigateByUrl(returnUrl);
+
+    } catch (err) {
+      console.error('[CadastroItemCatalogo] Erro ao salvar:', err);
+      window.alert('❌ Erro ao salvar item. Veja o console.');
+    } finally {
+      this.salvando = false;
     }
-
-    // 🔑 Volta para origem
-    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/catalogo';
-    this.router.navigateByUrl(returnUrl);
-
-  } catch (err) {
-    console.error('[CadastroItemCatalogo] Erro ao salvar:', err);
-    window.alert('❌ Erro ao salvar item. Veja o console.');
-  } finally {
-    this.salvando = false;
   }
-}
-
 }

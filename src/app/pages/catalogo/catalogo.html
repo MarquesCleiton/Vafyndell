@@ -1,38 +1,53 @@
 <div class="d-flex flex-column min-vh-100 bg-dark text-light">
 
-  <!-- Conteúdo -->
-  <div class="flex-grow-1 px-3 pb-5">
+  <!-- Barra de pesquisa -->
+  <div class="p-3 bg-black border-bottom position-sticky top-0" style="z-index: 10;">
+    <input type="text"
+           class="form-control bg-dark text-light border-light rounded-pill px-3"
+           placeholder="🔍 Pesquisar no catálogo..."
+           [(ngModel)]="filtro"
+           (input)="aplicarFiltro()" />
+  </div>
+
+  <div class="flex-grow-1 p-3">
+    <h4 class="fw-bold mb-3">📚 Catálogo</h4>
+
+
+    <!-- Loading -->
     <div *ngIf="carregando" class="text-center py-5">
       <div class="spinner-border text-light" role="status"></div>
-      <p class="mt-2">Carregando itens...</p>
+      <p class="mt-2">Carregando catálogo...</p>
     </div>
 
-    <div class="mt-5 pt-"></div>
+    <!-- Vazio -->
     <div *ngIf="!carregando && categoriasFiltradas.length === 0" class="text-center text-muted py-5">
-      Nenhum item encontrado para "{{ filtro }}"
+      Nenhum item encontrado.
     </div>
-    <ng-container *ngIf="!carregando">
-      <div *ngFor="let cat of categoriasFiltradas" class="mb-4">
 
-        <!-- Cabeçalho da categoria sticky -->
-        <div class="categoria-header d-flex justify-content-between align-items-center rounded">
+    <!-- Categorias -->
+    <div *ngIf="!carregando">
+      <div *ngFor="let cat of categoriasFiltradas" class="mb-3">
+
+        <!-- Cabeçalho da categoria -->
+        <button class="btn btn-outline-light w-100 text-start d-flex justify-content-between align-items-center"
+                (click)="toggleCategoria(cat)">
           <span class="fw-bold">{{ cat.nome || 'Outros' }}</span>
-          <span class="toggle-icon" (click)="toggleCategoria(cat)">
-            {{ cat.expandido ? '▼' : '▶' }}
-          </span>
-        </div>
+          <span>{{ cat.expandido ? '−' : '+' }}</span>
+        </button>
 
         <!-- Itens -->
-        <div *ngIf="cat.expandido" class="mt-3">
-          <div class="row row-cols-1 row-cols-md-2 g-3">
+        <div *ngIf="cat.expandido" class="mt-2">
+          <div class="row row-cols-1 g-2">
             <div class="col" *ngFor="let item of cat.itens">
-              <div class="card catalogo-card shadow-sm h-100 p-3" (click)="abrirItem(item)">
+              <div class="card catalogo-card shadow-sm h-100 p-3"
+                   (click)="abrirItem(item)"
+                   style="cursor: pointer;">
 
-                <!-- Cabeçalho do item -->
-                <div class="d-flex align-items-center mb-3">
+                <!-- Cabeçalho -->
+                <div class="d-flex align-items-center mb-2">
                   <img *ngIf="item.imagem" [src]="item.imagem" alt="{{ item.nome || 'Item' }}"
                        class="rounded me-3 shadow-sm"
-                       style="width: 65px; height: 65px; object-fit: cover;" />
+                       style="width: 55px; height: 55px; object-fit: cover;" />
                   <div>
                     <h6 class="fw-bold text-white mb-1">{{ item.nome || 'Sem nome' }}</h6>
                     <small class="raridade {{ getRaridadeClass(item.raridade) }}">
@@ -41,34 +56,27 @@
                   </div>
                 </div>
 
-                <!-- Conteúdo -->
-                <div>
-                  <p class="mb-1 small efeito-text">{{ item.efeito || '—' }}</p>
-                  <p *ngIf="item.colateral" class="small colateral">{{ item.colateral }}</p>
-                  <p *ngIf="item.descricao" class="small descricao-text fst-italic">{{ item.descricao }}</p>
-                </div>
-
+                <!-- Detalhes extras -->
+                <p *ngIf="item.efeito" class="small mt-2 efeito-text">
+                  ✨ {{ item.efeito }}
+                </p>
+                <p *ngIf="item.colateral" class="small colateral">
+                  ⚠️ {{ item.colateral }}
+                </p>
+                <p *ngIf="item.descricao" class="small descricao-text fst-italic">
+                  📝 {{ item.descricao }}
+                </p>
               </div>
             </div>
           </div>
         </div>
 
       </div>
-    </ng-container>
-  </div>
-
-  <!-- Barra de pesquisa fixa no rodapé -->
-  <div class="search-bar-bottom bg-black border-top px-3 py-2">
-    <input type="text" 
-           class="form-control bg-dark text-light border-light rounded-pill px-3"
-           placeholder="🔍 Pesquisar no catálogo..." 
-           [(ngModel)]="filtro" 
-           (input)="aplicarFiltro()" />
+    </div>
   </div>
 
   <!-- Botão flutuante -->
   <button class="fab btn btn-primary rounded-circle shadow-lg" (click)="novoItem()">
     <span class="fs-4">＋</span>
   </button>
-
 </div>

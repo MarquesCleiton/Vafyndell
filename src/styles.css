@@ -19,3 +19,6 @@ mat-sidenav .mat-icon {
 mat-sidenav .mat-mdc-list-item:hover {
   background-color: #333 !important;
 }
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

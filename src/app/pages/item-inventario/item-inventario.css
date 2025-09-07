@@ -1,0 +1,27 @@
+/* Bloco de metadados */
+.meta-info p {
+  color: #e6e6e6;
+  font-size: 1rem;        /* maior que antes */
+  margin-bottom: 0.6rem;  /* mais espaço entre linhas */
+  display: flex;
+  align-items: center;
+}
+
+.meta-info .icon {
+  margin-right: 6px;
+  font-size: 1.1rem;      /* ícone levemente maior */
+}
+
+/* Efeito, colateral e descrição */
+.efeito-text {
+  color: #ddd;
+  font-size: 0.95rem;
+}
+.colateral {
+  color: #c97a7a !important;
+  font-size: 0.95rem;
+}
+.descricao-text {
+  color: #bfbfbf !important;
+  font-size: 0.95rem;
+}

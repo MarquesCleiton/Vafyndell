@@ -1,0 +1,23 @@
+/* Painel do autocomplete */
+.mat-autocomplete-panel,
+.mat-select-panel,
+.mat-mdc-autocomplete-panel,
+.mat-mdc-select-panel {
+  background-color: #1e1e1e !important; /* fundo sólido escuro */
+  color: #f0f0f0 !important;            /* texto claro */
+  border: 1px solid #333 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Opções */
+.mat-option,
+.mdc-list-item__primary-text {
+  color: #f0f0f0 !important;
+}
+
+/* Hover */
+.mat-option:hover,
+.mat-option.mdc-list-item--selected {
+  background-color: #2a2a2a !important;
+}
