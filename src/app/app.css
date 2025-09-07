@@ -1,0 +1,90 @@
+.app-container {
+  height: 100vh;
+}
+
+/* Espaço para topbar e bottom-nav */
+.page-content {
+  padding: 1rem;
+  margin-top: 56px;   /* altura do mat-toolbar */
+  margin-bottom: 56px; /* altura da navbar */
+}
+
+/* Topbar fixa */
+mat-toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1001;
+}
+
+/* ===== SIDENAV DARK ===== */
+.sidenav {
+  width: 250px;
+  background-color: #1e1e1e !important;
+}
+
+mat-sidenav .mdc-list-item__primary-text {
+  color: #f8f9fa !important;
+}
+
+mat-sidenav .mat-icon {
+  color: #f8f9fa !important;
+}
+
+mat-sidenav .mat-mdc-list-item:hover {
+  background-color: #333 !important;
+}
+
+/* ===== NAVBAR INFERIOR ===== */
+.bottom-nav {
+  background: #1e1e1e;
+  border-top: 1px solid #333;
+  z-index: 1000;
+}
+
+.bottom-nav .nav-item {
+  background: transparent;
+  border: none;
+  color: #aaa;
+  text-decoration: none;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 6px;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.bottom-nav .nav-item .mat-icon {
+  font-size: 20px;
+  margin-bottom: 2px;
+}
+
+/* Hover */
+.bottom-nav .nav-item:hover {
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* Ativo */
+.bottom-nav .nav-item.active {
+  color: #0d6efd; /* azul destaque */
+  font-weight: 600;
+}
+
+/* ===== FAB (Botão flutuante) ===== */
+.fab-edit {
+  position: fixed;
+  bottom: 80px;   /* acima da navbar */
+  right: 20px;
+  z-index: 1100;
+}
+
+/* garante que as rotas animem sem quebrar layout */
+.page-content {
+  position: relative;
+  overflow: hidden;
+  min-height: calc(100vh - 112px); /* altura menos topbar e navbar */
+}
+

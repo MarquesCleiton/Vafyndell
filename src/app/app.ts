@@ -1,12 +1,86 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Router, NavigationEnd, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
+import { trigger, transition, style, animate, query, group } from '@angular/animations';
+
+// Angular Material
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatListModule } from '@angular/material/list';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  standalone: true,
+  imports: [
+    RouterOutlet,
+    MatToolbarModule,
+    MatIconModule,
+    MatButtonModule,
+    MatSidenavModule,
+    MatListModule
+  ],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
+  animations: [
+    trigger('routeAnimations', [
+      transition('* <=> *', [
+        // nova rota entra pela direita
+        query(':enter', [
+          style({ position: 'absolute', width: '100%', transform: 'translateX(100%)', opacity: 0 })
+        ], { optional: true }),
+
+        // rota antiga sai pela esquerda
+        query(':leave', [
+          style({ position: 'absolute', width: '100%' }),
+          animate('250ms ease', style({ transform: 'translateX(-100%)', opacity: 0 }))
+        ], { optional: true }),
+
+        // nova rota termina no centro
+        query(':enter', [
+          animate('250ms ease', style({ transform: 'translateX(0%)', opacity: 1 }))
+        ], { optional: true })
+      ])
+    ])
+  ]
+
 })
 export class App {
   protected readonly title = signal('Vafyndell');
+  protected readonly showFab = signal(false);
+  protected readonly activeRoute = signal('');
+
+  private titles: Record<string, string> = {
+    '/jogador': 'Klug Orin',
+    '/edicao-jogador': 'Skills',
+    '/inventario': 'Inventário',
+    '/criar': 'Criar',
+    '/batalha': 'Batalha',
+    '/notas': 'Notas'
+  };
+
+  constructor(private router: Router) {
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: NavigationEnd) => {
+        const url = (event as NavigationEnd).urlAfterRedirects;
+
+        this.activeRoute.set(url);
+        this.title.set(this.titles[url] ?? 'Vafyndell');
+        this.showFab.set(url === '/jogador');
+      });
+  }
+
+  onRefresh() {
+    window.location.reload();
+  }
+
+  editarJogador() {
+    this.router.navigate(['/edicao-jogador']);
+  }
+
+  navigateTo(path: string) {
+    this.router.navigate([path]);
+  }
 }

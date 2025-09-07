@@ -1,12 +1,21 @@
-/* You can add global styles to this file, and also import other style files */
-html, body {
-  height: 100%;
-  margin: 0;
-  background-color: #121212; /* fundo dark global */
+/* ====== SIDENAV DARK MODE ====== */
+mat-sidenav {
+  background-color: #1e1e1e !important;
+  color: #f8f9fa !important;
 }
 
-app-root {
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
+mat-sidenav .mat-mdc-list-item {
+  color: #f8f9fa !important;
+}
+
+mat-sidenav .mat-mdc-list-item .mdc-list-item__primary-text {
+  color: #f8f9fa !important;
+}
+
+mat-sidenav .mat-icon {
+  color: #f8f9fa !important;
+}
+
+mat-sidenav .mat-mdc-list-item:hover {
+  background-color: #333 !important;
 }

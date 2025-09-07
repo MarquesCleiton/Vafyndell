@@ -1,0 +1,4 @@
+.page-content,
+.flex-grow-1 {
+  padding-bottom: 120px !important; /* espaço para navbar + botão */
+}
