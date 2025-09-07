@@ -1,16 +1,18 @@
 <div class="d-flex flex-column min-vh-100 bg-dark text-light p-3">
+    <!-- Loading inicial -->
     <div *ngIf="carregando" class="text-center py-5">
         <div class="spinner-border text-light" role="status"></div>
         <p class="mt-2">Carregando item...</p>
     </div>
 
+    <!-- Conteúdo do item -->
     <ng-container *ngIf="!carregando && item">
-        <!-- Imagem fill -->
+        <!-- Imagem -->
         <div class="item-image mb-3">
             <img *ngIf="item.imagem" [src]="item.imagem" alt="{{item.nome}}" />
         </div>
 
-        <!-- Título -->
+        <!-- Informações principais -->
         <h4 class="fw-bold text-capitalize">{{ item.nome }}</h4>
         <p><b>Categoria:</b> {{ item.categoria }}</p>
         <p><b>Origem:</b> {{ item.origem }}</p>
@@ -24,14 +26,29 @@
         <p *ngIf="item.colateral"><span class="text-danger">⚠️</span> <b>Colateral:</b> {{ item.colateral }}</p>
         <p *ngIf="item.descricao"><span class="text-info">📝</span> <b>Descrição:</b> {{ item.descricao }}</p>
 
-        <!-- Botões minimalistas -->
+        <!-- Botões -->
         <div class="d-flex gap-2 mt-4">
-            <button class="btn btn-outline-danger flex-fill" (click)="excluirItem()">
-                <i class="bi bi-trash"></i> Excluir
+            <!-- Cancelar -->
+            <button class="btn btn-secondary flex-fill" (click)="cancelar()">
+                ⬅️ Cancelar
             </button>
-            <button class="btn btn-outline-warning flex-fill" (click)="editarItem()">
-                <i class="bi bi-pencil"></i> Editar
+
+            <!-- Excluir -->
+            <button class="btn btn-outline-danger flex-fill" [disabled]="processandoExcluir" (click)="excluirItem()">
+                <ng-container *ngIf="!processandoExcluir">🗑️ Excluir</ng-container>
+                <ng-container *ngIf="processandoExcluir">
+                    <span class="spinner-border spinner-border-sm me-1"></span> Excluindo...
+                </ng-container>
             </button>
+
+            <!-- Editar -->
+            <button class="btn btn-outline-warning flex-fill" [disabled]="processandoEditar" (click)="editarItem()">
+                <ng-container *ngIf="!processandoEditar">✏️ Editar</ng-container>
+                <ng-container *ngIf="processandoEditar">
+                    <span class="spinner-border spinner-border-sm me-1"></span> Editando...
+                </ng-container>
+            </button>
+
         </div>
     </ng-container>
 </div>

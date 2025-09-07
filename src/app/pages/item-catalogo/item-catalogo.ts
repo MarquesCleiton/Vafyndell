@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { CatalogoRepository } from '../../repositories/CatalogoRepository';
 import { CatalogoDomain } from '../../domain/CatalogoDomain';
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'app-item-catalogo',
@@ -15,9 +16,13 @@ export class ItemCatalogo implements OnInit {
   item: CatalogoDomain | null = null;
   carregando = true;
 
+  processandoEditar = false;
+  processandoExcluir = false;
+
   constructor(
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private location: Location
   ) {}
 
   async ngOnInit() {
@@ -44,11 +49,42 @@ export class ItemCatalogo implements OnInit {
     }
   }
 
+  cancelar() {
+    this.location.back();
+  }
+
   editarItem() {
-    alert('✏️ Função editar será implementada');
+    if (!this.item) return;
+    this.processandoEditar = true;
+
+    // Simples loading até redirecionar
+    setTimeout(() => {
+      this.router.navigate(['/cadastro-item-catalogo', this.item!.id], {
+        queryParams: { returnUrl: this.router.url },
+      });
+      this.processandoEditar = false;
+    }, 300);
   }
 
   excluirItem() {
-    alert('🗑️ Função excluir será implementada');
+    if (!this.item) return;
+
+    const confirmacao = confirm(`🗑️ Deseja realmente excluir o item "${this.item.nome}"?`);
+    if (!confirmacao) return;
+
+    this.processandoExcluir = true;
+
+    CatalogoRepository.deleteItem(this.item.id)
+      .then(() => {
+        alert('✅ Item excluído com sucesso!');
+        this.router.navigate(['/catalogo']);
+      })
+      .catch(err => {
+        console.error('[ItemCatalogo] Erro ao excluir item:', err);
+        alert('❌ Erro ao excluir item. Veja o console.');
+      })
+      .finally(() => {
+        this.processandoExcluir = false;
+      });
   }
 }

@@ -1,5 +1,5 @@
-import { Component, AfterViewInit, ElementRef } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, AfterViewInit, ElementRef, OnInit } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { CatalogoRepository } from '../../repositories/CatalogoRepository';
@@ -13,7 +13,7 @@ import { AuthService } from '../../core/auth/AuthService';
   templateUrl: './cadastro-item-catalogo.html',
   styleUrls: ['./cadastro-item-catalogo.css'],
 })
-export class CadastroItemCatalogo implements AfterViewInit {
+export class CadastroItemCatalogo implements OnInit, AfterViewInit {
   item: CatalogoDomain = {
     index: 0,
     id: 0,
@@ -31,31 +31,45 @@ export class CadastroItemCatalogo implements AfterViewInit {
   };
 
   salvando = false;
+  editMode = false; // 🔑 indica se é edição ou cadastro
 
   unidadesMedida = ['g', 'kg', 'ml', 'l', 'cm', 'm', 'unidade'];
   origens = ['Fabricável', 'Natural'];
   raridades = ['Comum', 'Incomum', 'Raro', 'Épico', 'Lendário'];
-
   categorias = [
-    'Recursos botânicos',
-    'Mineral',
-    'Equipamento',
-    'Moeda',
-    'Tesouro',
-    'Componentes bestiais e animalescos',
-    'Poção de Cura – Regenera vida, cicatriza feridas',
+    'Recursos botânicos','Mineral','Equipamento','Moeda','Tesouro',
+    'Componentes bestiais e animalescos','Poção de Cura – Regenera vida, cicatriza feridas',
     'Poção Mental – Calmante, foco, memória, sono, esquecimento',
     'Poção de Aprimoramento Físico – Força, resistência, agilidade',
     'Poção Sensorial – Visão, audição, percepção, voz, respiração',
     'Poção de Furtividade – Camuflagem, passos suaves, silêncio',
     'Poção de Energia – Percepção da energia fundamental',
-    'Veneno – Sonolência, confusão ou morte',
-    'Utilitário – Bombas, armadilhas, luz, som, gás, adesivos',
-    'Ferramentas',
-    'Outros',
+    'Veneno – Sonolência, confusão ou morte','Utilitário – Bombas, armadilhas, luz, som, gás, adesivos',
+    'Ferramentas','Outros',
   ];
 
-  constructor(private router: Router, private el: ElementRef) {}
+  constructor(
+    private router: Router,
+    private el: ElementRef,
+    private route: ActivatedRoute
+  ) {}
+
+  async ngOnInit() {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.editMode = true;
+      try {
+        await CatalogoRepository.syncItens();
+        const itens = await CatalogoRepository.getLocalItens();
+        const existente = itens.find(i => String(i.id) === id);
+        if (existente) {
+          this.item = { ...existente };
+        }
+      } catch (err) {
+        console.error('[CadastroItemCatalogo] Erro ao carregar item:', err);
+      }
+    }
+  }
 
   ngAfterViewInit() {
     // 🔹 Auto-ajuste dos textareas
@@ -66,7 +80,7 @@ export class CadastroItemCatalogo implements AfterViewInit {
         ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
       };
       ta.addEventListener('input', resize);
-      resize(); // ajusta já na inicialização
+      resize();
     });
   }
 
@@ -88,37 +102,40 @@ export class CadastroItemCatalogo implements AfterViewInit {
   }
 
   // Salvar
-  async salvar(form: NgForm) {
-    if (form.invalid) return;
+async salvar(form: NgForm) {
+  if (form.invalid) return;
 
-    try {
-      this.salvando = true;
+  try {
+    this.salvando = true;
 
-      const user = AuthService.getUser();
-      if (!user?.email) throw new Error('Usuário não autenticado');
-      this.item.email = user.email;
+    const user = AuthService.getUser();
+    if (!user?.email) throw new Error('Usuário não autenticado');
+    this.item.email = user.email;
 
-      // 🔄 sincroniza antes de salvar
+    if (this.editMode) {
+      await CatalogoRepository.updateItem(this.item);
+      window.alert('✅ Item atualizado com sucesso!');
+    } else {
       await CatalogoRepository.syncItens();
-
-      // pega todos os itens para calcular próximo índice
       const todos = await CatalogoRepository.getAllItens();
-      let maxIndex = 0;
-      if (todos.length > 0) {
-        maxIndex = Math.max(...todos.map(i => i.index || 0));
-      }
+      let maxIndex = todos.length > 0 ? Math.max(...todos.map(i => i.index || 0)) : 0;
       this.item.index = maxIndex + 1;
       this.item.id = maxIndex + 1;
 
       await CatalogoRepository.createItem(this.item);
-
-      window.alert('✅ Item salvo com sucesso!');
-      this.router.navigate(['/catalogo']);
-    } catch (err) {
-      console.error('[CadastroItemCatalogo] Erro ao salvar:', err);
-      window.alert('❌ Erro ao salvar item. Veja o console.');
-    } finally {
-      this.salvando = false;
+      window.alert('✅ Item criado com sucesso!');
     }
+
+    // 🔑 Volta para origem
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/catalogo';
+    this.router.navigateByUrl(returnUrl);
+
+  } catch (err) {
+    console.error('[CadastroItemCatalogo] Erro ao salvar:', err);
+    window.alert('❌ Erro ao salvar item. Veja o console.');
+  } finally {
+    this.salvando = false;
   }
+}
+
 }

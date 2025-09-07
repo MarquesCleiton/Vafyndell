@@ -156,4 +156,25 @@ export class CatalogoRepository {
     console.log('[CatalogoRepository] Cache já está atualizado.');
     return false;
   }
+
+  // =========================================================
+  // 📌 Excluir item
+  // =========================================================
+  static async deleteItem(id: number): Promise<boolean> {
+    console.log('[CatalogoRepository] Excluindo item...', id);
+
+    // Exclui no servidor
+    await ScriptClient.controllerDeleteByIndex({
+      tab: this.TAB,
+      index: id,
+    });
+
+    // Exclui local
+    const db = await this.getDb();
+    await db.delete(this.STORE, id);
+
+    console.log('[CatalogoRepository] Item excluído do cache/local:', id);
+    return true;
+  }
+
 }

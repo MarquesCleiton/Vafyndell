@@ -8,6 +8,8 @@ export const routes: Routes = [
   { path: 'cadastro-jogador', loadComponent: () => import('./pages/cadastro-jogador/cadastro-jogador').then((m) => m.CadastroJogador) },
   { path: 'edicao-jogador', loadComponent: () => import('./pages/edicao-jogador/edicao-jogador').then((m) => m.EdicaoJogador) },
   { path: 'cadastro-item-catalogo', loadComponent: () => import('./pages/cadastro-item-catalogo/cadastro-item-catalogo').then((m) => m.CadastroItemCatalogo) },
+  { path: 'cadastro-item-catalogo/:id', loadComponent: () => import('./pages/cadastro-item-catalogo/cadastro-item-catalogo').then((m) => m.CadastroItemCatalogo) },
+  
   { path: 'catalogo', loadComponent: () => import('./pages/catalogo/catalogo').then((m) => m.Catalogo) },
 
   // 🔑 aqui está o ajuste → rota com parâmetro :id
