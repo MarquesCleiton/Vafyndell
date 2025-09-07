@@ -21,4 +21,9 @@ export interface JogadorDomain {
   tipo_jogador: string;
   efeitos_temporarios: string;
   registo_de_jogo: string;
+
+  // 🔽 derivados
+  fator_cura?: number;
+  vida_total?: number;
+  deslocamento?: number;
 }

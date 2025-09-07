@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '../../core/auth/AuthService';
 import { JogadorRepository } from '../../repositories/JogadorRepository';
 import { JogadorDomain } from '../../domain/jogadorDomain';
 
@@ -10,7 +9,13 @@ import { JogadorDomain } from '../../domain/jogadorDomain';
   styleUrls: ['./jogador.css'],
 })
 export class Jogador implements OnInit {
-  jogador: JogadorDomain | null = null;
+  jogador: (JogadorDomain & {
+    fator_cura?: number;
+    vida_total?: number;
+    deslocamento?: number;
+  }) | null = null;
+
+  atributos: any[] = [];
   loading = true;
 
   constructor(private router: Router) {}
@@ -21,17 +26,16 @@ export class Jogador implements OnInit {
     try {
       // 1. Busca local primeiro
       let jogadorLocal = await JogadorRepository.getLocalJogador();
-      console.log(jogadorLocal)
       if (jogadorLocal) {
         console.log('[Jogador] Jogador local encontrado:', jogadorLocal);
-        this.jogador = jogadorLocal;
-        this.loading = false;
+        this.setJogador(jogadorLocal);
 
         // 2. Em paralelo, valida online
         JogadorRepository.syncJogadores().then(async updated => {
           if (updated) {
             console.log('[Jogador] Cache atualizado. Recarregando jogador...');
-            this.jogador = await JogadorRepository.getLocalJogador();
+            const atualizado = await JogadorRepository.getLocalJogador();
+            if (atualizado) this.setJogador(atualizado);
           }
         });
       } else {
@@ -39,8 +43,7 @@ export class Jogador implements OnInit {
         // 3. Se não tem local, busca online
         const jogadorOnline = await JogadorRepository.forceFetchJogador();
         if (jogadorOnline) {
-          this.jogador = jogadorOnline;
-          this.loading = false;
+          this.setJogador(jogadorOnline);
         } else {
           console.warn('[Jogador] Nenhum jogador encontrado online → redirecionando para o cadastro');
           this.router.navigate(['/cadastro_jogador']);
@@ -50,5 +53,39 @@ export class Jogador implements OnInit {
       console.error('[Jogador] Erro ao carregar Jogador:', err);
       this.router.navigate(['/login']);
     }
+  }
+
+  /** Prepara jogador e atributos */
+  private setJogador(jogador: JogadorDomain) {
+    // cálculos derivados
+    const vida = jogador.energia + jogador.constituicao;
+    const fatorCura = Math.floor(jogador.energia / 3);
+    const vidaTotal = vida + jogador.classe_de_armadura;
+    const deslocamento = Math.floor(jogador.destreza / 3);
+
+    this.jogador = {
+      ...jogador,
+      pontos_de_vida: vida,
+      fator_cura: fatorCura,
+      vida_total: vidaTotal,
+      deslocamento: deslocamento,
+    };
+
+    this.atributos = [
+      { label: 'Força', value: jogador.forca, icon: 'bi bi-hand-thumbs-up' },
+      { label: 'Destreza', value: jogador.destreza, icon: 'bi bi-lightning' },
+      { label: 'Constituição', value: jogador.constituicao, icon: 'bi bi-shield' },
+      { label: 'Inteligência', value: jogador.inteligencia, icon: 'bi bi-motherboard' },
+      { label: 'Sabedoria', value: jogador.sabedoria, icon: 'bi bi-eye' },
+      { label: 'Carisma', value: jogador.carisma, icon: 'bi bi-emoji-smile' },
+      { label: 'Energia', value: jogador.energia, icon: 'bi bi-lightning-charge' },
+      { label: 'Deslocamento', value: deslocamento, icon: 'bi bi-arrow-right' },
+    ];
+
+    this.loading = false;
+  }
+
+  editarJogador() {
+    this.router.navigate(['/editar-jogador']);
   }
 }

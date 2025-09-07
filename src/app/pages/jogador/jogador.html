@@ -1,37 +1,53 @@
-<div class="container mt-5">
-  @if (!loading) {
-    <h2 class="text-center">{{ jogador?.nome_do_jogador }}</h2>
-    <p class="text-center text-muted">{{ jogador?.email }}</p>
+<div class="d-flex flex-column min-vh-100 bg-dark text-light">
+  <div class="flex-grow-1 pb-5"><!-- 👈 adicionei pb-5 -->
+    @if (loading) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-light" role="status"></div>
+        <p class="mt-2">Carregando jogador...</p>
+      </div>
+    } @else if (jogador) {
+      <!-- Card principal -->
+      <div class="card bg-dark text-light border-0 shadow-lg">
+        <img [src]="jogador.imagem"
+             class="card-img-top object-fit-cover"
+             alt="Imagem do jogador"
+             style="max-height: 300px;">
 
-    @if (jogador?.imagem) {
-      <img
-        [src]="jogador?.imagem"
-        alt="Avatar"
-        class="img-thumbnail mb-3"
-        style="max-width: 150px; display: block; margin: auto;"
-      />
+        <div class="card-body pb-5"><!-- 👈 também reservei espaço no card -->
+          <h4 class="card-title fw-bold">🧙 {{ jogador.personagem }}</h4>
+          <p class="card-subtitle text-light mb-3">⚖️ {{ jogador.alinhamento }}</p>
+
+          <!-- infos -->
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item bg-dark text-light border-0">🏅 Nível: <b>{{ jogador.nivel }}</b></li>
+            <li class="list-group-item bg-dark text-light border-0">⭐ XP: <b>{{ jogador.xp }}</b></li>
+            <li class="list-group-item bg-dark text-light border-0">💖 Vida total: <b>{{ jogador.vida_total }}</b></li>
+            <li class="list-group-item bg-dark text-light border-0">❤️ Vida: <b>{{ jogador.pontos_de_vida }}</b> | 🛡️ Armadura: <b>{{ jogador.classe_de_armadura }}</b></li>
+            <li class="list-group-item bg-dark text-light border-0">💔 Dano tomado: <b>{{ jogador.dano_tomado }}</b></li>
+            <li class="list-group-item bg-dark text-light border-0">✨ Fator de cura: <b>{{ jogador.fator_cura }}</b></li>
+          </ul>
+
+          <!-- atributos -->
+          <div class="row row-cols-2 g-2 mt-3">
+            @for (attr of atributos; track attr.label) {
+              <div class="col">
+                <div class="p-2 rounded bg-secondary text-light text-center fw-bold">
+                  {{ attr.label }}: {{ attr.value }}
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    } @else {
+      <div class="alert alert-warning mt-4">Nenhum jogador encontrado. Vá para o cadastro.</div>
     }
+  </div>
 
-    <div class="card mt-4 shadow-sm">
-      <div class="card-body">
-        <p><strong>Personagem:</strong> {{ jogador?.personagem }}</p>
-        <p><strong>Classe de Armadura:</strong> {{ jogador?.classe_de_armadura }}</p>
-        <p><strong>Pontos de Vida:</strong> {{ jogador?.pontos_de_vida }}</p>
-        <p><strong>Nível:</strong> {{ jogador?.nivel }}</p>
-        <p><strong>XP:</strong> {{ jogador?.xp }}</p>
-        <p><strong>Força:</strong> {{ jogador?.forca }}</p>
-        <p><strong>Destreza:</strong> {{ jogador?.destreza }}</p>
-        <p><strong>Constituição:</strong> {{ jogador?.constituicao }}</p>
-        <p><strong>Inteligência:</strong> {{ jogador?.inteligencia }}</p>
-        <p><strong>Sabedoria:</strong> {{ jogador?.sabedoria }}</p>
-        <p><strong>Carisma:</strong> {{ jogador?.carisma }}</p>
-      </div>
-    </div>
-  } @else {
-    <div class="text-center mt-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Carregando...</span>
-      </div>
-    </div>
-  }
+  <!-- Botão fixo -->
+  <button class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center"
+          style="position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; font-size: 1.5rem; z-index: 1050;"
+          (click)="editarJogador()">
+    ✏️
+  </button>
 </div>
