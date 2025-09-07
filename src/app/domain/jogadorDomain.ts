@@ -22,8 +22,23 @@ export interface JogadorDomain {
   efeitos_temporarios: string;
   registo_de_jogo: string;
 
-  // 🔽 derivados
+  // derivados (calculados, não salvos direto)
   fator_cura?: number;
   vida_total?: number;
   deslocamento?: number;
 }
+
+// Apenas os atributos numéricos que podem ser ajustados no cadastro
+export type AtributosNumericos = Pick<
+  JogadorDomain,
+  | "forca"
+  | "destreza"
+  | "constituicao"
+  | "inteligencia"
+  | "sabedoria"
+  | "carisma"
+  | "energia"
+  | "classe_de_armadura"
+>;
+
+export type AtributoChave = keyof AtributosNumericos;

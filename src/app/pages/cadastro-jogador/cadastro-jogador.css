@@ -1,0 +1,41 @@
+/* Caixa quando não há imagem */
+.upload-box {
+  border: 2px dashed #666;
+  border-radius: 8px;
+  background-color: #1e1e1e;
+  height: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+.upload-box:hover {
+  background-color: #2a2a2a;
+  border-color: #999;
+}
+.upload-icon {
+  font-size: 2rem;
+  color: #28a745;
+}
+
+/* Preview da imagem */
+.image-preview {
+  position: relative;
+  display: inline-block;
+}
+.preview-img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #444;
+}
+.remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border-radius: 50%;
+  padding: 4px 8px;
+}

@@ -98,4 +98,19 @@ export class AuthService {
     );
     return JSON.parse(jsonPayload);
   }
+
+  /**
+ * Força uma atualização do idToken
+ * - Tenta silencioso
+ * - Se não rolar, pede interação
+ */
+  static async refreshIdToken(): Promise<User | null> {
+    try {
+      const user = await this.signInWithGoogle();
+      return user;
+    } catch (err) {
+      console.error('[AuthService] Falha ao renovar token:', err);
+      return null;
+    }
+  }
 }

@@ -1,18 +1,22 @@
 import { AuthService } from '../auth/AuthService';
 
 export class ScriptClient {
-  // alterna automaticamente entre dev (proxy) e prod (endpoint real)
-  private static ENDPOINT ='https://script.google.com/macros/s/AKfycby-ec_h6sljntLAgoWhpeyBFGTkWygqS7Xx1Yvkx8RKDKiXDHPxtHZ8hhh6vrN91JEL/exec';
-
+  private static ENDPOINT =
+    'https://script.google.com/macros/s/AKfycby-ec_h6sljntLAgoWhpeyBFGTkWygqS7Xx1Yvkx8RKDKiXDHPxtHZ8hhh6vrN91JEL/exec';
   private static SHEET_ID =
     '19B2aMGrajvhPJfOvYXt059-fECytaN38iFsP8GInD_g';
 
   /** Método interno genérico */
-  private static async call<T>(action: string, payload: any): Promise<T> {
-    const idToken = AuthService.getIdToken();
-    if (!idToken) throw new Error('Usuário não autenticado.');
+  private static async call<T>(action: string, payload: any, retry = true): Promise<T> {
+    let idToken = AuthService.getIdToken();
 
-    // injeta sempre o sheetId fixo
+    // 1. Se não tiver ou já expirado → tenta renovar
+    if (!idToken || !AuthService.isAuthenticated()) {
+      const user = await AuthService.refreshIdToken();
+      if (!user) throw new Error('Usuário precisa fazer login novamente.');
+      idToken = user.idToken;
+    }
+
     const body = {
       idToken,
       action,
@@ -26,13 +30,22 @@ export class ScriptClient {
 
     const res = await fetch(this.ENDPOINT, {
       method: 'POST',
-      //headers: { 'text/plain': 'charset=UTF-8' },
       body: JSON.stringify(body),
     });
 
     const text = await res.text();
+
     if (!res.ok) {
       console.error('❌ Erro bruto do Script:', text);
+
+      // 2. Se for 401/Unauthorized → tenta renovar e refazer uma vez
+      if (res.status === 401 && retry) {
+        console.warn('[ScriptClient] Token inválido, tentando renovar...');
+        const user = await AuthService.refreshIdToken();
+        if (!user) throw new Error('Usuário precisa se autenticar novamente.');
+        return this.call<T>(action, payload, false); // retry uma vez
+      }
+
       throw new Error(`Erro no Script: ${res.status} - ${res.statusText}\n${text}`);
     }
 
@@ -43,6 +56,7 @@ export class ScriptClient {
       throw err;
     }
   }
+
 
   // ========================
   // SHEET CLIENT

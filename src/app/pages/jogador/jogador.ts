@@ -46,7 +46,7 @@ export class Jogador implements OnInit {
           this.setJogador(jogadorOnline);
         } else {
           console.warn('[Jogador] Nenhum jogador encontrado online → redirecionando para o cadastro');
-          this.router.navigate(['/cadastro_jogador']);
+          this.router.navigate(['/cadastro-jogador']);
         }
       }
     } catch (err) {

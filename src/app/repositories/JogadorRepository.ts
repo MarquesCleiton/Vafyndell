@@ -8,6 +8,9 @@ export class JogadorRepository {
   private static STORE = this.TAB;
   private static META_STORE = 'metadados';
 
+  // 👇 ID da pasta compartilhada no Drive onde as imagens ficarão salvas
+  private static FOLDER_ID = '1zId11Ydti8d0FOQoQjd9lQmPo6GiJx26';
+
   // 🔑 Singleton da instância do IndexedDB
   private static dbPromise: Promise<IndexedDBClient> | null = null;
 
@@ -19,9 +22,57 @@ export class JogadorRepository {
     return this.dbPromise;
   }
 
+  // =========================================================
+  // 📌 Criar jogador (com upload de imagem)
+  // =========================================================
+  static async createJogador(novo: JogadorDomain): Promise<JogadorDomain> {
+    console.log('[JogadorRepository] Criando novo jogador...', novo);
+
+    const created = await ScriptClient.controllerCreate({
+      tab: this.TAB,
+      attrs: novo,
+      folderId: this.FOLDER_ID,
+    });
+
+    const jogadorFinal: JogadorDomain = {
+      ...created,
+      id: created?.index || Date.now(),
+    };
+
+    const db = await this.getDb();
+    await db.put(this.STORE, jogadorFinal);
+
+    const onlineMetaList = await ScriptClient.controllerGetAll<{ SheetName: string; UltimaModificacao: string }>({
+      tab: 'Metadados',
+    });
+
+    if (Array.isArray(onlineMetaList)) {
+      const onlineMeta = onlineMetaList.find(m => m.SheetName === this.TAB);
+      if (onlineMeta) {
+        await db.put(this.META_STORE, {
+          id: this.TAB,
+          UltimaModificacao: onlineMeta.UltimaModificacao,
+        });
+      }
+    }
+
+    console.log('[JogadorRepository] Jogador criado e salvo no cache:', jogadorFinal);
+    return jogadorFinal;
+  }
+
   /**
-   * Busca jogador local (se existir)
+   * 📌 Novo método: Buscar todos os jogadores
    */
+  static async getAllJogadores(): Promise<JogadorDomain[]> {
+    console.log('[JogadorRepository] getAllJogadores...');
+    const onlineList = await ScriptClient.controllerGetAll<JogadorDomain>({ tab: this.TAB });
+    return Array.isArray(onlineList) ? onlineList : [];
+  }
+
+  // =========================================================
+  // Métodos existentes
+  // =========================================================
+
   static async getLocalJogador(): Promise<JogadorDomain | null> {
     const user = AuthService.getUser();
     if (!user) throw new Error('Usuário não autenticado.');
@@ -33,57 +84,51 @@ export class JogadorRepository {
     return allLocal.find(j => j.email === user.email) || null;
   }
 
-  /**
-   * Força buscar jogador online e atualizar cache/metadados
-   */
   static async forceFetchJogador(): Promise<JogadorDomain | null> {
     const user = AuthService.getUser();
     if (!user) throw new Error('Usuário não autenticado.');
 
     console.log('[JogadorRepository] Baixando lista online...');
+    const onlineList = await this.getAllJogadores();
 
-    const onlineList = await ScriptClient.controllerGetAll<JogadorDomain>({ tab: this.TAB });
     if (!onlineList.length) {
       console.warn('[JogadorRepository] Nenhum jogador encontrado online.');
       return null;
     }
 
-    // 🔑 Sempre garantir id = index
     const jogadoresComId = onlineList.map(j => ({ ...j, id: j.index }));
-
     const db = await this.getDb();
 
-    // ♻️ Atualiza cache local
     await db.clear(this.STORE);
     await db.bulkPut(this.STORE, jogadoresComId);
     console.log('[JogadorRepository] Cache atualizado com lista online.');
 
-    // 💾 Atualiza metadados locais
     const onlineMetaList = await ScriptClient.controllerGetAll<{ SheetName: string; UltimaModificacao: string }>({
       tab: 'Metadados',
     });
-    const onlineMeta = onlineMetaList.find(m => m.SheetName === this.TAB);
-    if (onlineMeta) {
-      await db.put(this.META_STORE, {
-        id: this.TAB,
-        UltimaModificacao: onlineMeta.UltimaModificacao,
-      });
-      console.log('[JogadorRepository] Metadados locais atualizados:', onlineMeta);
+
+    if (Array.isArray(onlineMetaList)) {
+      const onlineMeta = onlineMetaList.find(m => m.SheetName === this.TAB);
+      if (onlineMeta) {
+        await db.put(this.META_STORE, {
+          id: this.TAB,
+          UltimaModificacao: onlineMeta.UltimaModificacao,
+        });
+        console.log('[JogadorRepository] Metadados locais atualizados:', onlineMeta);
+      }
     }
 
     return jogadoresComId.find(j => j.email === user.email) || null;
   }
 
-  /**
-   * Sincroniza cache com dados online caso metadados indiquem atualização
-   * Retorna true se houve atualização
-   */
   static async syncJogadores(): Promise<boolean> {
     console.log('[JogadorRepository] Verificando necessidade de sincronização...');
-
     const onlineMetaList = await ScriptClient.controllerGetAll<{ SheetName: string; UltimaModificacao: string }>({
       tab: 'Metadados',
     });
+
+    if (!Array.isArray(onlineMetaList)) return false;
+
     const onlineMeta = onlineMetaList.find(m => m.SheetName === this.TAB);
     if (!onlineMeta) {
       console.warn('[JogadorRepository] Nenhum metadado online encontrado.');
@@ -91,58 +136,36 @@ export class JogadorRepository {
     }
 
     const db = await this.getDb();
-    const localMeta = await db.get<{ id: string; UltimaModificacao: string }>(
-      this.META_STORE,
-      this.TAB
-    );
+    const localMeta = await db.get<{ id: string; UltimaModificacao: string }>(this.META_STORE, this.TAB);
 
-    const precisaAtualizar =
-      !localMeta || localMeta.UltimaModificacao !== onlineMeta.UltimaModificacao;
+    const precisaAtualizar = !localMeta || localMeta.UltimaModificacao !== onlineMeta.UltimaModificacao;
 
     if (precisaAtualizar) {
       console.log('[JogadorRepository] Cache desatualizado → sincronizando...');
       await this.forceFetchJogador();
       return true;
-    } else {
-      console.log('[JogadorRepository] Cache já está atualizado.');
-      return false;
     }
+
+    console.log('[JogadorRepository] Cache já está atualizado.');
+    return false;
   }
 
-  /**
-   * Recupera jogador priorizando cache local, mas sempre validando online em paralelo
-   */
   static async getCurrentJogador(): Promise<JogadorDomain | null> {
     console.log('[JogadorRepository] getCurrentJogador iniciado.');
-
     const user = AuthService.getUser();
-    if (!user) {
-      console.error('[JogadorRepository] Usuário não autenticado.');
-      throw new Error('Usuário não autenticado.');
-    }
+    if (!user) throw new Error('Usuário não autenticado.');
 
-    // 1. Primeiro tenta local
     let jogadorLocal = await this.getLocalJogador();
     if (jogadorLocal) {
-      console.log('[JogadorRepository] Retornando jogador local:', jogadorLocal);
-
-      // 2. Em paralelo valida atualização
       this.syncJogadores()
         .then(async updated => {
-          if (updated) {
-            console.log('[JogadorRepository] Cache atualizado → recarregando jogador.');
-            jogadorLocal = await this.getLocalJogador();
-          }
+          if (updated) jogadorLocal = await this.getLocalJogador();
         })
-        .catch(err => {
-          console.error('[JogadorRepository] Erro ao sincronizar em paralelo:', err);
-        });
+        .catch(err => console.error('[JogadorRepository] Erro ao sincronizar:', err));
 
       return jogadorLocal;
     }
 
-    // 3. Se não tem local → força buscar online
-    console.log('[JogadorRepository] Nenhum jogador local → buscando online...');
     return await this.forceFetchJogador();
   }
 }
