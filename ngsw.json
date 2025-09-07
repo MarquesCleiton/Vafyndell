@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1757214433511,
+  "timestamp": 1757242932570,
   "index": "https://marquesCleiton.github.io/Vafyndell/index.html",
   "assetGroups": [
     {
@@ -11,18 +11,18 @@
         "ignoreVary": true
       },
       "urls": [
-        "https://marquesCleiton.github.io/Vafyndell/chunk-BPLQ2KNU.js",
+        "https://marquesCleiton.github.io/Vafyndell/chunk-5PQRMEXC.js",
         "https://marquesCleiton.github.io/Vafyndell/chunk-FQNMPWWG.js",
         "https://marquesCleiton.github.io/Vafyndell/chunk-IT5HYUXY.js",
         "https://marquesCleiton.github.io/Vafyndell/chunk-KYB7LNT6.js",
-        "https://marquesCleiton.github.io/Vafyndell/chunk-MWIF6M7D.js",
+        "https://marquesCleiton.github.io/Vafyndell/chunk-OXOEB4CD.js",
         "https://marquesCleiton.github.io/Vafyndell/chunk-RYS7N2RJ.js",
-        "https://marquesCleiton.github.io/Vafyndell/chunk-SYUNTUXX.js",
         "https://marquesCleiton.github.io/Vafyndell/chunk-X57XKTIJ.js",
         "https://marquesCleiton.github.io/Vafyndell/chunk-XY4KCV2H.js",
+        "https://marquesCleiton.github.io/Vafyndell/chunk-ZWOCVDXT.js",
         "https://marquesCleiton.github.io/Vafyndell/favicon.ico",
         "https://marquesCleiton.github.io/Vafyndell/index.html",
-        "https://marquesCleiton.github.io/Vafyndell/main-REXZ24LA.js",
+        "https://marquesCleiton.github.io/Vafyndell/main-Z5G2HP62.js",
         "https://marquesCleiton.github.io/Vafyndell/manifest.webmanifest",
         "https://marquesCleiton.github.io/Vafyndell/polyfills-5CFQRCPP.js",
         "https://marquesCleiton.github.io/Vafyndell/styles-BIBBEMHW.css"
@@ -51,15 +51,15 @@
   ],
   "dataGroups": [],
   "hashTable": {
-    "https://marquesCleiton.github.io/Vafyndell/chunk-BPLQ2KNU.js": "f4f1edb62c1dd811bf53f07ee61c593831fe1a94",
+    "https://marquesCleiton.github.io/Vafyndell/chunk-5PQRMEXC.js": "5accb4e7f881a1776deeadfd098d6c5eaea11100",
     "https://marquesCleiton.github.io/Vafyndell/chunk-FQNMPWWG.js": "277bf52d14df6fafc971efd96cead55459e0f81b",
     "https://marquesCleiton.github.io/Vafyndell/chunk-IT5HYUXY.js": "ed1c0e87440157edb26a6381543348ef937ee35f",
     "https://marquesCleiton.github.io/Vafyndell/chunk-KYB7LNT6.js": "30c3a87bad2308d275a2213983e8cd43da13b864",
-    "https://marquesCleiton.github.io/Vafyndell/chunk-MWIF6M7D.js": "78e3b61a24f8d35f625aac51102a3065b426fc31",
+    "https://marquesCleiton.github.io/Vafyndell/chunk-OXOEB4CD.js": "f2ae794de3536782237a2914c717a5aa2438b924",
     "https://marquesCleiton.github.io/Vafyndell/chunk-RYS7N2RJ.js": "8dfa5963f85be502eca098a71a383957c7d9e50d",
-    "https://marquesCleiton.github.io/Vafyndell/chunk-SYUNTUXX.js": "99227ecb30fb0b10da1e913005478df86eda5cb0",
     "https://marquesCleiton.github.io/Vafyndell/chunk-X57XKTIJ.js": "9bdd141247791c835f2b0cef47d93c02b15c2f21",
     "https://marquesCleiton.github.io/Vafyndell/chunk-XY4KCV2H.js": "e3979002b190a3631be5cdf1b9311cf6a306ddb1",
+    "https://marquesCleiton.github.io/Vafyndell/chunk-ZWOCVDXT.js": "ff3ceabbd5318c57b1b7134f3c6de77a773bedaf",
     "https://marquesCleiton.github.io/Vafyndell/favicon.ico": "9c39f434fe1261f68c5e3eefdf734630d99c5670",
     "https://marquesCleiton.github.io/Vafyndell/icons/icon-128x128.png": "f912963bdc6d5a38d8f1dd0afbaab2ce8d657acb",
     "https://marquesCleiton.github.io/Vafyndell/icons/icon-144x144.png": "b155fd5f2fd5d2ea7760721063003c4cd95fd783",
@@ -69,8 +69,8 @@
     "https://marquesCleiton.github.io/Vafyndell/icons/icon-512x512.png": "1de182f76f7329dfa8f9fcdd1fdcdd695bea6a99",
     "https://marquesCleiton.github.io/Vafyndell/icons/icon-72x72.png": "aa88a6096bd973be7f6d7a5489bfa6bc2463f8c4",
     "https://marquesCleiton.github.io/Vafyndell/icons/icon-96x96.png": "7fb8f59c30ce2ff12c700321a0b39e14b3dc8f95",
-    "https://marquesCleiton.github.io/Vafyndell/index.html": "6d2ed8c6d57855aded83a58f9d8afe825b5906dd",
-    "https://marquesCleiton.github.io/Vafyndell/main-REXZ24LA.js": "1be554d25d00f1d5c6681d4f89f56e18eef213e4",
+    "https://marquesCleiton.github.io/Vafyndell/index.html": "cd978f76cd9dc46972922271bde54ac40edf4cb2",
+    "https://marquesCleiton.github.io/Vafyndell/main-Z5G2HP62.js": "c09f3d483f465fc3f3161da191efb0c0987f85b1",
     "https://marquesCleiton.github.io/Vafyndell/manifest.webmanifest": "e32bc8cca2a0f9d93a13eb27ca678027a7aec643",
     "https://marquesCleiton.github.io/Vafyndell/polyfills-5CFQRCPP.js": "f2241e9a25858f895ce299d15f6f22e849e2fd72",
     "https://marquesCleiton.github.io/Vafyndell/styles-BIBBEMHW.css": "c75a4c1dd851273390839a6847d8c5ecd761eb91"
