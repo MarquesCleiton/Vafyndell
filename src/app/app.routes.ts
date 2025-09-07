@@ -6,5 +6,6 @@ export const routes: Routes = [
   {path: 'home', loadComponent: () =>import('./pages/home/home').then((m) => m.Home),},
   {path: 'jogador', loadComponent: () =>import('./pages/jogador/jogador').then((m) => m.Jogador),},
   {path: 'cadastro-jogador', loadComponent: () =>import('./pages/cadastro-jogador/cadastro-jogador').then((m) => m.CadastroJogador),},
+  {path: 'edicao-jogador', loadComponent: () =>import('./pages/edicao-jogador/edicao-jogador').then((m) => m.EdicaoJogador),},
   { path: '**', redirectTo: 'login' }
 ];

@@ -2,11 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { JogadorRepository } from '../../repositories/JogadorRepository';
 import { JogadorDomain } from '../../domain/jogadorDomain';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-jogador',
   templateUrl: './jogador.html',
   styleUrls: ['./jogador.css'],
+  imports: [CommonModule], // 👈 aqui garante suporte ao *ngIf, *ngFor
 })
 export class Jogador implements OnInit {
   jogador: (JogadorDomain & {
@@ -86,6 +88,6 @@ export class Jogador implements OnInit {
   }
 
   editarJogador() {
-    this.router.navigate(['/editar-jogador']);
+    this.router.navigate(['/edicao-jogador']);
   }
 }

@@ -1,53 +1,56 @@
 <div class="d-flex flex-column min-vh-100 bg-dark text-light">
   <div class="flex-grow-1 pb-5"><!-- 👈 adicionei pb-5 -->
     @if (loading) {
-      <div class="text-center py-5">
-        <div class="spinner-border text-light" role="status"></div>
-        <p class="mt-2">Carregando jogador...</p>
-      </div>
+    <div class="text-center py-5">
+      <div class="spinner-border text-light" role="status"></div>
+      <p class="mt-2">Carregando jogador...</p>
+    </div>
     } @else if (jogador) {
-      <!-- Card principal -->
-      <div class="card bg-dark text-light border-0 shadow-lg">
-        <img [src]="jogador.imagem"
-             class="card-img-top object-fit-cover"
-             alt="Imagem do jogador"
-             style="max-height: 300px;">
+    <!-- Card principal -->
+    <!-- Card principal -->
+    <div class="card bg-dark text-light border-0 shadow-lg">
+      <ng-container *ngIf="jogador.imagem">
+        <img [src]="jogador.imagem" class="card-img-top object-fit-cover" alt="Imagem do jogador"
+          style="max-height: 300px;">
+      </ng-container>
 
-        <div class="card-body pb-5"><!-- 👈 também reservei espaço no card -->
-          <h4 class="card-title fw-bold">🧙 {{ jogador.personagem }}</h4>
-          <p class="card-subtitle text-light mb-3">⚖️ {{ jogador.alinhamento }}</p>
+      <div class="card-body pb-5"><!-- 👈 também reservei espaço no card -->
+        <h4 class="card-title fw-bold">🧙 {{ jogador.personagem }}</h4>
+        <p class="card-subtitle text-light mb-3">⚖️ {{ jogador.alinhamento }}</p>
 
-          <!-- infos -->
-          <ul class="list-group list-group-flush">
-            <li class="list-group-item bg-dark text-light border-0">🏅 Nível: <b>{{ jogador.nivel }}</b></li>
-            <li class="list-group-item bg-dark text-light border-0">⭐ XP: <b>{{ jogador.xp }}</b></li>
-            <li class="list-group-item bg-dark text-light border-0">💖 Vida total: <b>{{ jogador.vida_total }}</b></li>
-            <li class="list-group-item bg-dark text-light border-0">❤️ Vida: <b>{{ jogador.pontos_de_vida }}</b> | 🛡️ Armadura: <b>{{ jogador.classe_de_armadura }}</b></li>
-            <li class="list-group-item bg-dark text-light border-0">💔 Dano tomado: <b>{{ jogador.dano_tomado }}</b></li>
-            <li class="list-group-item bg-dark text-light border-0">✨ Fator de cura: <b>{{ jogador.fator_cura }}</b></li>
-          </ul>
+        <!-- infos -->
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item bg-dark text-light border-0">🏅 Nível: <b>{{ jogador.nivel }}</b></li>
+          <li class="list-group-item bg-dark text-light border-0">⭐ XP: <b>{{ jogador.xp }}</b></li>
+          <li class="list-group-item bg-dark text-light border-0">💖 Vida total: <b>{{ jogador.vida_total }}</b></li>
+          <li class="list-group-item bg-dark text-light border-0">❤️ Vida: <b>{{ jogador.pontos_de_vida }}</b> | 🛡️
+            Armadura: <b>{{ jogador.classe_de_armadura }}</b></li>
+          <li class="list-group-item bg-dark text-light border-0">💔 Dano tomado: <b>{{ jogador.dano_tomado }}</b></li>
+          <li class="list-group-item bg-dark text-light border-0">✨ Fator de cura: <b>{{ jogador.fator_cura }}</b></li>
+        </ul>
 
-          <!-- atributos -->
-          <div class="row row-cols-2 g-2 mt-3">
-            @for (attr of atributos; track attr.label) {
-              <div class="col">
-                <div class="p-2 rounded bg-secondary text-light text-center fw-bold">
-                  {{ attr.label }}: {{ attr.value }}
-                </div>
-              </div>
-            }
+        <!-- atributos -->
+        <div class="row row-cols-2 g-2 mt-3">
+          @for (attr of atributos; track attr.label) {
+          <div class="col">
+            <div class="p-2 rounded bg-secondary text-light text-center fw-bold">
+              {{ attr.label }}: {{ attr.value }}
+            </div>
           </div>
+          }
         </div>
       </div>
+    </div>
+
     } @else {
-      <div class="alert alert-warning mt-4">Nenhum jogador encontrado. Vá para o cadastro.</div>
+    <div class="alert alert-warning mt-4">Nenhum jogador encontrado. Vá para o cadastro.</div>
     }
   </div>
 
   <!-- Botão fixo -->
   <button class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center"
-          style="position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; font-size: 1.5rem; z-index: 1050;"
-          (click)="editarJogador()">
+    style="position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; font-size: 1.5rem; z-index: 1050;"
+    (click)="editarJogador()">
     ✏️
   </button>
 </div>

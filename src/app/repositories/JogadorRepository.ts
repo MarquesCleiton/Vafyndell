@@ -11,7 +11,6 @@ export class JogadorRepository {
   // 👇 ID da pasta compartilhada no Drive onde as imagens ficarão salvas
   private static FOLDER_ID = '1zId11Ydti8d0FOQoQjd9lQmPo6GiJx26';
 
-  // 🔑 Singleton da instância do IndexedDB
   private static dbPromise: Promise<IndexedDBClient> | null = null;
 
   private static async getDb(): Promise<IndexedDBClient> {
@@ -23,7 +22,7 @@ export class JogadorRepository {
   }
 
   // =========================================================
-  // 📌 Criar jogador (com upload de imagem)
+  // 📌 Criar jogador
   // =========================================================
   static async createJogador(novo: JogadorDomain): Promise<JogadorDomain> {
     console.log('[JogadorRepository] Criando novo jogador...', novo);
@@ -42,27 +41,38 @@ export class JogadorRepository {
     const db = await this.getDb();
     await db.put(this.STORE, jogadorFinal);
 
-    const onlineMetaList = await ScriptClient.controllerGetAll<{ SheetName: string; UltimaModificacao: string }>({
-      tab: 'Metadados',
-    });
-
-    if (Array.isArray(onlineMetaList)) {
-      const onlineMeta = onlineMetaList.find(m => m.SheetName === this.TAB);
-      if (onlineMeta) {
-        await db.put(this.META_STORE, {
-          id: this.TAB,
-          UltimaModificacao: onlineMeta.UltimaModificacao,
-        });
-      }
-    }
-
     console.log('[JogadorRepository] Jogador criado e salvo no cache:', jogadorFinal);
     return jogadorFinal;
   }
 
-  /**
-   * 📌 Novo método: Buscar todos os jogadores
-   */
+  // =========================================================
+  // 📌 Atualizar jogador
+  // =========================================================
+  static async updateJogador(jogador: JogadorDomain): Promise<JogadorDomain> {
+    console.log('[JogadorRepository] Atualizando jogador...', jogador);
+
+    const updated = await ScriptClient.controllerUpdateByIndex({
+      tab: this.TAB,
+      index: jogador.index,
+      attrs: jogador,
+      folderId: this.FOLDER_ID,
+    });
+
+    const jogadorFinal: JogadorDomain = {
+      ...jogador,
+      ...updated,
+    };
+
+    const db = await this.getDb();
+    await db.put(this.STORE, jogadorFinal);
+
+    console.log('[JogadorRepository] Jogador atualizado no cache local:', jogadorFinal);
+    return jogadorFinal;
+  }
+
+  // =========================================================
+  // 📌 Buscar todos (online)
+  // =========================================================
   static async getAllJogadores(): Promise<JogadorDomain[]> {
     console.log('[JogadorRepository] getAllJogadores...');
     const onlineList = await ScriptClient.controllerGetAll<JogadorDomain>({ tab: this.TAB });
@@ -70,9 +80,8 @@ export class JogadorRepository {
   }
 
   // =========================================================
-  // Métodos existentes
+  // 📌 Buscar local
   // =========================================================
-
   static async getLocalJogador(): Promise<JogadorDomain | null> {
     const user = AuthService.getUser();
     if (!user) throw new Error('Usuário não autenticado.');
@@ -84,6 +93,9 @@ export class JogadorRepository {
     return allLocal.find(j => j.email === user.email) || null;
   }
 
+  // =========================================================
+  // 📌 Força buscar online (atualiza cache e metadados)
+  // =========================================================
   static async forceFetchJogador(): Promise<JogadorDomain | null> {
     const user = AuthService.getUser();
     if (!user) throw new Error('Usuário não autenticado.');
@@ -103,6 +115,7 @@ export class JogadorRepository {
     await db.bulkPut(this.STORE, jogadoresComId);
     console.log('[JogadorRepository] Cache atualizado com lista online.');
 
+    // 🔄 Atualiza metadados somente aqui
     const onlineMetaList = await ScriptClient.controllerGetAll<{ SheetName: string; UltimaModificacao: string }>({
       tab: 'Metadados',
     });
@@ -121,6 +134,9 @@ export class JogadorRepository {
     return jogadoresComId.find(j => j.email === user.email) || null;
   }
 
+  // =========================================================
+  // 📌 Sincronizar
+  // =========================================================
   static async syncJogadores(): Promise<boolean> {
     console.log('[JogadorRepository] Verificando necessidade de sincronização...');
     const onlineMetaList = await ScriptClient.controllerGetAll<{ SheetName: string; UltimaModificacao: string }>({
@@ -150,6 +166,9 @@ export class JogadorRepository {
     return false;
   }
 
+  // =========================================================
+  // 📌 Recupera jogador atual
+  // =========================================================
   static async getCurrentJogador(): Promise<JogadorDomain | null> {
     console.log('[JogadorRepository] getCurrentJogador iniciado.');
     const user = AuthService.getUser();
