@@ -13,6 +13,11 @@ export const routes: Routes = [
   { path: 'item-inventario/:id', loadComponent: () => import('./pages/item-inventario/item-inventario').then((m) => m.ItemInventario) },
   { path: 'cadastro-inventario', loadComponent: () => import('./pages/cadastro-inventario/cadastro-inventario').then((m) => m.CadastroInventario) },
   { path: 'cadastro-inventario/:id', loadComponent: () => import('./pages/cadastro-inventario/cadastro-inventario').then((m) => m.CadastroInventario) },
+  { path: 'cadastro-npc', loadComponent: () => import('./pages/cadastro-npc/cadastro-npc').then((m) => m.CadastroNpc) },
+  { path: 'cadastro-npc/:id', loadComponent: () => import('./pages/cadastro-npc/cadastro-npc').then((m) => m.CadastroNpc) },
+  { path: 'npcs', loadComponent: () => import('./pages/npcs/npcs').then((m) => m.Npcs) },
+  { path: 'npc-detalhes', loadComponent: () => import('./pages/npc-detalhes/npc-detalhes').then((m) => m.NpcDetalhes) },
+  { path: 'npc-detalhes/:id', loadComponent: () => import('./pages/npc-detalhes/npc-detalhes').then((m) => m.NpcDetalhes) },
   
   { path: 'catalogo', loadComponent: () => import('./pages/catalogo/catalogo').then((m) => m.Catalogo) },
 

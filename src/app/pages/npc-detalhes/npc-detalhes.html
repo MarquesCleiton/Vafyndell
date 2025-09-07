@@ -1,0 +1,69 @@
+<div class="d-flex flex-column min-vh-100 bg-dark text-light">
+  <div class="flex-grow-1 p-3">
+
+    <!-- Loading -->
+    <div *ngIf="carregando" class="text-center py-5">
+      <div class="spinner-border text-light" role="status"></div>
+      <p class="mt-2">Carregando NPC...</p>
+    </div>
+
+    <!-- Conteúdo -->
+    <div *ngIf="!carregando && npc" class="card bg-secondary text-light shadow-lg border-0">
+      <ng-container *ngIf="npc.imagem">
+        <img [src]="npc.imagem" class="card-img-top object-fit-cover" alt="{{ npc.nome }}"
+             style="max-height: 300px;" />
+      </ng-container>
+
+      <div class="card-body">
+        <h4 class="fw-bold">{{ npc.nome }}</h4>
+        <p class="mb-1"><b>🏷️ Classificação:</b> {{ npc.classificacao }}</p>
+        <p class="mb-1"><b>🎭 Tipo:</b> {{ npc.tipo }}</p>
+        <p class="mb-1"><b>⚖️ Alinhamento:</b> {{ npc.alinhamento || 'Não definido' }}</p>
+
+        <hr />
+
+        <!-- Atributos -->
+        <p>❤️ Vida: <b>{{ npc.pontos_de_vida }}</b></p>
+        <p>🛡️ Armadura: <b>{{ npc.classe_armadura }}</b></p>
+        <p>⭐ XP: <b>{{ npc.xp }}</b></p>
+        <p>💪 Força: <b>{{ npc.forca }}</b></p>
+        <p>🪨 Constituição: <b>{{ npc.constituicao }}</b></p>
+        <p>🤸‍♂️ Destreza: <b>{{ npc.destreza }}</b></p>
+        <p>📖 Sabedoria: <b>{{ npc.sabedoria }}</b></p>
+        <p>🧠 Inteligência: <b>{{ npc.inteligencia }}</b></p>
+        <p>⚡ Energia: <b>{{ npc.energia }}</b></p>
+
+        <hr />
+
+        <!-- Descrição -->
+        <p *ngIf="npc.descricao" class="descricao-text">
+          {{ npc.descricao }}
+        </p>
+
+        <!-- Ataques -->
+        <div *ngIf="npc.ataques">
+          <h6 class="fw-bold mt-3">⚔️ Ataques</h6>
+          <p class="ataques-text">{{ npc.ataques }}</p>
+        </div>
+
+        <!-- Ações -->
+        <div class="d-flex justify-content-between mt-4">
+          <button class="btn btn-outline-light" (click)="cancelar()">⬅ Voltar</button>
+          <div>
+            <button class="btn btn-warning me-2" (click)="editarNpc()" [disabled]="processandoEditar">
+              ✏️ Editar
+            </button>
+            <button class="btn btn-danger" (click)="excluirNpc()" [disabled]="processandoExcluir">
+              🗑️ Excluir
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Se não encontrou -->
+    <div *ngIf="!carregando && !npc" class="text-center text-muted py-5">
+      NPC não encontrado.
+    </div>
+  </div>
+</div>

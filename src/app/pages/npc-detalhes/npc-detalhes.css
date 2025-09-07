@@ -1,0 +1,40 @@
+.card {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.card img {
+  object-fit: cover;
+  border-bottom: 3px solid #444;
+}
+
+h4 {
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+p {
+  color: #ddd;
+  margin-bottom: 0.3rem;
+}
+
+hr {
+  opacity: 0.3;
+  margin: 1rem 0;
+}
+
+button {
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s ease-in-out;
+}
+
+button:hover {
+  transform: translateY(-2px);
+}
+
+/* 🔑 Respeita quebras de linha em descrição e ataques */
+.descricao-text,
+.ataques-text {
+  white-space: pre-line;
+}

@@ -1,0 +1,118 @@
+<div class="d-flex flex-column min-vh-100 bg-dark text-light">
+    <div class="flex-grow-1 pb-5">
+        <form #form="ngForm" (ngSubmit)="salvar(form)">
+
+            <!-- Upload da imagem -->
+            <div class="position-relative text-center mb-3">
+                <ng-container *ngIf="npc.imagem; else uploadBox">
+                    <img [src]="npc.imagem" class="w-100 rounded shadow-sm" alt="Preview"
+                        style="height: 250px; object-fit: cover;" />
+                    <button type="button"
+                        class="btn btn-danger rounded-circle position-absolute d-flex align-items-center justify-content-center"
+                        style="top: 10px; right: 10px; width: 40px; height: 40px;" (click)="removerImagem()">✖</button>
+                </ng-container>
+                <ng-template #uploadBox>
+                    <label class="d-flex align-items-center justify-content-center border rounded w-100"
+                        style="height: 150px; background: #1e1e1e; cursor: pointer;">
+                        <span class="text-success fs-1">📷</span>
+                        <input type="file" class="d-none" (change)="onFileChange($event)" accept="image/*" />
+                    </label>
+                </ng-template>
+            </div>
+
+            <!-- Card principal -->
+            <div class="card bg-dark border-0 shadow-sm">
+                <div class="card-body">
+                    <h4 class="fw-bold mb-3 text-white">👹 Cadastro de NPC</h4>
+
+                    <!-- Nome -->
+                    <div class="mb-3">
+                        <label class="form-label text-white">🙍 Nome *</label>
+                        <input type="text" class="form-control bg-dark text-light border-light" [(ngModel)]="npc.nome"
+                            name="nome" required />
+                    </div>
+
+                    <!-- Classificação -->
+                    <div class="mb-3">
+                        <label class="form-label text-white">🏷️ Classificação *</label>
+                        <select class="form-select bg-dark text-light border-light" [(ngModel)]="npc.classificacao"
+                            name="classificacao" required>
+                            <option *ngFor="let c of classificacoes">{{c}}</option>
+                        </select>
+                    </div>
+
+                    <!-- Tipo -->
+                    <div class="mb-3">
+                        <label class="form-label text-white">🎭 Tipo *</label>
+                        <select class="form-select bg-dark text-light border-light" [(ngModel)]="npc.tipo" name="tipo"
+                            required>
+                            <option *ngFor="let t of tipos">{{t}}</option>
+                        </select>
+                    </div>
+
+                    <!-- Alinhamento -->
+                    <div class="mb-3">
+                        <label class="form-label text-white">⚖️ Alinhamento</label>
+                        <select class="form-select bg-dark text-light border-light" [(ngModel)]="npc.alinhamento"
+                            name="alinhamento">
+                            <option value="" disabled selected>Selecione...</option>
+                            <option>Leal e Bom (Lawful Good)</option>
+                            <option>Neutro e Bom (Neutral Good)</option>
+                            <option>Caótico e Bom (Chaotic Good)</option>
+                            <option>Leal e Neutro (Lawful Neutral)</option>
+                            <option>Neutro (Neutral)</option>
+                            <option>Caótico e Neutro (Chaotic Neutral)</option>
+                            <option>Leal e Mau (Lawful Evil)</option>
+                            <option>Neutro e Mau (Neutral Evil)</option>
+                            <option>Caótico e Mau (Chaotic Evil)</option>
+                        </select>
+                    </div>
+
+                    <!-- Descrição -->
+                    <div class="mb-3">
+                        <label class="form-label text-white">📝 Descrição</label>
+                        <textarea class="form-control bg-dark text-light border-light auto-expand" rows="3"
+                            [(ngModel)]="npc.descricao" name="descricao"></textarea>
+                    </div>
+
+                    <!-- Ataques -->
+                    <div class="mb-3 mt-4">
+                        <label class="form-label text-white">⚔️ Ataques</label>
+                        <textarea class="form-control bg-dark text-light border-light auto-expand" rows="3"
+                            [(ngModel)]="npc.ataques" name="ataques"></textarea>
+                    </div>
+
+                    <!-- Atributos numéricos -->
+                    <div class="row row-cols-2 g-3 mt-3">
+                        <div class="col" *ngFor="let attr of atributosNumericos">
+                            <label class="form-label text-white">{{attr.icon}} {{attr.label}}</label>
+                            <div class="input-group">
+                                <input type="number"
+                                    class="form-control text-center bg-dark text-white border-light fw-bold"
+                                    [ngModel]="getValor(attr.key)" (ngModelChange)="setValor(attr.key, $event)"
+                                    name="{{attr.key}}" min="0" />
+                                <div class="d-flex">
+                                    <button type="button" class="btn btn-outline-light"
+                                        (click)="ajustarValor(attr.key, -1)">−</button>
+                                    <button type="button" class="btn btn-outline-light"
+                                        (click)="ajustarValor(attr.key, 1)">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botão salvar -->
+            <div class="text-end mt-4">
+                <button type="submit" class="btn btn-success px-4" [disabled]="form.invalid || salvando">
+                    <ng-container *ngIf="!salvando">💾 Salvar</ng-container>
+                    <ng-container *ngIf="salvando">
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Salvando...
+                    </ng-container>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
