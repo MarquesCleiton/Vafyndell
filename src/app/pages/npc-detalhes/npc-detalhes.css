@@ -1,40 +1,36 @@
-.card {
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.card img {
-  object-fit: cover;
-  border-bottom: 3px solid #444;
-}
-
-h4 {
-  color: #fff;
-  margin-bottom: 0.5rem;
-}
-
-p {
-  color: #ddd;
-  margin-bottom: 0.3rem;
-}
-
-hr {
-  opacity: 0.3;
-  margin: 1rem 0;
-}
-
-button {
+/* Ajuste global para botões de ação */
+.btn {
   font-weight: 500;
-  border-radius: 8px;
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
   transition: all 0.2s ease-in-out;
 }
 
-button:hover {
-  transform: translateY(-2px);
+.btn-sm {
+  font-size: 0.85rem;
 }
 
-/* 🔑 Respeita quebras de linha em descrição e ataques */
-.descricao-text,
-.ataques-text {
-  white-space: pre-line;
+.btn-outline-light,
+.btn-outline-warning,
+.btn-outline-danger {
+  background: transparent;
+}
+
+.btn-outline-light:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-outline-warning:hover {
+  background: rgba(255, 193, 7, 0.1);
+}
+
+.btn-outline-danger:hover {
+  background: rgba(220, 53, 69, 0.1);
+}
+
+/* Spinner alinhado ao texto */
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  vertical-align: text-bottom;
 }

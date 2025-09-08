@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { Location } from '@angular/common';
 import { NpcRepository } from '../../repositories/NpcRepository';
 import { NpcDomain } from '../../domain/NpcDomain';
+import { JogadorRepository } from '../../repositories/JogadorRepository';
+import { JogadorDomain } from '../../domain/jogadorDomain';
 
 @Component({
   selector: 'app-npc-detalhes',
@@ -17,6 +19,7 @@ export class NpcDetalhes implements OnInit {
   carregando = true;
   processandoEditar = false;
   processandoExcluir = false;
+  processandoAdicionar = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -92,6 +95,79 @@ export class NpcDetalhes implements OnInit {
       alert('❌ Erro ao excluir NPC. Veja o console.');
     } finally {
       this.processandoExcluir = false;
+    }
+  }
+
+  /** ➕ Adicionar NPC como "jogador" no campo de batalha */
+  async adicionarAoCampo() {
+    if (!this.npc) return;
+    this.processandoAdicionar = true;
+
+    try {
+      // 1. Carrega jogadores existentes
+      const jogadores = await JogadorRepository.getAllJogadores();
+
+      // 2. Pega base do nome e procura quantos já existem
+      const baseName = this.npc.nome.trim();
+      const regex = new RegExp(`^(\\d+) - ${baseName}$`, 'i');
+      const existentes = jogadores.filter(j => regex.test(j.personagem));
+
+      // 3. Calcula próximo número
+      let proximoNumero = 1;
+      if (existentes.length > 0) {
+        const numeros = existentes
+          .map(j => {
+            const match = j.personagem.match(/^(\d+) -/);
+            return match ? parseInt(match[1], 10) : 0;
+          })
+          .filter(n => !isNaN(n));
+        proximoNumero = Math.max(...numeros) + 1;
+      }
+
+      // 4. Calcula novo ID
+      const maxId = jogadores.length > 0 ? Math.max(...jogadores.map(j => j.id || 0)) : 0;
+      const novoId = maxId + 1;
+
+      // 5. Cria registro de jogador NPC com atributos herdados
+      const novoNpcJogador: JogadorDomain = {
+        index: novoId,
+        id: novoId,
+        email: '', // NPC não tem email
+        imagem: this.npc.imagem || '',
+        nome_do_jogador: 'NPC',
+        personagem: `${proximoNumero} - ${baseName}`,
+        alinhamento: this.npc.alinhamento || '',
+        pontos_de_vida: this.npc.pontos_de_vida,
+        classe_de_armadura: this.npc.classe_armadura,
+        forca: this.npc.forca,
+        destreza: this.npc.destreza,
+        constituicao: this.npc.constituicao,
+        inteligencia: this.npc.inteligencia,
+        sabedoria: this.npc.sabedoria,
+        carisma: 0,
+        energia: this.npc.energia,
+        nivel: 1,
+        xp: this.npc.xp,
+        dano_tomado: 0,
+        tipo_jogador: 'NPC',
+        efeitos_temporarios: '',
+        registo_de_jogo: '',
+
+        // 🔑 novos campos herdados do NPC
+        classificacao: this.npc.classificacao,
+        tipo: this.npc.tipo,
+        descricao: this.npc.descricao,
+        ataques: this.npc.ataques,
+      };
+
+      await JogadorRepository.createJogador(novoNpcJogador);
+      alert(`✅ ${novoNpcJogador.personagem} adicionado ao campo de batalha!`);
+
+    } catch (err) {
+      console.error('[NpcDetalhes] Erro ao adicionar NPC no campo de batalha:', err);
+      alert('❌ Erro ao adicionar NPC. Veja o console.');
+    } finally {
+      this.processandoAdicionar = false;
     }
   }
 }

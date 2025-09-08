@@ -1,4 +1,4 @@
-<div class="d-flex flex-column min-vh-100 bg-dark text-light">
+<div class="d-flex flex-column min-vh-100 bg-dark text-light pb-5 mb-5">
   <div class="flex-grow-1 p-3">
 
     <!-- Loading -->
@@ -10,8 +10,7 @@
     <!-- Conteúdo -->
     <div *ngIf="!carregando && npc" class="card bg-secondary text-light shadow-lg border-0">
       <ng-container *ngIf="npc.imagem">
-        <img [src]="npc.imagem" class="card-img-top object-fit-cover" alt="{{ npc.nome }}"
-             style="max-height: 300px;" />
+        <img [src]="npc.imagem" class="card-img-top object-fit-cover" alt="{{ npc.nome }}" style="max-height: 300px;" />
       </ng-container>
 
       <div class="card-body">
@@ -48,13 +47,19 @@
 
         <!-- Ações -->
         <div class="d-flex justify-content-between mt-4">
-          <button class="btn btn-outline-light" (click)="cancelar()">⬅ Voltar</button>
+          <button class="btn btn-outline-light btn-sm" (click)="cancelar()">⬅ Voltar</button>
           <div>
-            <button class="btn btn-warning me-2" (click)="editarNpc()" [disabled]="processandoEditar">
-              ✏️ Editar
+            <button class="btn btn-warning btn-sm me-2" (click)="editarNpc()" [disabled]="processandoEditar">
+              <ng-container *ngIf="!processandoEditar">✏️ Editar</ng-container>
+              <ng-container *ngIf="processandoEditar">
+                <span class="spinner-border spinner-border-sm me-2"></span> Editando...
+              </ng-container>
             </button>
-            <button class="btn btn-danger" (click)="excluirNpc()" [disabled]="processandoExcluir">
-              🗑️ Excluir
+            <button class="btn btn-danger btn-sm" (click)="excluirNpc()" [disabled]="processandoExcluir">
+              <ng-container *ngIf="!processandoExcluir">🗑️ Excluir</ng-container>
+              <ng-container *ngIf="processandoExcluir">
+                <span class="spinner-border spinner-border-sm me-2"></span> Excluindo...
+              </ng-container>
             </button>
           </div>
         </div>
@@ -66,4 +71,16 @@
       NPC não encontrado.
     </div>
   </div>
+
+  <!-- Botão flutuante para adicionar NPC ao campo de batalha -->
+  <button class="fab btn btn-danger rounded-circle shadow-lg d-flex align-items-center justify-content-center"
+    (click)="adicionarAoCampo()" [disabled]="processandoAdicionar"
+    style="position: fixed; bottom: 70px; right: 20px; z-index: 20; width: 70px; height: 70px; font-size: 2rem;">
+    <ng-container *ngIf="!processandoAdicionar">⚔️</ng-container>
+    <ng-container *ngIf="processandoAdicionar">
+      <div class="spinner-border text-light" role="status" style="width: 2rem; height: 2rem;"></div>
+    </ng-container>
+  </button>
+
+
 </div>

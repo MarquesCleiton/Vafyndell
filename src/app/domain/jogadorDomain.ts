@@ -21,6 +21,10 @@ export interface JogadorDomain {
   tipo_jogador: string;
   efeitos_temporarios: string;
   registo_de_jogo: string;
+  classificacao: string;
+  tipo: string;
+  descricao: string;	
+  ataques: string;
 
   // derivados (calculados, não salvos direto)
   fator_cura?: number;
