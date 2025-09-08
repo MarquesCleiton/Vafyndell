@@ -135,6 +135,17 @@ export class JogadorRepository {
   }
 
   // =========================================================
+  // 📌 Buscar todos os jogadores (local IndexedDB)
+  // =========================================================
+  static async getLocalJogadores(): Promise<JogadorDomain[]> {
+    const db = await this.getDb();
+    const allLocal = await db.getAll<JogadorDomain>(this.STORE);
+    console.log('[JogadorRepository] getLocalJogadores → total encontrados:', allLocal.length);
+    return allLocal;
+  }
+
+
+  // =========================================================
   // 📌 Sincronizar
   // =========================================================
   static async syncJogadores(): Promise<boolean> {
@@ -187,4 +198,24 @@ export class JogadorRepository {
 
     return await this.forceFetchJogador();
   }
+
+
+  // =========================================================
+  // 📌 Excluir jogador
+  // =========================================================
+  static async deleteJogador(id: number): Promise<boolean> {
+    console.log('[JogadorRepository] Excluindo jogador...', id);
+
+    await ScriptClient.controllerDeleteByIndex({
+      tab: this.TAB,
+      index: id,
+    });
+
+    const db = await this.getDb();
+    await db.delete(this.STORE, id);
+
+    console.log('[JogadorRepository] Jogador excluído do cache/local:', id);
+    return true;
+  }
+
 }

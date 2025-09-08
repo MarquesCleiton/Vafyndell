@@ -1,1 +1,85 @@
-<p>batalha works!</p>
+<div class="d-flex flex-column min-vh-100 bg-dark text-light">
+  <!-- Topbar -->
+  <div class="p-3 bg-black border-bottom d-flex justify-content-between align-items-center sticky-top">
+    <h5 class="m-0">⚔️ Batalha</h5>
+    <input type="text" class="form-control bg-dark text-light border-light rounded-pill ms-3" style="max-width: 250px;"
+      placeholder="🔍 Pesquisar..." [(ngModel)]="filtro" (input)="aplicarFiltro()" />
+  </div>
+
+  <!-- Conteúdo -->
+  <div class="flex-grow-1 p-2 overflow-auto">
+    <!-- Loading -->
+    <div *ngIf="carregando" class="text-center py-5">
+      <div class="spinner-border text-light" role="status"></div>
+      <p class="mt-2">Carregando jogadores...</p>
+    </div>
+
+    <!-- Lista -->
+    <div *ngIf="!carregando && jogadoresFiltrados.length > 0">
+      <div *ngFor="let j of jogadoresFiltrados" class="card bg-secondary text-light mb-2 shadow-sm jogador-card">
+
+        <div class="d-flex align-items-center p-2 position-relative">
+          <!-- Imagem (ou placeholder) -->
+          <div class="rounded me-3 d-flex align-items-center justify-content-center bg-dark"
+            style="width: 55px; height: 55px; overflow: hidden;">
+            <img *ngIf="j.imagem" [src]="j.imagem" alt="{{ j.personagem }}"
+              style="width: 100%; height: 100%; object-fit: cover;" />
+            <span *ngIf="!j.imagem" class="text-muted">👤</span>
+          </div>
+
+          <!-- Centro -->
+          <div class="flex-grow-1">
+            <h6 class="fw-bold mb-1 d-flex align-items-center">
+              <!-- Nome do personagem -->
+              <span class="me-3">{{ j.personagem }}</span>
+
+              <!-- Status -->
+              <ng-container *ngIf="j.pontos_de_vida > 0; else morto">
+                <span class="me-2 text-danger">❤️ {{ j.pontos_de_vida }}</span>
+                <span *ngIf="j.classe_de_armadura > 0; else semArmadura" class="me-2 text-primary">
+                  🛡️ {{ j.classe_de_armadura }}
+                </span>
+                <ng-template #semArmadura>
+                  <span class="me-2 text-danger">🛡️❌</span>
+                </ng-template>
+              </ng-container>
+              <ng-template #morto>
+                <span class="me-2">💀 ⚰️</span>
+              </ng-template>
+            </h6>
+
+            <small class="text-muted">
+              {{ j.classificacao || 'Jogador' }}
+              <span *ngIf="j.tipo">| {{ j.tipo }}</span>
+            </small>
+
+
+
+            <small class="text-muted">
+              {{ j.classificacao || 'Jogador' }}
+              <span *ngIf="j.tipo">| {{ j.tipo }}</span>
+            </small>
+          </div>
+
+          <!-- Ações (lado direito) -->
+          <div class="d-flex ms-2">
+            <!-- Sempre mostra a espada -->
+            <button class="btn btn-sm btn-outline-light me-1" (click)="abrirJogador(j)">
+              ⚔️
+            </button>
+
+            <!-- Só mostra excluir se for NPC -->
+            <button *ngIf="!j.email" class="btn btn-sm btn-outline-danger" (click)="excluirNpcDaBatalha(j)">
+              🗑️
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vazio -->
+    <div *ngIf="!carregando && jogadoresFiltrados.length === 0" class="text-center text-muted py-5">
+      Nenhum jogador encontrado.
+    </div>
+  </div>
+</div>

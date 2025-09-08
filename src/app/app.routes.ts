@@ -18,6 +18,7 @@ export const routes: Routes = [
   { path: 'npcs', loadComponent: () => import('./pages/npcs/npcs').then((m) => m.Npcs) },
   { path: 'npc-detalhes', loadComponent: () => import('./pages/npc-detalhes/npc-detalhes').then((m) => m.NpcDetalhes) },
   { path: 'npc-detalhes/:id', loadComponent: () => import('./pages/npc-detalhes/npc-detalhes').then((m) => m.NpcDetalhes) },
+  { path: 'batalha', loadComponent: () => import('./pages/batalha/batalha').then((m) => m.Batalha) },
   
   { path: 'catalogo', loadComponent: () => import('./pages/catalogo/catalogo').then((m) => m.Catalogo) },
 
