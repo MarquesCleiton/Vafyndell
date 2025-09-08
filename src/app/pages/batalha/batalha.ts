@@ -18,26 +18,42 @@ export class Batalha implements OnInit {
   carregando = true;
   filtro = '';
 
+  // estados de loading por jogador
+  processando: { [id: number]: 'abrir' | 'excluir' | null } = {};
+
   constructor(private router: Router) {}
 
   async ngOnInit() {
+    console.log('[Batalha] ngOnInit → carregando jogadores...');
     try {
-      const locais = await JogadorRepository.getAllJogadores();
+      // 1. Busca local primeiro
+      const locais = await JogadorRepository.getLocalJogadores();
       if (locais.length > 0) {
         this.jogadores = locais;
         this.aplicarFiltro();
+        this.carregando = false; // libera tela já com cache
       }
 
+      // 2. Em paralelo, valida online
       JogadorRepository.syncJogadores().then(async updated => {
         if (updated) {
-          const atualizados = await JogadorRepository.getAllJogadores();
+          const atualizados = await JogadorRepository.getLocalJogadores();
           this.jogadores = atualizados;
           this.aplicarFiltro();
         }
       });
+
+      // 3. Se não havia nada local, força fetch
+      if (locais.length === 0) {
+        const online = await JogadorRepository.forceFetchJogador();
+        if (online) {
+          this.jogadores = Array.isArray(online) ? online : [online];
+          this.aplicarFiltro();
+        }
+        this.carregando = false;
+      }
     } catch (err) {
       console.error('[Batalha] Erro ao carregar jogadores:', err);
-    } finally {
       this.carregando = false;
     }
   }
@@ -57,26 +73,29 @@ export class Batalha implements OnInit {
     );
   }
 
-  abrirJogador(jogador: JogadorDomain) {
-    this.router.navigate(['/jogador', jogador.id]);
+  async abrirJogador(jogador: JogadorDomain) {
+    this.processando[jogador.id] = 'abrir';
+    setTimeout(() => {
+      this.router.navigate(['/jogador', jogador.id]);
+      this.processando[jogador.id] = null;
+    }, 400); // apenas para mostrar loading
   }
 
   async excluirNpcDaBatalha(j: JogadorDomain) {
     const confirmacao = confirm(`🗑️ Deseja remover "${j.personagem}" do campo de batalha?`);
     if (!confirmacao) return;
 
+    this.processando[j.id] = 'excluir';
     try {
-      await JogadorRepository.updateJogador({ ...j, personagem: `[REMOVIDO] ${j.personagem}` });
-      await JogadorRepository.deleteJogador(j.id); // 🔑 precisa existir no repository
-
-      // Atualiza a lista local
+      await JogadorRepository.deleteJogador(j.id);
       this.jogadores = this.jogadores.filter(x => x.id !== j.id);
       this.aplicarFiltro();
-
       alert('✅ NPC removido da batalha!');
     } catch (err) {
       console.error('[Batalha] Erro ao excluir NPC:', err);
       alert('❌ Erro ao excluir NPC da batalha.');
+    } finally {
+      this.processando[j.id] = null;
     }
   }
 }

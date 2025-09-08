@@ -1,50 +1,62 @@
 .inventario-card {
-  background: #1e1e1e;
-  border: 1px solid #333;
-  border-radius: 12px;
-  transition: all 0.2s ease-in-out;
+  border-radius: 10px;
+  background: #495057;
+  /* cinza elegante */
+  color: #f8f9fa;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .inventario-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+  transform: translateY(-2px);
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-/* Quantidade + unidade + peso */
-.item-info {
-  color: #d0d0d0 !important;
-  font-size: 0.85rem;
+/* Ícones de efeito/colateral harmonizados */
+.inventario-card .text-info {
+  color: #0dcaf0 !important;
+  /* azul suave */
 }
 
-/* Texto efeito e colateral */
-.efeito-text {
-  color: #e6e6e6 !important;
+.inventario-card .text-danger {
+  color: #ff6b6b !important;
+  /* vermelho suave */
 }
 
-.colateral {
-  color: #c97a7a !important;
+.inventario-card small {
+  color: #adb5bd;
 }
 
-.fab {
-  position: fixed;
-  bottom: 80px;
-  /* acima do navbar inferior */
-  right: 20px;
-  width: 56px;
-  height: 56px;
+
+/* 🔹 Botões de ação (espada, excluir etc.) */
+.btn-acao {
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  z-index: 100;
-  background: #0d6efd;
-  /* azul bootstrap */
-  border: none;
-  transition: all 0.2s ease-in-out;
+  font-size: 18px;
+  padding: 0;
 }
 
-.fab:hover {
-  transform: scale(1.1);
-  background: #0b5ed7;
-  /* azul mais escuro no hover */
+/* 🔹 Botão flutuante (FAB) */
+.fab {
+  position: fixed;
+  bottom: 80px;
+  /* acima da navbar */
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 🔹 Botões de categoria (não arredondar!) */
+.btn-categoria {
+  border-radius: 8px !important;
+  text-align: left;
+  font-weight: bold;
 }

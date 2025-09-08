@@ -2,8 +2,11 @@
 
   <!-- Barra de pesquisa -->
   <div class="p-3 bg-black border-bottom position-sticky top-0" style="z-index: 10;">
-    <input type="text" class="form-control bg-dark text-light border-light rounded-pill px-3"
-      placeholder="🔍 Pesquisar NPCs..." [(ngModel)]="filtro" (input)="aplicarFiltro()" />
+    <input type="text"
+           class="form-control bg-dark text-light border-light rounded-pill px-3"
+           placeholder="🔍 Pesquisar NPCs..."
+           [(ngModel)]="filtro"
+           (input)="aplicarFiltro()" />
   </div>
 
   <!-- Conteúdo -->
@@ -17,7 +20,8 @@
     </div>
 
     <!-- Vazio -->
-    <div *ngIf="!carregando && categoriasFiltradas.length === 0" class="text-center text-muted py-5">
+    <div *ngIf="!carregando && categoriasFiltradas.length === 0"
+         class="text-center text-muted py-5">
       Nenhum NPC encontrado.
     </div>
 
@@ -27,38 +31,50 @@
 
         <!-- Cabeçalho da categoria -->
         <button class="btn btn-outline-light w-100 text-start d-flex justify-content-between align-items-center"
-          (click)="toggleCategoria(cat)">
-          <span class="fw-bold">{{ cat.nome }}</span>
+                (click)="toggleCategoria(cat)">
+          <span class="fw-bold">{{ cat.nome || 'Outros' }}</span>
           <span>{{ cat.expandido ? '−' : '+' }}</span>
         </button>
 
-        <!-- Itens -->
+        <!-- Lista de NPCs -->
         <div *ngIf="cat.expandido" class="mt-2">
           <div class="row row-cols-1 g-2">
             <div class="col" *ngFor="let npc of cat.itens">
-              <div class="card shadow-sm h-100 p-3 bg-secondary text-light" (click)="abrirItem(npc)"
-                style="cursor: pointer;">
+              <div class="card npc-card shadow-sm p-3"
+                   (click)="abrirItem(npc)"
+                   style="cursor: pointer;">
 
-                <!-- Cabeçalho -->
+                <!-- Cabeçalho do NPC -->
                 <div class="d-flex align-items-center mb-2">
-                  <img *ngIf="npc.imagem" [src]="npc.imagem" alt="{{ npc.nome }}" class="rounded me-3"
-                    style="width: 55px; height: 55px; object-fit: cover;" />
+                  <div class="rounded me-3 d-flex align-items-center justify-content-center bg-dark"
+                       style="width: 55px; height: 55px; overflow: hidden;">
+                    <img *ngIf="npc.imagem"
+                         [src]="npc.imagem"
+                         alt="{{ npc.nome }}"
+                         style="width: 100%; height: 100%; object-fit: cover;" />
+                    <span *ngIf="!npc.imagem" class="text-muted">👤</span>
+                  </div>
+
                   <div>
                     <h6 class="fw-bold text-white mb-1">{{ npc.nome }}</h6>
-                    <small class="text-muted">
-                      {{ npc.tipo }} | {{ npc.alinhamento || 'Sem alinhamento' }}
+                    <small>
+                      {{ npc.tipo || '—' }} | {{ npc.alinhamento || 'Sem alinhamento' }}
                     </small>
                   </div>
                 </div>
 
-                <!-- Detalhes -->
+                <!-- Status -->
                 <p class="small mb-1">
-                  ❤️ Vida: <b>{{ npc.pontos_de_vida }}</b>
-                  | 🛡️ Arm: <b>{{ npc.classe_armadura }}</b>
-                  | ⭐ XP: <b>{{ npc.xp }}</b>
+                  ❤️ <b>{{ npc.pontos_de_vida }}</b>
+                  | 🛡️ <b>{{ npc.classe_armadura }}</b>
+                  | ⭐ <b>{{ npc.xp }}</b>
                 </p>
-                <p *ngIf="npc.descricao" class="small fst-italic">{{ npc.descricao }}</p>
 
+                <!-- Descrição -->
+                <p *ngIf="npc.descricao"
+                   class="small descricao-text fst-italic">
+                  {{ npc.descricao }}
+                </p>
               </div>
             </div>
           </div>
@@ -69,7 +85,8 @@
   </div>
 
   <!-- Botão flutuante -->
-  <button class="fab btn btn-primary rounded-circle shadow-lg" (click)="novoNpc()">
+  <button class="fab btn btn-primary rounded-circle shadow-lg"
+          (click)="novoNpc()">
     <span class="fs-4">＋</span>
   </button>
 </div>
