@@ -19,6 +19,10 @@ export const routes: Routes = [
   { path: 'npc-detalhes', loadComponent: () => import('./pages/npc-detalhes/npc-detalhes').then((m) => m.NpcDetalhes) },
   { path: 'npc-detalhes/:id', loadComponent: () => import('./pages/npc-detalhes/npc-detalhes').then((m) => m.NpcDetalhes) },
   { path: 'batalha', loadComponent: () => import('./pages/batalha/batalha').then((m) => m.Batalha) },
+  { path: 'jogador-detalhes-batalha', loadComponent: () => import('./pages/jogador-detalhes-batalha/jogador-detalhes-batalha').then((m) => m.JogadorDetalhesBatalha) },
+  { path: 'jogador-detalhes-batalha/:id', loadComponent: () => import('./pages/jogador-detalhes-batalha/jogador-detalhes-batalha').then((m) => m.JogadorDetalhesBatalha) },
+  { path: 'combate', loadComponent: () => import('./pages/combate/combate').then((m) => m.Combate) },
+  { path: 'combate/:id', loadComponent: () => import('./pages/combate/combate').then((m) => m.Combate) },
   
   { path: 'catalogo', loadComponent: () => import('./pages/catalogo/catalogo').then((m) => m.Catalogo) },
 

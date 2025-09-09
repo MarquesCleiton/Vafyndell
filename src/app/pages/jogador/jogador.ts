@@ -84,7 +84,7 @@ private setJogador(jogador: JogadorDomain) {
     { label: 'Sabedoria', value: jogador.sabedoria, mod: calcMod(jogador.sabedoria), icon: '📖' },
     { label: 'Carisma', value: jogador.carisma, mod: calcMod(jogador.carisma), icon: '😎' },
     { label: 'Energia', value: jogador.energia, mod: calcMod(jogador.energia), icon: '⚡' },
-    { label: 'Deslocamento', value: deslocamento, mod: calcMod(deslocamento), icon: '🚶‍♂️‍➡️' },
+    // { label: 'Deslocamento', value: deslocamento, mod: calcMod(deslocamento), icon: '🚶‍♂️‍➡️' },
   ];
 
   this.loading = false;

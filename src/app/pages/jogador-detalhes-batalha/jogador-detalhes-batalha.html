@@ -1,0 +1,56 @@
+<div class="d-flex flex-column min-vh-100 bg-dark text-light">
+  <div class="flex-grow-1 pb-5">
+    <!-- Loading -->
+    <div *ngIf="loading" class="text-center py-5">
+      <div class="spinner-border text-light" role="status"></div>
+      <p class="mt-2">Carregando personagem...</p>
+    </div>
+
+    <!-- Conteúdo -->
+    <div *ngIf="!loading && jogador" class="card bg-dark text-light border-0 shadow-lg">
+      <ng-container *ngIf="jogador.imagem">
+        <img [src]="jogador.imagem" class="card-img-top object-fit-cover" alt="Imagem do personagem"
+             style="max-height: 300px;">
+      </ng-container>
+
+      <div class="card-body pb-5">
+        <h4 class="card-title fw-bold">
+          {{ jogador.email ? '🧙' : '👹' }} {{ jogador.personagem }}
+        </h4>
+        <p class="card-subtitle text-light mb-3">
+          ⚖️ {{ jogador.alinhamento || 'Sem alinhamento' }}
+        </p>
+
+        <!-- Infos gerais -->
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item bg-dark text-light border-0">⭐ XP: <b>{{ jogador.xp }}</b></li>
+          <li class="list-group-item bg-dark text-light border-0">❤️ Vida: <b>{{ jogador.pontos_de_vida }}</b> | 🛡️ Armadura: <b>{{ jogador.classe_de_armadura }}</b></li>
+          <li class="list-group-item bg-dark text-light border-0">💔 Dano tomado: <b>{{ jogador.dano_tomado }}</b></li>
+          <li class="list-group-item bg-dark text-light border-0">✨ Fator de cura: <b>{{ jogador.fator_cura }}</b></li>
+          <li class="list-group-item bg-dark text-light border-0">🚶‍♂️ Deslocamento: <b>{{ jogador.deslocamento }}</b></li>
+        </ul>
+
+        <!-- atributos -->
+        <div class="row row-cols-2 g-2 mt-3">
+          <div class="col" *ngFor="let attr of atributos">
+            <div class="p-2 rounded bg-secondary text-light text-center fw-bold d-flex flex-column align-items-center">
+              <div>{{ attr.icon }} {{ attr.label }}</div>
+              <div>{{ attr.value }} <small>({{ attr.mod >= 0 ? '+' + attr.mod : attr.mod }})</small></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Extra só para NPC -->
+        <div *ngIf="!jogador.email" class="mt-3">
+          <p *ngIf="jogador.descricao" class="fst-italic">{{ jogador.descricao }}</p>
+          <p *ngIf="jogador.ataques"><b>⚔️ Ataques:</b> {{ jogador.ataques }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nenhum encontrado -->
+    <div *ngIf="!loading && !jogador" class="alert alert-warning mt-4">
+      Nenhum personagem encontrado.
+    </div>
+  </div>
+</div>

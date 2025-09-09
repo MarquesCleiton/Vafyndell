@@ -1,0 +1,80 @@
+<div class="d-flex flex-column min-vh-100 bg-dark text-light p-3">
+  <form #form="ngForm" (ngSubmit)="registrarCombate(form)">
+
+    <!-- Ofensor -->
+    <div class="mb-3">
+      <label class="form-label text-light">Ofensor *</label>
+      <mat-form-field appearance="outline" class="w-100">
+        <input type="text" matInput placeholder="Selecione o ofensor..."
+               [(ngModel)]="filtroOfensor" name="filtroOfensor"
+               [matAutocomplete]="autoOfensor" (input)="filtrarOfensores()" class="text-light" />
+        <mat-autocomplete #autoOfensor="matAutocomplete" (optionSelected)="selecionarOfensor($event.option.value)">
+          <mat-option *ngFor="let j of ofensoresFiltrados" [value]="j" class="bg-dark text-light">
+            <div class="d-flex align-items-center">
+              <img *ngIf="j.imagem" [src]="j.imagem" class="me-2 rounded"
+                   style="width: 28px; height: 28px; object-fit: cover;">
+              <span>{{ j.personagem }}</span>
+            </div>
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+    </div>
+
+    <!-- Vítima -->
+    <div class="mb-3">
+      <label class="form-label text-light">Vítima *</label>
+      <mat-form-field appearance="outline" class="w-100">
+        <input type="text" matInput placeholder="Selecione a vítima..."
+               [(ngModel)]="filtroVitima" name="filtroVitima"
+               [matAutocomplete]="autoVitima" (input)="filtrarVitimas()" class="text-light" />
+        <mat-autocomplete #autoVitima="matAutocomplete" (optionSelected)="selecionarVitima($event.option.value)">
+          <mat-option *ngFor="let j of vitimasFiltradas" [value]="j" class="bg-dark text-light">
+            <div class="d-flex align-items-center">
+              <img *ngIf="j.imagem" [src]="j.imagem" class="me-2 rounded"
+                   style="width: 28px; height: 28px; object-fit: cover;">
+              <span>{{ j.personagem }}</span>
+            </div>
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+    </div>
+
+    <!-- Preview -->
+    <div *ngIf="ofensorSelecionado && vitimaSelecionada"
+         class="card bg-secondary text-light shadow-sm mb-3 p-3 text-center fw-bold">
+      ⚔️ {{ ofensorSelecionado.personagem }}
+      <span class="text-danger">X</span>
+      {{ vitimaSelecionada.personagem }}
+    </div>
+
+    <!-- Dano -->
+    <div class="mb-3">
+      <label class="form-label text-light">Dano *</label>
+      <div class="input-group">
+        <button type="button" class="btn btn-outline-light" (click)="decrementar()">−</button>
+        <input type="number" class="form-control bg-dark text-light border-light text-center fw-bold"
+               [(ngModel)]="dano" name="dano" min="0" required />
+        <button type="button" class="btn btn-outline-light" (click)="incrementar()">+</button>
+      </div>
+    </div>
+
+    <!-- Efeitos -->
+    <div class="mb-3">
+      <label class="form-label text-light">Efeitos adicionais</label>
+      <textarea class="form-control bg-dark text-light border-light" rows="2"
+                [(ngModel)]="efeitos" name="efeitos"
+                placeholder="Ex: sangramento, atordoamento..."></textarea>
+    </div>
+
+    <!-- Botões -->
+    <div class="d-flex justify-content-between mt-4">
+      <button type="button" class="btn btn-secondary px-4" (click)="cancelar()">Cancelar</button>
+      <button type="submit" class="btn btn-success px-4" [disabled]="form.invalid || salvando">
+        <ng-container *ngIf="!salvando">Registrar</ng-container>
+        <ng-container *ngIf="salvando">
+          <span class="spinner-border spinner-border-sm me-2"></span> Registrando...
+        </ng-container>
+      </button>
+    </div>
+  </form>
+</div>

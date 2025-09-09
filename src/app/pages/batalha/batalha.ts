@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { JogadorRepository } from '../../repositories/JogadorRepository';
-import { JogadorDomain } from '../../domain/jogadorDomain';
+import { JogadorDomain, JogadorUtils } from '../../domain/jogadorDomain';
 import { Router } from '@angular/router';
 
 @Component({
@@ -19,7 +19,9 @@ export class Batalha implements OnInit {
   filtro = '';
 
   // estados de loading por jogador
-  processando: { [id: number]: 'abrir' | 'excluir' | null } = {};
+  processando: { [id: number]: 'abrir' | 'excluir' | 'espada' | null } = {};
+
+  JogadorUtils = JogadorUtils; // 👈 expõe no template
 
   constructor(private router: Router) {}
 
@@ -31,7 +33,7 @@ export class Batalha implements OnInit {
       if (locais.length > 0) {
         this.jogadores = locais;
         this.aplicarFiltro();
-        this.carregando = false; // libera tela já com cache
+        this.carregando = false;
       }
 
       // 2. Em paralelo, valida online
@@ -73,12 +75,16 @@ export class Batalha implements OnInit {
     );
   }
 
-  async abrirJogador(jogador: JogadorDomain) {
+  async abrirDetalhes(jogador: JogadorDomain) {
     this.processando[jogador.id] = 'abrir';
     setTimeout(() => {
-      this.router.navigate(['/jogador', jogador.id]);
+      this.router.navigate(['/jogador-detalhes-batalha', jogador.id]);
       this.processando[jogador.id] = null;
-    }, 400); // apenas para mostrar loading
+    }, 400);
+  }
+
+  async acaoEspada(jogador: JogadorDomain) {
+    this.router.navigate(['/combate', jogador.id]);
   }
 
   async excluirNpcDaBatalha(j: JogadorDomain) {

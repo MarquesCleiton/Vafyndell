@@ -1,26 +1,64 @@
-.jogador-card {
-  border-radius: 10px;
-  transition: transform 0.15s ease;
+/* ===== Card estilo catálogo (tema dark) ===== */
+.catalogo-card {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 12px;
+  transition: all 0.2s ease-in-out;
 }
-
-.jogador-card:hover {
+.catalogo-card:hover {
   transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
 }
 
-.jogador-card img,
-.jogador-card .bg-dark {
-  width: 55px;
-  height: 55px;
-  border-radius: 6px;
+/* ===== Status (vida e armadura) ===== */
+.status-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.status-line .text-danger {
+  color: #ff4d6d !important; /* vermelho suave */
+}
+.status-line .text-info {
+  color: #4da6ff !important; /* azul mais suave que neon */
 }
 
-button.btn {
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
+/* ===== Botões ===== */
+.jogador-card button {
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
   padding: 0;
+  font-size: 1rem;
+}
+
+.jogador-card .btn-outline-danger {
+  border-color: #ff4d6d;
+  color: #ff4d6d;
+}
+.jogador-card .btn-outline-danger:hover {
+  background: #ff4d6d;
+  color: #fff;
+}
+
+.jogador-card .btn-outline-light {
+  border-color: #bbb;
+  color: #bbb;
+}
+.jogador-card .btn-outline-light:hover {
+  background: #bbb;
+  color: #1e1e1e;
+}
+
+/* ===== Texto ===== */
+.text-secondary {
+  color: #bfbfbf !important; /* mais visível que muted */
+}
+
+/* ===== Ajuste imagem ===== */
+.catalogo-card img {
+  border-radius: 6px;
 }
