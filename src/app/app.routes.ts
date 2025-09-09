@@ -23,8 +23,9 @@ export const routes: Routes = [
   { path: 'jogador-detalhes-batalha/:id', loadComponent: () => import('./pages/jogador-detalhes-batalha/jogador-detalhes-batalha').then((m) => m.JogadorDetalhesBatalha) },
   { path: 'combate', loadComponent: () => import('./pages/combate/combate').then((m) => m.Combate) },
   { path: 'combate/:id', loadComponent: () => import('./pages/combate/combate').then((m) => m.Combate) },
-  
   { path: 'catalogo', loadComponent: () => import('./pages/catalogo/catalogo').then((m) => m.Catalogo) },
+  { path: 'recuperacao', loadComponent: () => import('./pages/recuperacao/recuperacao').then((m) => m.Recuperacao) },
+  { path: 'recuperacao/:id', loadComponent: () => import('./pages/recuperacao/recuperacao').then((m) => m.Recuperacao) },
 
   // 🔑 aqui está o ajuste → rota com parâmetro :id
   { path: 'item-catalogo/:id', loadComponent: () => import('./pages/item-catalogo/item-catalogo').then((m) => m.ItemCatalogo) },

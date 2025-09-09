@@ -67,15 +67,29 @@
                 <div *ngIf="j.email" style="width:32px; height:32px;"></div>
               </div>
 
+              <!-- Botão recuperação -->
+              <div class="me-1">
+                <button class="btn btn-sm btn-outline-success" [disabled]="processando[j.id] === 'recuperar'"
+                  (click)="acaoRecuperacao(j)">
+                  <ng-container *ngIf="processando[j.id] === 'recuperar'; else recuperarIcon">
+                    <span class="spinner-border spinner-border-sm"></span>
+                  </ng-container>
+                  <ng-template #recuperarIcon>💊</ng-template>
+                </button>
+              </div>
+
               <!-- Botão espada -->
-              <button class="btn btn-sm btn-outline-light" [disabled]="processando[j.id] === 'espada'"
-                (click)="acaoEspada(j)">
-                <ng-container *ngIf="processando[j.id] === 'espada'; else espadaIcon">
-                  <span class="spinner-border spinner-border-sm"></span>
-                </ng-container>
-                <ng-template #espadaIcon>⚔️</ng-template>
-              </button>
+              <div>
+                <button class="btn btn-sm btn-outline-light" [disabled]="processando[j.id] === 'espada'"
+                  (click)="acaoEspada(j)">
+                  <ng-container *ngIf="processando[j.id] === 'espada'; else espadaIcon">
+                    <span class="spinner-border spinner-border-sm"></span>
+                  </ng-container>
+                  <ng-template #espadaIcon>⚔️</ng-template>
+                </button>
+              </div>
             </div>
+
           </div>
 
         </div>

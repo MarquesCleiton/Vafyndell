@@ -19,7 +19,7 @@ export class Batalha implements OnInit {
   filtro = '';
 
   // estados de loading por jogador
-  processando: { [id: number]: 'abrir' | 'excluir' | 'espada' | null } = {};
+  processando: { [id: number]: 'abrir' | 'excluir' | 'espada' | 'recuperar' | null } = {};
 
   JogadorUtils = JogadorUtils; // 👈 expõe no template
 
@@ -84,7 +84,19 @@ export class Batalha implements OnInit {
   }
 
   async acaoEspada(jogador: JogadorDomain) {
-    this.router.navigate(['/combate', jogador.id]);
+    this.processando[jogador.id] = 'espada';
+    setTimeout(() => {
+      this.router.navigate(['/combate', jogador.id]);
+      this.processando[jogador.id] = null;
+    }, 400);
+  }
+
+  async acaoRecuperacao(jogador: JogadorDomain) {
+    this.processando[jogador.id] = 'recuperar';
+    setTimeout(() => {
+      this.router.navigate(['/recuperacao', jogador.id]);
+      this.processando[jogador.id] = null;
+    }, 400);
   }
 
   async excluirNpcDaBatalha(j: JogadorDomain) {

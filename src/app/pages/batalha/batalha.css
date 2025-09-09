@@ -145,3 +145,13 @@
   background: #6c757d;
   color: #fff;
 }
+
+.jogador-card .btn-outline-success {
+  border-color: #28a745;
+  color: #28a745;
+}
+.jogador-card .btn-outline-success:hover {
+  background: #28a745;
+  color: #fff;
+}
+
