@@ -5,7 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 
 // Angular Material
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatOptionModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
@@ -23,7 +23,7 @@ import { AuthService } from '../../core/auth/AuthService';
     FormsModule,
     // Material
     MatFormFieldModule,
-    MatAutocompleteModule,
+    MatSelectModule,
     MatInputModule,
     MatOptionModule,
     MatIconModule,
@@ -38,16 +38,11 @@ export class Combate implements OnInit {
   ofensorSelecionado: JogadorDomain | null = null;
   vitimaSelecionada: JogadorDomain | null = null;
 
-  filtroOfensor = '';
-  filtroVitima = '';
-  ofensoresFiltrados: JogadorDomain[] = [];
-  vitimasFiltradas: JogadorDomain[] = [];
-
   dano = 0;
   efeitos = '';
   salvando = false;
 
-  constructor(private router: Router, private route: ActivatedRoute) { }
+  constructor(private router: Router, private route: ActivatedRoute) {}
 
   async ngOnInit() {
     this.todosJogadores = await JogadorRepository.getLocalJogadores();
@@ -56,45 +51,13 @@ export class Combate implements OnInit {
     const user = AuthService.getUser();
     this.ofensorSelecionado =
       this.todosJogadores.find(j => j.email === user?.email) || null;
-    this.filtroOfensor = this.ofensorSelecionado?.personagem || '';
-    this.ofensoresFiltrados = [...this.todosJogadores];
 
     // Pré-preencher vítima = ID da rota
     const vitimaId = this.route.snapshot.paramMap.get('id');
     if (vitimaId) {
       this.vitimaSelecionada =
         this.todosJogadores.find(j => String(j.id) === vitimaId) || null;
-      this.filtroVitima = this.vitimaSelecionada?.personagem || '';
     }
-    this.vitimasFiltradas = [...this.todosJogadores];
-  }
-
-  filtrarOfensores() {
-    const termo = this.filtroOfensor.toLowerCase().trim();
-    this.ofensoresFiltrados = termo
-      ? this.todosJogadores.filter(j =>
-        j.personagem.toLowerCase().includes(termo)
-      )
-      : [...this.todosJogadores];
-  }
-
-  filtrarVitimas() {
-    const termo = this.filtroVitima.toLowerCase().trim();
-    this.vitimasFiltradas = termo
-      ? this.todosJogadores.filter(j =>
-        j.personagem.toLowerCase().includes(termo)
-      )
-      : [...this.todosJogadores];
-  }
-
-  selecionarOfensor(j: JogadorDomain) {
-    this.ofensorSelecionado = j;
-    this.filtroOfensor = j.personagem;
-  }
-
-  selecionarVitima(j: JogadorDomain) {
-    this.vitimaSelecionada = j;
-    this.filtroVitima = j.personagem;
   }
 
   incrementar() {
@@ -140,7 +103,7 @@ export class Combate implements OnInit {
       // Atualiza no repositório
       await JogadorRepository.updateJogador(this.vitimaSelecionada);
 
-      // Log para depuração
+      // Log
       console.log('⚔️ Combate registrado:', {
         ofensor: this.ofensorSelecionado,
         vitima: this.vitimaSelecionada,
@@ -150,7 +113,7 @@ export class Combate implements OnInit {
         efeitos: this.efeitos,
       });
 
-      // Alerta amigável
+      // Feedback ao usuário
       alert(
         `✅ ${this.ofensorSelecionado.personagem} causou ${this.dano} de dano em ${this.vitimaSelecionada.personagem}!\n` +
         `🛡️ Armadura restante: ${this.vitimaSelecionada.classe_de_armadura}\n` +
@@ -165,5 +128,4 @@ export class Combate implements OnInit {
       this.salvando = false;
     }
   }
-
 }

@@ -1,24 +1,41 @@
-/* Card principal */
 .detalhe-card {
   background: #1e1e1e;
   border-radius: 0.75rem;
-}
-
-/* Inputs escuros */
-.input-dark input {
-  color: #f8f9fa !important;
-}
-
-.input-dark .mat-mdc-form-field-outline {
-  color: #6c757d !important;
 }
 
 /* Preview */
 .preview-card {
   background: rgba(108, 117, 125, 0.2);
   border-radius: 0.5rem;
-  padding: 0.75rem;
+  padding: 0.5rem 0.75rem;
   text-align: center;
+}
+
+.preview-img {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  border: 1px solid #6c757d;
+}
+
+/* Compactar selects */
+.compact-select .mat-mdc-form-field-subscript-wrapper {
+  display: none; /* remove espaço extra */
+}
+.compact-select .mat-mdc-form-field-flex {
+  padding: 0.25rem 0.5rem;
+}
+.compact-select .mat-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Forçar seta visível */
+.mat-select-arrow {
+  color: #bbb !important;
+  transform: scale(1.2);
 }
 
 /* Quantidade/Dano box */
@@ -29,14 +46,15 @@
 }
 
 .quantidade-input {
-  width: 70px;
+  width: 60px;
   text-align: center;
   font-weight: bold;
   border: 1px solid #6c757d;
   border-radius: 0.4rem;
   background: #212529;
   color: #f8f9fa;
-  padding: 0.25rem;
+  padding: 0.2rem;
+  font-size: 0.85rem;
 }
 
 /* Botões */
@@ -46,7 +64,6 @@
   font-weight: 600;
   transition: all 0.2s ease-in-out;
 }
-
 .btn-save:hover {
   background: #157347;
   transform: scale(1.03);
@@ -55,22 +72,13 @@
 .btn-outline-light {
   border-color: #adb5bd;
 }
-
 .btn-outline-light:hover {
   background: #adb5bd;
   color: #212529;
 }
 
-/* Preview combate */
-.preview-card {
-  background: rgba(108, 117, 125, 0.2);
-  border-radius: 0.5rem;
-  padding: 0.75rem 1rem;
-  text-align: center;
+/* Textarea compacta */
+.compact-textarea {
+  font-size: 0.85rem;
+  padding: 0.4rem;
 }
-
-.preview-card img {
-  border-radius: 0.5rem;
-  border: 1px solid #6c757d;
-}
-

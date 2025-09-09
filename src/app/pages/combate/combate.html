@@ -6,49 +6,44 @@
       <div class="card-body">
 
         <!-- Ofensor -->
-        <div class="mb-3">
+        <div>
           <label class="form-label text-light fw-bold">⚔️ Ofensor *</label>
-          <mat-form-field appearance="outline" class="w-100 input-dark">
-            <input type="text" matInput placeholder="Selecione o ofensor..." [(ngModel)]="filtroOfensor"
-              name="filtroOfensor" [matAutocomplete]="autoOfensor" (input)="filtrarOfensores()" />
-            <mat-autocomplete #autoOfensor="matAutocomplete" (optionSelected)="selecionarOfensor($event.option.value)">
-              <mat-option *ngFor="let j of ofensoresFiltrados" [value]="j" class="bg-dark text-light">
+          <mat-form-field appearance="fill" class="w-100 input-dark compact-select text-light">
+            <mat-select [(ngModel)]="ofensorSelecionado" name="ofensorSelecionado" required>
+              <mat-option *ngFor="let j of todosJogadores" [value]="j" class="text-light bg-dark">
                 <div class="d-flex align-items-center">
                   <img *ngIf="j.imagem" [src]="j.imagem" class="me-2 rounded"
-                    style="width: 28px; height: 28px; object-fit: cover;">
-                  <span>{{ j.personagem }}</span>
+                       style="width: 24px; height: 24px; object-fit: cover;">
+                  <span >{{ j.personagem }}</span>
                 </div>
               </mat-option>
-            </mat-autocomplete>
+            </mat-select>
           </mat-form-field>
         </div>
 
         <!-- Vítima -->
-        <div class="mb-3">
+        <div>
           <label class="form-label text-light fw-bold">🛡️ Vítima *</label>
-          <mat-form-field appearance="outline" class="w-100 input-dark">
-            <input type="text" matInput placeholder="Selecione a vítima..." [(ngModel)]="filtroVitima"
-              name="filtroVitima" [matAutocomplete]="autoVitima" (input)="filtrarVitimas()" />
-            <mat-autocomplete #autoVitima="matAutocomplete" (optionSelected)="selecionarVitima($event.option.value)">
-              <mat-option *ngFor="let j of vitimasFiltradas" [value]="j" class="bg-dark text-light">
+          <mat-form-field appearance="fill" class="w-100 input-dark compact-select text-light">
+            <mat-select [(ngModel)]="vitimaSelecionada" name="vitimaSelecionada" required>
+              <mat-option *ngFor="let j of todosJogadores" [value]="j" class="text-light bg-dark">
                 <div class="d-flex align-items-center">
                   <img *ngIf="j.imagem" [src]="j.imagem" class="me-2 rounded"
-                    style="width: 28px; height: 28px; object-fit: cover;">
+                       style="width: 24px; height: 24px; object-fit: cover;">
                   <span>{{ j.personagem }}</span>
                 </div>
               </mat-option>
-            </mat-autocomplete>
+            </mat-select>
           </mat-form-field>
         </div>
 
         <!-- Preview -->
         <div *ngIf="ofensorSelecionado && vitimaSelecionada" class="preview-card mb-3">
           <div class="d-flex align-items-center justify-content-around">
-
             <!-- Ofensor -->
             <div class="d-flex align-items-center">
-              <img *ngIf="ofensorSelecionado.imagem" [src]="ofensorSelecionado.imagem" class="me-2 rounded"
-                style="width: 50px; height: 50px; object-fit: cover;">
+              <img *ngIf="ofensorSelecionado.imagem" [src]="ofensorSelecionado.imagem"
+                   class="me-2 rounded preview-img">
               <div>
                 <h6 class="fw-bold text-light mb-1">{{ ofensorSelecionado.personagem }}</h6>
                 <small class="text-light opacity-75">Ofensor</small>
@@ -60,8 +55,8 @@
 
             <!-- Vítima -->
             <div class="d-flex align-items-center">
-              <img *ngIf="vitimaSelecionada.imagem" [src]="vitimaSelecionada.imagem" class="me-2 rounded"
-                style="width: 50px; height: 50px; object-fit: cover;">
+              <img *ngIf="vitimaSelecionada.imagem" [src]="vitimaSelecionada.imagem"
+                   class="me-2 rounded preview-img">
               <div>
                 <h6 class="fw-bold text-light mb-1">{{ vitimaSelecionada.personagem }}</h6>
                 <small class="text-light opacity-75">Vítima</small>
@@ -83,14 +78,15 @@
         <!-- Efeitos -->
         <div class="mb-3">
           <label class="form-label text-light fw-bold">✨ Efeitos adicionais</label>
-          <textarea class="form-control bg-dark text-light border-light" rows="2" [(ngModel)]="efeitos" name="efeitos"
-            placeholder="Ex: sangramento, atordoamento..."></textarea>
+          <textarea class="form-control bg-dark text-light border-light compact-textarea"
+                    rows="2" [(ngModel)]="efeitos" name="efeitos"
+                    placeholder="Ex: sangramento, atordoamento..."></textarea>
         </div>
 
         <!-- Botões -->
-        <div class="d-flex justify-content-between mt-4">
-          <button type="button" class="btn btn-outline-light px-4" (click)="cancelar()">⬅ Cancelar</button>
-          <button type="submit" class="btn btn-save px-4" [disabled]="form.invalid || salvando">
+        <div class="d-flex justify-content-between mt-3">
+          <button type="button" class="btn btn-outline-light px-3" (click)="cancelar()">⬅ Cancelar</button>
+          <button type="submit" class="btn btn-save px-3" [disabled]="form.invalid || salvando">
             <ng-container *ngIf="!salvando">⚔️ Registrar</ng-container>
             <ng-container *ngIf="salvando">
               <span class="spinner-border spinner-border-sm me-2"></span> Registrando...
