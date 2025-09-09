@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
+import { AuthService } from './core/auth/AuthService';
 
 @Component({
   selector: 'app-root',
@@ -50,6 +51,7 @@ export class App {
   protected readonly title = signal('Vafyndell');
   protected readonly showFab = signal(false);
   protected readonly activeRoute = signal('');
+  protected readonly isLogged = signal(false); // 👈 novo
 
   private titles: Record<string, string> = {
     '/jogador': 'Klug Orin',
@@ -70,6 +72,8 @@ export class App {
         this.title.set(this.titles[url] ?? 'Vafyndell');
         this.showFab.set(url === '/jogador');
       });
+    // Checa login inicial
+    this.isLogged.set(AuthService.isAuthenticated());
   }
 
   onRefresh() {
@@ -83,4 +87,6 @@ export class App {
   navigateTo(path: string) {
     this.router.navigate([path]);
   }
+
+
 }
