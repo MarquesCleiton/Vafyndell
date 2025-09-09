@@ -1,48 +1,58 @@
 <div class="d-flex flex-column min-vh-100 bg-dark text-light">
   <div class="flex-grow-1 pb-5">
     @if (loading) {
-      <div class="text-center py-5">
-        <div class="spinner-border text-light" role="status"></div>
-        <p class="mt-2">Carregando jogador...</p>
-      </div>
+    <div class="text-center py-5">
+      <div class="spinner-border text-light" role="status"></div>
+      <p class="mt-2">Carregando jogador...</p>
+    </div>
     } @else if (jogador) {
-      <!-- Card principal -->
-      <div class="card detalhe-card shadow-lg border-0">
-        <ng-container *ngIf="jogador.imagem">
-          <img [src]="jogador.imagem" class="card-img-top detalhe-img" alt="Imagem do jogador" />
-        </ng-container>
+    <!-- Card principal -->
+    <div class="card detalhe-card shadow-lg border-0">
+      <ng-container *ngIf="jogador.imagem">
+        <img [src]="jogador.imagem" class="card-img-top detalhe-img" alt="Imagem do jogador" />
+      </ng-container>
 
-        <div class="card-body pb-5">
-          <h4 class="fw-bold mb-1 text-light">🧙 {{ jogador.personagem }}</h4>
-          <p class="text-secondary mb-3">⚖️ {{ jogador.alinhamento }}</p>
+      <div class="card-body pb-5">
+        <h4 class="fw-bold mb-1 text-light">🧙 {{ jogador.personagem }}</h4>
+        <p class="text-secondary mb-3">⚖️ {{ jogador.alinhamento }}</p>
 
-          <!-- Infos básicas -->
-          <ul class="info-list mb-3">
-            <li>🏅 <span>Nível:</span> {{ jogador.nivel }}</li>
-            <li>⭐ <span>XP:</span> {{ jogador.xp }}</li>
-            <li>💖 <span>Vida total:</span> {{ jogador.vida_total }}</li>
-            <li>❤️ <span>Vida:</span> {{ jogador.pontos_de_vida }}</li>
-            <li>🛡️ <span>Armadura:</span> {{ jogador.classe_de_armadura }}</li>
-            <li>💔 <span>Dano tomado:</span> {{ jogador.dano_tomado }}</li>
-            <li>✨ <span>Fator de cura:</span> {{ jogador.fator_cura }}</li>
-            <li>🚶‍♂️ <span>Deslocamento:</span> {{ jogador.deslocamento }}</li>
-          </ul>
+        <!-- Infos básicas -->
+        <ul class="info-list mb-3">
+          <li>🏅 <span>Nível:</span> {{ jogador.nivel }}</li>
+          <li>⭐ <span>XP:</span> {{ jogador.xp }}</li>
 
-          <!-- Atributos -->
-          <h6 class="fw-bold mt-3 text-light">📊 Atributos</h6>
-          <div class="atributos-grid compact mb-3">
-            @for (attr of atributos; track attr.label) {
-              <div class="atributo-item">
-                {{ attr.icon }} <span>{{ attr.label }}</span>
-                <b>{{ attr.value }}</b>
-                <small>({{ attr.mod >= 0 ? '+' + attr.mod : attr.mod }})</small>
-              </div>
-            }
+          <!-- Vida simples e Vida Total -->
+          <li>
+            💖 <span>Vida Total:</span>
+            <span [ngClass]="{ 'text-danger fw-bold': jogador.vida_total! <= 0 }">
+              {{ jogador.vida_total }}
+            </span>
+            / {{ jogador.pontos_de_vida + jogador.classe_de_armadura }}
+          </li>
+          <li>❤️ <span>Vida:</span> {{ jogador.pontos_de_vida }}</li>
+
+
+          <li>🛡️ <span>Armadura:</span> {{ jogador.classe_de_armadura }}</li>
+          <li>💔 <span>Dano tomado:</span> {{ jogador.dano_tomado }}</li>
+          <li>✨ <span>Fator de cura:</span> {{ jogador.fator_cura }}</li>
+          <li>🚶‍♂️ <span>Deslocamento:</span> {{ jogador.deslocamento }}</li>
+        </ul>
+
+        <!-- Atributos -->
+        <h6 class="fw-bold mt-3 text-light">📊 Atributos</h6>
+        <div class="atributos-grid compact mb-3">
+          @for (attr of atributos; track attr.label) {
+          <div class="atributo-item">
+            {{ attr.icon }} <span>{{ attr.label }}</span>
+            <b>{{ attr.value }}</b>
+            <small class="text-light">({{ attr.mod >= 0 ? '+' + attr.mod : attr.mod }})</small>
           </div>
+          }
         </div>
       </div>
+    </div>
     } @else {
-      <div class="alert alert-warning mt-4">Nenhum jogador encontrado. Vá para o cadastro.</div>
+    <div class="alert alert-warning mt-4">Nenhum jogador encontrado. Vá para o cadastro.</div>
     }
   </div>
 

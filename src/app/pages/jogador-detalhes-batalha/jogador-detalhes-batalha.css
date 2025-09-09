@@ -4,6 +4,7 @@
   border-radius: 12px;
   overflow: hidden;
 }
+
 .detalhe-img {
   max-height: 220px;
   object-fit: cover;
@@ -16,13 +17,16 @@
   margin: 0;
   font-size: 0.95rem;
 }
+
 .info-list li {
   margin-bottom: 4px;
   color: #f1f1f1;
 }
+
 .info-list span {
   font-weight: 600;
-  color: #f8f9fa; /* text-light */
+  color: #f8f9fa;
+  /* text-light */
 }
 
 /* Grid de atributos */
@@ -33,6 +37,7 @@
   font-size: 0.9rem;
   color: #f1f1f1;
 }
+
 .atributo-item {
   display: flex;
   align-items: center;
@@ -43,14 +48,17 @@
   border-radius: 6px;
   padding: 4px 8px;
 }
+
 .atributo-item span {
   font-weight: 500;
   color: #ccc;
   margin-right: 2px;
 }
+
 .atributo-item b {
   color: #fff;
 }
+
 .atributo-item small {
   color: #aaa;
   margin-left: 2px;
@@ -61,7 +69,13 @@
   color: #ddd;
   font-size: 0.95rem;
 }
+
 .ataques-text {
   color: #f8d775;
   font-size: 0.9rem;
+}
+
+/* Deixa o texto dos atributos calculados branco */
+.atributo-item small {
+  color: #f8f9fa !important;
 }

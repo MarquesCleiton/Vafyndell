@@ -64,18 +64,18 @@ export class JogadorDetalhesBatalha implements OnInit {
   }
 
   private setJogador(jogador: JogadorDomain) {
-    // 📌 Se no cadastro já existe pontos_de_vida, respeitamos esse valor
+    // Vida base cadastrada ou calculada
     const vidaBase = jogador.pontos_de_vida && jogador.pontos_de_vida > 0
       ? jogador.pontos_de_vida
       : jogador.energia + jogador.constituicao;
 
     const fatorCura = Math.floor(jogador.energia / 3);
-    const vidaTotal = vidaBase + jogador.classe_de_armadura;
+    const vidaTotal = vidaBase + jogador.classe_de_armadura - (jogador.dano_tomado || 0);
     const deslocamento = Math.floor(jogador.destreza / 3);
 
     this.jogador = {
       ...jogador,
-      pontos_de_vida: vidaBase,  // 👈 respeita o cadastrado
+      pontos_de_vida: vidaBase,
       fator_cura: fatorCura,
       vida_total: vidaTotal,
       deslocamento: deslocamento,
@@ -93,6 +93,7 @@ export class JogadorDetalhesBatalha implements OnInit {
       { label: 'Energia', value: jogador.energia, mod: calcMod(jogador.energia), icon: '⚡' },
     ];
   }
+
 
 
   editarJogador() {

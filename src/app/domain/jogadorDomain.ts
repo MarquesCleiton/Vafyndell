@@ -55,17 +55,22 @@ export class JogadorUtils {
       : j.energia + j.constituicao;
   }
 
-  /** Vida total atual = vida base + CA - dano */
+  /** Vida total atual (inclui CA ainda não quebrada) */
   static getVidaTotal(j: JogadorDomain): number {
     const vidaBase = this.getVidaBase(j);
-    return vidaBase + (j.classe_de_armadura || 0) - (j.dano_tomado || 0);
+    const ca = j.classe_de_armadura || 0;
+    const dano = j.dano_tomado || 0;
+    return vidaBase + ca - dano;
   }
 
-  /** Apenas a vida "sem armadura" */
+  /** Vida atual do jogador SEM a armadura (apenas carne/ossos) */
   static getVidaAtual(j: JogadorDomain): number {
-    return this.getVidaBase(j) - (j.dano_tomado || 0);
+    const vidaBase = this.getVidaBase(j);
+    const dano = j.dano_tomado || 0;
+    return vidaBase - dano;
   }
 
+  /** Verifica se o jogador está morto */
   static estaMorto(j: JogadorDomain): boolean {
     return this.getVidaTotal(j) <= 0;
   }

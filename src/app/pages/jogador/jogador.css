@@ -22,7 +22,7 @@
 }
 .info-list span {
   font-weight: 600;
-  color: #ffc107; /* destaque em amarelo */
+  color: #dddddd; /* destaque em amarelo */
 }
 
 /* Grid de atributos (chips) */

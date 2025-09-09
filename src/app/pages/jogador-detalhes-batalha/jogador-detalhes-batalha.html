@@ -23,7 +23,17 @@
         <!-- Infos gerais -->
         <ul class="info-list mb-3">
           <li>⭐ <span>XP:</span> {{ jogador.xp }}</li>
+
+          <!-- Vida e Vida Total -->
+          <li>
+            💖 <span>Vida Total:</span>
+            <span [ngClass]="{ 'text-danger fw-bold': jogador.vida_total! <= 0 }">
+              {{ jogador.vida_total }}
+            </span>
+            / {{ jogador.pontos_de_vida + jogador.classe_de_armadura }}
+          </li>
           <li>❤️ <span>Vida:</span> {{ jogador.pontos_de_vida }}</li>
+
           <li>🛡️ <span>Armadura:</span> {{ jogador.classe_de_armadura }}</li>
           <li>💔 <span>Dano tomado:</span> {{ jogador.dano_tomado }}</li>
           <li>✨ <span>Fator de cura:</span> {{ jogador.fator_cura }}</li>
@@ -36,7 +46,7 @@
           <div class="atributo-item" *ngFor="let attr of atributos">
             {{ attr.icon }} <span>{{ attr.label }}</span>
             <b>{{ attr.value }}</b>
-            <small>({{ attr.mod >= 0 ? '+' + attr.mod : attr.mod }})</small>
+            <small class="text-light">({{ attr.mod >= 0 ? '+' + attr.mod : attr.mod }})</small>
           </div>
         </div>
 

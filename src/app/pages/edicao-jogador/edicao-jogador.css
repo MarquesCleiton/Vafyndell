@@ -177,3 +177,13 @@
 .btn-save {
   margin-left: auto; /* alinhado à direita */
 }
+
+/* Deixa o texto dos atributos calculados branco */
+.atributo-item small {
+  color: #f8f9fa !important;
+}
+/* Deixa o texto dos atributos calculados branco */
+.atributo-item small {
+  color: #f8f9fa !important;
+}
+

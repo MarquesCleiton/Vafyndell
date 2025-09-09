@@ -65,12 +65,14 @@
               <div>
                 <h6 class="fw-bold text-light mb-1">{{ vitimaSelecionada.personagem }}</h6>
                 <small class="text-light opacity-75">Vítima</small>
+                <div class="text-danger small mt-1">
+                  ❤️ Dano sofrido: <b>{{ vitimaSelecionada.dano_tomado || 0 }}</b>
+                </div>
               </div>
             </div>
 
           </div>
         </div>
-
 
         <!-- Dano -->
         <div class="d-flex align-items-center justify-content-between mb-3">
