@@ -1,27 +1,86 @@
-/* Bloco de metadados */
+/* ======================
+   CARD & IMAGEM
+   ====================== */
+.card {
+  background: #1e1e1e;
+  border-radius: 12px;
+  border: 1px solid #2c2c2c;
+}
+.img-fluid {
+  border-radius: 10px;
+}
+
+/* Placeholder sem imagem */
+.bg-secondary {
+  background: #2c2c2c !important;
+  color: #ccc;
+  font-size: 1rem;
+  border-radius: 10px;
+}
+
+/* ======================
+   META INFO
+   ====================== */
 .meta-info p {
-  color: #e6e6e6;
-  font-size: 1rem;        /* maior que antes */
-  margin-bottom: 0.6rem;  /* mais espaço entre linhas */
-  display: flex;
-  align-items: center;
-}
-
-.meta-info .icon {
-  margin-right: 6px;
-  font-size: 1.1rem;      /* ícone levemente maior */
-}
-
-/* Efeito, colateral e descrição */
-.efeito-text {
-  color: #ddd;
+  margin-bottom: 6px;
   font-size: 0.95rem;
+  color: #eaeaea;
+}
+.meta-info .icon {
+  margin-right: 4px;
+}
+
+/* ======================
+   TEXTOS ESPECÍFICOS
+   ====================== */
+.efeito-text {
+  color: #0dcaf0; /* azul elegante */
+  font-weight: 500;
 }
 .colateral {
-  color: #c97a7a !important;
-  font-size: 0.95rem;
+  color: #ff6b6b; /* vermelho suave */
+  font-weight: 500;
 }
 .descricao-text {
-  color: #bfbfbf !important;
-  font-size: 0.95rem;
+  color: #bbb;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* ======================
+   BOTÕES
+   ====================== */
+.btn {
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+/* Cancelar */
+.btn-secondary {
+  background: #444;
+  border: none;
+}
+.btn-secondary:hover {
+  background: #555;
+}
+
+/* Editar */
+.btn-outline-warning {
+  border-color: #ffc107;
+  color: #ffc107;
+}
+.btn-outline-warning:hover:not(:disabled) {
+  background: #ffc107;
+  color: #1e1e1e;
+}
+
+/* Excluir */
+.btn-outline-danger {
+  border-color: #ff4d6d;
+  color: #ff4d6d;
+}
+.btn-outline-danger:hover:not(:disabled) {
+  background: #ff4d6d;
+  color: #fff;
 }

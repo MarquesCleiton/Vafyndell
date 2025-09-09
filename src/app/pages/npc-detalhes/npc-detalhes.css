@@ -1,36 +1,105 @@
-/* Ajuste global para botões de ação */
-.btn {
-  font-weight: 500;
+/* Card detalhes */
+.detalhe-card {
+  background: #1e1e1e;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.detalhe-img {
+  max-height: 220px;
+  object-fit: cover;
+}
+
+/* Lista básica */
+.info-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.95rem;
+}
+.info-list li {
+  margin-bottom: 4px;
+  color: #f1f1f1;
+}
+.info-list span {
+  font-weight: 600;
+  color: #ffc107;
+}
+
+/* Grid de atributos */
+.atributos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #e0e0e0;
+}
+.atributos-grid.compact p {
+  margin: 0;
+}
+
+/* Texto */
+.descricao-text {
+  color: #ddd;
+  font-size: 0.95rem;
+}
+.ataques-text {
+  color: #f8d775;
+  font-size: 0.9rem;
+}
+
+/* Seções (descrição, ataques, atributos) */
+.card-body h6 {
+  color: #f1f1f1;
+  margin-bottom: 6px;
+}
+
+/* FAB herdado */
+.fab {
+  position: fixed;
+  bottom: 70px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
+}
+.fab-danger {
+  background: #ff4d6d;
+  color: #fff;
+}
+.fab-danger:hover {
+  background: #e63e5b;
+}
+
+/* Grid de atributos */
+.atributos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px 12px;
+  font-size: 0.9rem;
+  color: #f1f1f1;
+}
+
+/* Cada atributo compacto */
+.atributo-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  background: #2a2a2a;
   border-radius: 6px;
-  padding: 0.35rem 0.75rem;
-  transition: all 0.2s ease-in-out;
+  padding: 4px 8px;
 }
-
-.btn-sm {
-  font-size: 0.85rem;
+.atributo-item span {
+  font-weight: 500;
+  color: #ccc;
+  margin-right: 2px;
 }
-
-.btn-outline-light,
-.btn-outline-warning,
-.btn-outline-danger {
-  background: transparent;
-}
-
-.btn-outline-light:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.btn-outline-warning:hover {
-  background: rgba(255, 193, 7, 0.1);
-}
-
-.btn-outline-danger:hover {
-  background: rgba(220, 53, 69, 0.1);
-}
-
-/* Spinner alinhado ao texto */
-.spinner-border-sm {
-  width: 1rem;
-  height: 1rem;
-  vertical-align: text-bottom;
+.atributo-item b {
+  color: #fff;
 }

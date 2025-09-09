@@ -7,43 +7,46 @@
     </div>
 
     <!-- Conteúdo -->
-    <div *ngIf="!loading && jogador" class="card bg-dark text-light border-0 shadow-lg">
+    <div *ngIf="!loading && jogador" class="card detalhe-card shadow-lg border-0">
       <ng-container *ngIf="jogador.imagem">
-        <img [src]="jogador.imagem" class="card-img-top object-fit-cover" alt="Imagem do personagem"
-             style="max-height: 300px;">
+        <img [src]="jogador.imagem" class="card-img-top detalhe-img" alt="Imagem do personagem" />
       </ng-container>
 
       <div class="card-body pb-5">
-        <h4 class="card-title fw-bold">
+        <h4 class="fw-bold mb-1 text-light">
           {{ jogador.email ? '🧙' : '👹' }} {{ jogador.personagem }}
         </h4>
-        <p class="card-subtitle text-light mb-3">
+        <p class="text-secondary mb-3">
           ⚖️ {{ jogador.alinhamento || 'Sem alinhamento' }}
         </p>
 
         <!-- Infos gerais -->
-        <ul class="list-group list-group-flush">
-          <li class="list-group-item bg-dark text-light border-0">⭐ XP: <b>{{ jogador.xp }}</b></li>
-          <li class="list-group-item bg-dark text-light border-0">❤️ Vida: <b>{{ jogador.pontos_de_vida }}</b> | 🛡️ Armadura: <b>{{ jogador.classe_de_armadura }}</b></li>
-          <li class="list-group-item bg-dark text-light border-0">💔 Dano tomado: <b>{{ jogador.dano_tomado }}</b></li>
-          <li class="list-group-item bg-dark text-light border-0">✨ Fator de cura: <b>{{ jogador.fator_cura }}</b></li>
-          <li class="list-group-item bg-dark text-light border-0">🚶‍♂️ Deslocamento: <b>{{ jogador.deslocamento }}</b></li>
+        <ul class="info-list mb-3">
+          <li>⭐ <span>XP:</span> {{ jogador.xp }}</li>
+          <li>❤️ <span>Vida:</span> {{ jogador.pontos_de_vida }}</li>
+          <li>🛡️ <span>Armadura:</span> {{ jogador.classe_de_armadura }}</li>
+          <li>💔 <span>Dano tomado:</span> {{ jogador.dano_tomado }}</li>
+          <li>✨ <span>Fator de cura:</span> {{ jogador.fator_cura }}</li>
+          <li>🚶‍♂️ <span>Deslocamento:</span> {{ jogador.deslocamento }}</li>
         </ul>
 
-        <!-- atributos -->
-        <div class="row row-cols-2 g-2 mt-3">
-          <div class="col" *ngFor="let attr of atributos">
-            <div class="p-2 rounded bg-secondary text-light text-center fw-bold d-flex flex-column align-items-center">
-              <div>{{ attr.icon }} {{ attr.label }}</div>
-              <div>{{ attr.value }} <small>({{ attr.mod >= 0 ? '+' + attr.mod : attr.mod }})</small></div>
-            </div>
+        <!-- Atributos -->
+        <h6 class="fw-bold mt-3 text-light">📊 Atributos</h6>
+        <div class="atributos-grid compact mb-3">
+          <div class="atributo-item" *ngFor="let attr of atributos">
+            {{ attr.icon }} <span>{{ attr.label }}</span>
+            <b>{{ attr.value }}</b>
+            <small>({{ attr.mod >= 0 ? '+' + attr.mod : attr.mod }})</small>
           </div>
         </div>
 
         <!-- Extra só para NPC -->
         <div *ngIf="!jogador.email" class="mt-3">
-          <p *ngIf="jogador.descricao" class="fst-italic">{{ jogador.descricao }}</p>
-          <p *ngIf="jogador.ataques"><b>⚔️ Ataques:</b> {{ jogador.ataques }}</p>
+          <h6 class="fw-bold text-light">📝 Descrição</h6>
+          <p *ngIf="jogador.descricao" class="descricao-text">{{ jogador.descricao }}</p>
+
+          <h6 *ngIf="jogador.ataques" class="fw-bold text-light mt-3">⚔️ Ataques</h6>
+          <p *ngIf="jogador.ataques" class="ataques-text">{{ jogador.ataques }}</p>
         </div>
       </div>
     </div>

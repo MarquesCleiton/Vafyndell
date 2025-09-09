@@ -8,40 +8,46 @@
     </div>
 
     <!-- Conteúdo -->
-    <div *ngIf="!carregando && npc" class="card bg-secondary text-light shadow-lg border-0">
+    <div *ngIf="!carregando && npc" class="card detalhe-card shadow-lg border-0">
       <ng-container *ngIf="npc.imagem">
-        <img [src]="npc.imagem" class="card-img-top object-fit-cover" alt="{{ npc.nome }}" style="max-height: 300px;" />
+        <img [src]="npc.imagem" class="card-img-top detalhe-img" alt="{{ npc.nome }}" />
       </ng-container>
 
-      <div class="card-body">
-        <h4 class="fw-bold">{{ npc.nome }}</h4>
-        <p class="mb-1"><b>🏷️ Classificação:</b> {{ npc.classificacao }}</p>
-        <p class="mb-1"><b>🎭 Tipo:</b> {{ npc.tipo }}</p>
-        <p class="mb-1"><b>⚖️ Alinhamento:</b> {{ npc.alinhamento || 'Não definido' }}</p>
+      <div class="card-body p-3">
+        <h5 class="fw-bold mb-3">{{ npc.nome }}</h5>
 
-        <hr />
+        <!-- Info básica -->
+        <ul class="info-list mb-3">
+          <li>🏷️ <span>Classificação:</span> {{ npc.classificacao }}</li>
+          <li>🎭 <span>Tipo:</span> {{ npc.tipo }}</li>
+          <li>⚖️ <span>Alinhamento:</span> {{ npc.alinhamento || 'Não definido' }}</li>
+        </ul>
 
         <!-- Atributos -->
-        <p>❤️ Vida: <b>{{ npc.pontos_de_vida }}</b></p>
-        <p>🛡️ Armadura: <b>{{ npc.classe_armadura }}</b></p>
-        <p>⭐ XP: <b>{{ npc.xp }}</b></p>
-        <p>💪 Força: <b>{{ npc.forca }}</b></p>
-        <p>🪨 Constituição: <b>{{ npc.constituicao }}</b></p>
-        <p>🤸‍♂️ Destreza: <b>{{ npc.destreza }}</b></p>
-        <p>📖 Sabedoria: <b>{{ npc.sabedoria }}</b></p>
-        <p>🧠 Inteligência: <b>{{ npc.inteligencia }}</b></p>
-        <p>⚡ Energia: <b>{{ npc.energia }}</b></p>
+        <!-- Atributos -->
+        <h6 class="fw-bold mt-3">📊 Atributos</h6>
+        <div class="atributos-grid compact mb-3">
+          <div class="atributo-item">❤️ <span>Vida</span> <b>{{ npc.pontos_de_vida }}</b></div>
+          <div class="atributo-item">🛡️ <span>Armadura</span> <b>{{ npc.classe_armadura }}</b></div>
+          <div class="atributo-item">⭐ <span>XP</span> <b>{{ npc.xp }}</b></div>
+          <div class="atributo-item">💪 <span>Força</span> <b>{{ npc.forca }}</b></div>
+          <div class="atributo-item">🪨 <span>Constituição</span> <b>{{ npc.constituicao }}</b></div>
+          <div class="atributo-item">🤸‍♂️ <span>Destreza</span> <b>{{ npc.destreza }}</b></div>
+          <div class="atributo-item">📖 <span>Sabedoria</span> <b>{{ npc.sabedoria }}</b></div>
+          <div class="atributo-item">🧠 <span>Inteligência</span> <b>{{ npc.inteligencia }}</b></div>
+          <div class="atributo-item">⚡ <span>Energia</span> <b>{{ npc.energia }}</b></div>
+        </div>
 
-        <hr />
 
         <!-- Descrição -->
-        <p *ngIf="npc.descricao" class="descricao-text">
-          {{ npc.descricao }}
-        </p>
+        <div *ngIf="npc.descricao" class="mt-3">
+          <h6 class="fw-bold">📝 Descrição</h6>
+          <p class="descricao-text">{{ npc.descricao }}</p>
+        </div>
 
         <!-- Ataques -->
-        <div *ngIf="npc.ataques">
-          <h6 class="fw-bold mt-3">⚔️ Ataques</h6>
+        <div *ngIf="npc.ataques" class="mt-3">
+          <h6 class="fw-bold">⚔️ Ataques</h6>
           <p class="ataques-text">{{ npc.ataques }}</p>
         </div>
 
@@ -67,20 +73,16 @@
     </div>
 
     <!-- Se não encontrou -->
-    <div *ngIf="!carregando && !npc" class="text-center text-muted py-5">
+    <div *ngIf="!carregando && !npc" class="text-center text-secondary py-5">
       NPC não encontrado.
     </div>
   </div>
 
-  <!-- Botão flutuante para adicionar NPC ao campo de batalha -->
-  <button class="fab btn btn-danger rounded-circle shadow-lg d-flex align-items-center justify-content-center"
-    (click)="adicionarAoCampo()" [disabled]="processandoAdicionar"
-    style="position: fixed; bottom: 70px; right: 20px; z-index: 20; width: 70px; height: 70px; font-size: 2rem;">
+  <!-- FAB -->
+  <button class="fab fab-danger" (click)="adicionarAoCampo()" [disabled]="processandoAdicionar">
     <ng-container *ngIf="!processandoAdicionar">⚔️</ng-container>
     <ng-container *ngIf="processandoAdicionar">
       <div class="spinner-border text-light" role="status" style="width: 2rem; height: 2rem;"></div>
     </ng-container>
   </button>
-
-
 </div>
