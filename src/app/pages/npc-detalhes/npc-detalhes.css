@@ -103,3 +103,23 @@
 .atributo-item b {
   color: #fff;
 }
+
+.descricao-text,
+.ataques-text {
+  white-space: pre-line; /* 👈 já respeita \n */
+  color: #f1f1f1;
+  background: #2a2a2a;
+  border-radius: 6px;
+  padding: 8px 10px;
+  line-height: 1.4;
+  font-size: 0.95rem;
+}
+
+
+textarea.auto-expand {
+  overflow-y: hidden;   /* evita scroll feio */
+  resize: none;         /* só cresce automático */
+  min-height: 60px;
+  max-height: 200px;    /* 👈 limite máximo */
+}
+

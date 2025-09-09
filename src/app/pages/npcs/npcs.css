@@ -49,3 +49,27 @@ button.btn-outline-light:hover {
   border-color: #888;
   color: #fff;
 }
+
+/* Botão flutuante (FAB) */
+.fab {
+  position: fixed;
+  bottom: 80px;   /* deixa acima da bottom nav */
+  right: 20px;    /* canto inferior direito */
+  width: 60px;    /* largura fixa */
+  height: 60px;   /* altura fixa */
+  border-radius: 50%; /* círculo perfeito */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  z-index: 1000;
+}
+
+.fab.btn-primary {
+  background: #0d6efd;
+  border: none;
+}
+
+.fab.btn-primary:hover {
+  background: #0b5ed7;
+}

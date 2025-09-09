@@ -28,10 +28,9 @@
             <span *ngIf="!j.imagem && !JogadorUtils.estaMorto(j)" class="text-secondary">👤</span>
           </div>
 
-
           <!-- Coluna 2: Nome + classificação/tipo -->
           <div class="flex-grow-1">
-            <h6 class=" text-light fw-bold mb-1">{{ j.personagem }}</h6>
+            <h6 class="text-light fw-bold mb-1">{{ j.personagem }}</h6>
             <small class="text-secondary">
               {{ j.classificacao || 'Jogador' }}
               <span *ngIf="j.tipo">| {{ j.tipo }}</span>
@@ -41,17 +40,17 @@
           <!-- Coluna 3: Vida/armadura + botões -->
           <div class="d-flex flex-column align-items-end ms-2" (click)="$event.stopPropagation()">
 
-            <!-- Linha 1: Vida total + Armadura -->
+            <!-- Linha 1: Vida atual + Armadura -->
             <div class="d-flex mb-1 align-items-center">
-              <div class="me-3 text-danger">
-                ❤️ {{ JogadorUtils.getVidaTotal(j) }}/{{ JogadorUtils.getVidaBase(j) + (j.classe_de_armadura || 0) }}
+              <div class="me-3 text-danger fw-bold">
+                ❤️ {{ JogadorUtils.getVidaAtual(j) }}/{{ JogadorUtils.getVidaBase(j) }}
               </div>
               <div class="text-info">🛡️ {{ j.classe_de_armadura }}</div>
             </div>
 
             <!-- Linha 2: Dano tomado -->
             <div class="text-warning small mb-1">
-              💥 Dano tomado: {{ j.dano_tomado || 0 }}
+              💥 Dano: {{ j.dano_tomado || 0 }}
             </div>
 
             <!-- Linha 3: Botões -->

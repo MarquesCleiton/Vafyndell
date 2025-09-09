@@ -1,5 +1,5 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { LocationStrategy, HashLocationStrategy } from '@angular/common';
 import { provideAnimations } from '@angular/platform-browser/animations';
 
@@ -8,7 +8,13 @@ import { routes } from './app/app.routes';
 
 bootstrapApplication(App, {
   providers: [
-    provideRouter(routes),
+    provideRouter(
+      routes,
+      withInMemoryScrolling({
+        scrollPositionRestoration: 'enabled', // 👈 usa 'enabled' em vez de 'top'
+        anchorScrolling: 'enabled',
+      })
+    ),
     provideAnimations(),
     { provide: LocationStrategy, useClass: HashLocationStrategy },
   ],

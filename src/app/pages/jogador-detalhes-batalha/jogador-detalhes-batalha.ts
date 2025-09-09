@@ -63,36 +63,41 @@ export class JogadorDetalhesBatalha implements OnInit {
     }
   }
 
-  private setJogador(jogador: JogadorDomain) {
-    // Vida base cadastrada ou calculada
-    const vidaBase = jogador.pontos_de_vida && jogador.pontos_de_vida > 0
-      ? jogador.pontos_de_vida
-      : jogador.energia + jogador.constituicao;
+private setJogador(jogador: JogadorDomain) {
+  // Vida base cadastrada ou calculada
+  const vidaBase = jogador.pontos_de_vida && jogador.pontos_de_vida > 0
+    ? jogador.pontos_de_vida
+    : jogador.energia + jogador.constituicao;
 
-    const fatorCura = Math.floor(jogador.energia / 3);
-    const vidaTotal = vidaBase + jogador.classe_de_armadura - (jogador.dano_tomado || 0);
-    const deslocamento = Math.floor(jogador.destreza / 3);
+  const fatorCura = Math.floor(jogador.energia / 3);
+  const deslocamento = Math.floor(jogador.destreza / 3);
 
-    this.jogador = {
-      ...jogador,
-      pontos_de_vida: vidaBase,
-      fator_cura: fatorCura,
-      vida_total: vidaTotal,
-      deslocamento: deslocamento,
-    };
+  // Vida atual segue a regra da armadura
+  const vidaAtual = jogador.classe_de_armadura > 0
+    ? vidaBase
+    : vidaBase - (jogador.dano_tomado || 0);
 
-    const calcMod = (valor: number) => Math.floor((valor - 10) / 2);
+  this.jogador = {
+    ...jogador,
+    pontos_de_vida: vidaBase,
+    vida_atual: vidaAtual,
+    fator_cura: fatorCura,
+    deslocamento: deslocamento,
+  };
 
-    this.atributos = [
-      { label: 'Força', value: jogador.forca, mod: calcMod(jogador.forca), icon: '💪' },
-      { label: 'Destreza', value: jogador.destreza, mod: calcMod(jogador.destreza), icon: '🤸‍♂️' },
-      { label: 'Constituição', value: jogador.constituicao, mod: calcMod(jogador.constituicao), icon: '🪨' },
-      { label: 'Inteligência', value: jogador.inteligencia, mod: calcMod(jogador.inteligencia), icon: '🧠' },
-      { label: 'Sabedoria', value: jogador.sabedoria, mod: calcMod(jogador.sabedoria), icon: '📖' },
-      { label: 'Carisma', value: jogador.carisma, mod: calcMod(jogador.carisma), icon: '😎' },
-      { label: 'Energia', value: jogador.energia, mod: calcMod(jogador.energia), icon: '⚡' },
-    ];
-  }
+  const calcMod = (valor: number) => Math.floor((valor - 10) / 2);
+
+  this.atributos = [
+    { label: 'Força', value: jogador.forca, mod: calcMod(jogador.forca), icon: '💪' },
+    { label: 'Destreza', value: jogador.destreza, mod: calcMod(jogador.destreza), icon: '🤸‍♂️' },
+    { label: 'Constituição', value: jogador.constituicao, mod: calcMod(jogador.constituicao), icon: '🪨' },
+    { label: 'Inteligência', value: jogador.inteligencia, mod: calcMod(jogador.inteligencia), icon: '🧠' },
+    { label: 'Sabedoria', value: jogador.sabedoria, mod: calcMod(jogador.sabedoria), icon: '📖' },
+    { label: 'Carisma', value: jogador.carisma, mod: calcMod(jogador.carisma), icon: '😎' },
+    { label: 'Energia', value: jogador.energia, mod: calcMod(jogador.energia), icon: '⚡' },
+  ];
+}
+
 
 
 

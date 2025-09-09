@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ElementRef, NgZone } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -20,7 +20,7 @@ type AtributoChave = keyof Pick<
   templateUrl: './cadastro-npc.html',
   styleUrls: ['./cadastro-npc.css'],
 })
-export class CadastroNpc {
+export class CadastroNpc implements OnInit, AfterViewInit {
   npc: NpcDomain = {
     id: 0,
     index: 0,
@@ -59,34 +59,45 @@ export class CadastroNpc {
   tipos = ['Comum', 'Elite', 'Mágico', 'Lendário'];
 
   salvando = false;
-  editMode = false; // 👈 agora existe
+  editMode = false;
 
-  constructor(private router: Router, private route: ActivatedRoute) {}
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private el: ElementRef,
+    private zone: NgZone
+  ) {}
 
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.editMode = true;
       try {
-        // 1. Tenta carregar local
         const locais = await NpcRepository.getLocalNpcs();
         const existente = locais.find(n => String(n.id) === id);
-        if (existente) this.npc = { ...existente };
+        if (existente) {
+          this.npc = { ...existente };
+          this.scheduleAutoExpand();
+        }
 
-        // 2. Faz sync em paralelo
         NpcRepository.syncNpcs().then(async updated => {
           if (updated) {
             const atualizados = await NpcRepository.getLocalNpcs();
             const atualizado = atualizados.find(n => String(n.id) === id);
-            if (atualizado) this.npc = { ...atualizado };
+            if (atualizado) {
+              this.npc = { ...atualizado };
+              this.scheduleAutoExpand();
+            }
           }
         });
 
-        // 3. Se não havia local, força buscar online
         if (!existente) {
           const online = await NpcRepository.forceFetchNpcs();
           const achadoOnline = online.find(n => String(n.id) === id);
-          if (achadoOnline) this.npc = { ...achadoOnline };
+          if (achadoOnline) {
+            this.npc = { ...achadoOnline };
+            this.scheduleAutoExpand();
+          }
         }
       } catch (err) {
         console.error('[CadastroNpc] Erro ao carregar NPC:', err);
@@ -94,7 +105,33 @@ export class CadastroNpc {
     }
   }
 
-  // Ajustar valores
+  ngAfterViewInit() {
+    this.scheduleAutoExpand();
+  }
+
+  /** agenda o auto expand depois da renderização */
+  private scheduleAutoExpand() {
+    this.zone.runOutsideAngular(() => {
+      setTimeout(() => this.applyAutoExpand(), 0);
+    });
+  }
+
+  /** Ajusta dinamicamente os textareas */
+  private applyAutoExpand() {
+    const textareas = this.el.nativeElement.querySelectorAll('textarea.auto-expand');
+    textareas.forEach((ta: HTMLTextAreaElement) => {
+      ta.style.height = 'auto';
+      const maxHeight = 200;
+      ta.style.height = Math.min(ta.scrollHeight, maxHeight) + 'px';
+
+      // listener para inputs
+      ta.oninput = () => {
+        ta.style.height = 'auto';
+        ta.style.height = Math.min(ta.scrollHeight, maxHeight) + 'px';
+      };
+    });
+  }
+
   getValor(campo: AtributoChave): number {
     return this.npc[campo] as number;
   }
@@ -105,7 +142,6 @@ export class CadastroNpc {
     this.setValor(campo, this.getValor(campo) + delta);
   }
 
-  // Upload imagem
   onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -121,18 +157,14 @@ export class CadastroNpc {
     this.npc.imagem = '';
   }
 
-  // Salvar
   async salvar(form: NgForm) {
     if (form.invalid) return;
-
     try {
       this.salvando = true;
-
       const user = AuthService.getUser();
       if (!user?.email) throw new Error('Usuário não autenticado');
       this.npc.email = user.email;
 
-      // 🔄 sincroniza antes de salvar
       await NpcRepository.syncNpcs();
 
       if (this.editMode) {
@@ -140,13 +172,9 @@ export class CadastroNpc {
         window.alert('✅ NPC atualizado com sucesso!');
       } else {
         const todos = await NpcRepository.getLocalNpcs();
-        let maxIndex = 0;
-        if (todos.length > 0) {
-          maxIndex = Math.max(...todos.map(n => n.index || 0));
-        }
+        const maxIndex = todos.length > 0 ? Math.max(...todos.map(n => n.index || 0)) : 0;
         this.npc.index = maxIndex + 1;
         this.npc.id = maxIndex + 1;
-
         await NpcRepository.createNpc(this.npc);
         window.alert('✅ NPC criado com sucesso!');
       }

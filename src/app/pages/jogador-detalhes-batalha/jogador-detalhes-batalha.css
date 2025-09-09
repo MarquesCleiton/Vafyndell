@@ -79,3 +79,19 @@
 .atributo-item small {
   color: #f8f9fa !important;
 }
+
+/* Texto extra */
+.descricao-text,
+.ataques-text {
+  white-space: pre-line;   /* 👈 respeita quebras de linha do texto */
+  color: #ddd;
+  font-size: 0.95rem;
+  background: #2a2a2a;
+  border-radius: 6px;
+  padding: 8px 10px;
+  line-height: 1.4;
+}
+
+.ataques-text {
+  color: #f8d775; /* destaque diferenciado */
+}

@@ -10,11 +10,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { AuthService } from './core/auth/AuthService';
-
+import { CommonModule } from '@angular/common'; // 👈 importar aqui
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [
+    CommonModule,       // 👈 adiciona aqui
     RouterOutlet,
     MatToolbarModule,
     MatIconModule,

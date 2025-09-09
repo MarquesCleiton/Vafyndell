@@ -62,20 +62,6 @@
             </select>
           </div>
 
-          <!-- Descrição -->
-          <div class="mb-3">
-            <label class="form-label text-light">📝 Descrição</label>
-            <textarea class="form-control input-dark auto-expand" rows="3" [(ngModel)]="npc.descricao"
-              name="descricao"></textarea>
-          </div>
-
-          <!-- Ataques -->
-          <div class="mb-3 mt-4">
-            <label class="form-label text-light">⚔️ Ataques</label>
-            <textarea class="form-control input-dark auto-expand" rows="3" [(ngModel)]="npc.ataques"
-              name="ataques"></textarea>
-          </div>
-
           <!-- Atributos Numéricos -->
           <h6 class="fw-bold mt-4 text-light">📊 Atributos Numéricos</h6>
           <div class="atributos-grid-edit mb-3">
@@ -98,6 +84,19 @@
             </div>
           </div>
 
+          <!-- Descrição -->
+          <div class="mb-3">
+            <label class="form-label text-light">📝 Descrição</label>
+            <textarea class="form-control input-dark auto-expand" rows="3" [(ngModel)]="npc.descricao"
+              name="descricao"></textarea>
+          </div>
+
+          <!-- Ataques -->
+          <div class="mb-3 mt-4">
+            <label class="form-label text-light">⚔️ Ataques</label>
+            <textarea class="form-control input-dark auto-expand" rows="3" [(ngModel)]="npc.ataques"
+              name="ataques"></textarea>
+          </div>
           <!-- Botão salvar -->
           <div class="text-end mt-4">
             <button type="submit" class="btn btn-save px-4" [disabled]="form.invalid || salvando">

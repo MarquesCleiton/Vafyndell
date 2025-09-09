@@ -24,17 +24,18 @@
         <ul class="info-list mb-3">
           <li>⭐ <span>XP:</span> {{ jogador.xp }}</li>
 
-          <!-- Vida e Vida Total -->
+          <!-- Vida atual -->
           <li>
-            💖 <span>Vida Total:</span>
-            <span [ngClass]="{ 'text-danger fw-bold': jogador.vida_total! <= 0 }">
-              {{ jogador.vida_total }}
+            ❤️ <span>Vida:</span>
+            <span [ngClass]="{ 'text-danger fw-bold': jogador.vida_atual! <= 0 }">
+              {{ jogador.vida_atual }}
             </span>
-            / {{ jogador.pontos_de_vida + jogador.classe_de_armadura }}
+            / {{ jogador.pontos_de_vida }}
           </li>
-          <li>❤️ <span>Vida:</span> {{ jogador.pontos_de_vida }}</li>
 
+          <!-- Armadura -->
           <li>🛡️ <span>Armadura:</span> {{ jogador.classe_de_armadura }}</li>
+
           <li>💔 <span>Dano tomado:</span> {{ jogador.dano_tomado }}</li>
           <li>✨ <span>Fator de cura:</span> {{ jogador.fator_cura }}</li>
           <li>🚶‍♂️ <span>Deslocamento:</span> {{ jogador.deslocamento }}</li>
@@ -58,6 +59,7 @@
           <h6 *ngIf="jogador.ataques" class="fw-bold text-light mt-3">⚔️ Ataques</h6>
           <p *ngIf="jogador.ataques" class="ataques-text">{{ jogador.ataques }}</p>
         </div>
+
       </div>
     </div>
 

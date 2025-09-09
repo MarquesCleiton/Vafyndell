@@ -64,14 +64,19 @@ export class Jogador implements OnInit {
       : jogador.energia + jogador.constituicao;
 
     const fatorCura = Math.floor(jogador.energia / 3);
-    const vidaTotal = vidaBase + jogador.classe_de_armadura - (jogador.dano_tomado || 0);
     const deslocamento = Math.floor(jogador.destreza / 3);
+
+    // Se armadura > 0 → vida atual não desconta dano
+    // Se armadura == 0 → vida atual desconta o dano tomado
+    const vidaAtual = jogador.classe_de_armadura > 0
+      ? vidaBase
+      : vidaBase - (jogador.dano_tomado || 0);
 
     this.jogador = {
       ...jogador,
-      pontos_de_vida: vidaBase,
+      pontos_de_vida: vidaBase, // vida base cadastrada ou calculada
+      vida_atual: vidaAtual,    // vida exibida
       fator_cura: fatorCura,
-      vida_total: vidaTotal,
       deslocamento: deslocamento,
     };
 
@@ -90,6 +95,7 @@ export class Jogador implements OnInit {
 
     this.loading = false;
   }
+
 
 
   editarJogador() {
