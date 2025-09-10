@@ -35,7 +35,8 @@ export class NpcRepository {
 
     const npcFinal: NpcDomain = {
       ...created,
-      id: created?.index || Date.now(),
+      id: Number(created?.id) || Date.now(), // 👈 usa id real da planilha
+      index: created?.index,                 // 👈 index separado
     };
 
     const db = await this.getDb();
@@ -53,7 +54,7 @@ export class NpcRepository {
 
     const updated = await ScriptClient.controllerUpdateByIndex({
       tab: this.TAB,
-      index: npc.index,
+      index: npc.index, // 👈 update sempre pelo index (linha)
       attrs: npc,
       folderId: this.FOLDER_ID,
     });
@@ -61,6 +62,8 @@ export class NpcRepository {
     const npcFinal: NpcDomain = {
       ...npc,
       ...updated,
+      id: Number(updated?.id || npc.id), // 👈 preserva id real
+      index: updated?.index || npc.index,
     };
 
     const db = await this.getDb();
@@ -76,12 +79,21 @@ export class NpcRepository {
   static async deleteNpc(id: number): Promise<boolean> {
     console.log('[NpcRepository] Deletando NPC...', id);
 
+    const db = await this.getDb();
+    const npc = await db.get<NpcDomain>(this.STORE, id);
+
+    if (!npc) {
+      console.warn('[NpcRepository] NPC não encontrado no cache:', id);
+      return false;
+    }
+
+    // Exclui no servidor pelo index
     await ScriptClient.controllerDeleteByIndex({
       tab: this.TAB,
-      index: id,
+      index: npc.index,
     });
 
-    const db = await this.getDb();
+    // Exclui local pelo id
     await db.delete(this.STORE, id);
 
     console.log('[NpcRepository] NPC excluído do cache/local:', id);
@@ -94,7 +106,14 @@ export class NpcRepository {
   static async getAllNpcs(): Promise<NpcDomain[]> {
     console.log('[NpcRepository] getAllNpcs...');
     const onlineList = await ScriptClient.controllerGetAll<NpcDomain>({ tab: this.TAB });
-    return Array.isArray(onlineList) ? onlineList : [];
+
+    return Array.isArray(onlineList)
+      ? onlineList.map(n => ({
+          ...n,
+          id: Number(n.id), // 👈 garante id real da planilha
+          index: n.index,
+        }))
+      : [];
   }
 
   // =========================================================
@@ -124,11 +143,11 @@ export class NpcRepository {
 
     const npcsComId = onlineList.map(n => ({
       ...n,
-      id: n.index ?? n.id,
+      id: Number(n.id), // 👈 sempre usa id real da planilha
+      index: n.index,
     }));
 
     const db = await this.getDb();
-
     await db.clear(this.STORE);
     await db.bulkPut(this.STORE, npcsComId);
     console.log('[NpcRepository] Cache atualizado com lista online.');

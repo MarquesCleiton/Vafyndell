@@ -35,7 +35,8 @@ export class JogadorRepository {
 
     const jogadorFinal: JogadorDomain = {
       ...created,
-      id: created?.index || Date.now(),
+      id: Number(created?.id) || Date.now(), // 👈 usa id real da planilha
+      index: created?.index,                 // 👈 index separado
     };
 
     const db = await this.getDb();
@@ -53,7 +54,7 @@ export class JogadorRepository {
 
     const updated = await ScriptClient.controllerUpdateByIndex({
       tab: this.TAB,
-      index: jogador.index,
+      index: jogador.index, // 👈 update sempre pelo index
       attrs: jogador,
       folderId: this.FOLDER_ID,
     });
@@ -61,6 +62,8 @@ export class JogadorRepository {
     const jogadorFinal: JogadorDomain = {
       ...jogador,
       ...updated,
+      id: Number(updated?.id || jogador.id), // 👈 preserva id da planilha
+      index: updated?.index || jogador.index,
     };
 
     const db = await this.getDb();
@@ -76,11 +79,18 @@ export class JogadorRepository {
   static async getAllJogadores(): Promise<JogadorDomain[]> {
     console.log('[JogadorRepository] getAllJogadores...');
     const onlineList = await ScriptClient.controllerGetAll<JogadorDomain>({ tab: this.TAB });
-    return Array.isArray(onlineList) ? onlineList : [];
+
+    return Array.isArray(onlineList)
+      ? onlineList.map(j => ({
+          ...j,
+          id: Number(j.id), // 👈 garante id real
+          index: j.index,
+        }))
+      : [];
   }
 
   // =========================================================
-  // 📌 Buscar local
+  // 📌 Buscar local (jogador atual)
   // =========================================================
   static async getLocalJogador(): Promise<JogadorDomain | null> {
     const user = AuthService.getUser();
@@ -94,7 +104,7 @@ export class JogadorRepository {
   }
 
   // =========================================================
-  // 📌 Força buscar online (atualiza cache e metadados)
+  // 📌 Força buscar jogador atual online
   // =========================================================
   static async forceFetchJogador(): Promise<JogadorDomain | null> {
     const user = AuthService.getUser();
@@ -108,14 +118,18 @@ export class JogadorRepository {
       return null;
     }
 
-    const jogadoresComId = onlineList.map(j => ({ ...j, id: j.index }));
-    const db = await this.getDb();
+    const jogadoresComId = onlineList.map(j => ({
+      ...j,
+      id: Number(j.id),
+      index: j.index,
+    }));
 
+    const db = await this.getDb();
     await db.clear(this.STORE);
     await db.bulkPut(this.STORE, jogadoresComId);
     console.log('[JogadorRepository] Cache atualizado com lista online.');
 
-    // 🔄 Atualiza metadados somente aqui
+    // 🔄 Atualiza metadados
     const onlineMetaList = await ScriptClient.controllerGetAll<{ SheetName: string; UltimaModificacao: string }>({
       tab: 'Metadados',
     });
@@ -135,7 +149,7 @@ export class JogadorRepository {
   }
 
   // =========================================================
-  // 📌 Buscar todos os jogadores (local IndexedDB)
+  // 📌 Buscar todos local
   // =========================================================
   static async getLocalJogadores(): Promise<JogadorDomain[]> {
     const db = await this.getDb();
@@ -143,7 +157,6 @@ export class JogadorRepository {
     console.log('[JogadorRepository] getLocalJogadores → total encontrados:', allLocal.length);
     return allLocal;
   }
-
 
   // =========================================================
   // 📌 Sincronizar
@@ -178,7 +191,7 @@ export class JogadorRepository {
   }
 
   // =========================================================
-  // 📌 Recupera jogador atual (refatorado para consistência)
+  // 📌 Recupera jogador atual
   // =========================================================
   static async getCurrentJogador(): Promise<JogadorDomain | null> {
     console.log('[JogadorRepository] getCurrentJogador iniciado.');
@@ -189,7 +202,7 @@ export class JogadorRepository {
     let jogadorLocal = await this.getLocalJogador();
     if (jogadorLocal) {
       console.log('[JogadorRepository] Jogador local encontrado.');
-      // dispara sync em paralelo, mas retorna já o jogador local
+      // dispara sync em paralelo
       this.syncJogadores().then(async updated => {
         if (updated) {
           console.log('[JogadorRepository] Jogador atualizado após sync.');
@@ -204,28 +217,32 @@ export class JogadorRepository {
     return await this.forceFetchJogador();
   }
 
-
-
   // =========================================================
   // 📌 Excluir jogador
   // =========================================================
   static async deleteJogador(id: number): Promise<boolean> {
     console.log('[JogadorRepository] Excluindo jogador...', id);
 
+    const db = await this.getDb();
+    const jogador = await db.get<JogadorDomain>(this.STORE, id);
+
+    if (!jogador) {
+      console.warn('[JogadorRepository] Jogador não encontrado no cache:', id);
+      return false;
+    }
+
     await ScriptClient.controllerDeleteByIndex({
       tab: this.TAB,
-      index: id,
+      index: jogador.index, // 👈 exclui pelo index
     });
 
-    const db = await this.getDb();
     await db.delete(this.STORE, id);
-
     console.log('[JogadorRepository] Jogador excluído do cache/local:', id);
     return true;
   }
 
   // =========================================================
-  // 📌 Força buscar todos online (atualiza cache e metadados)
+  // 📌 Força buscar todos online
   // =========================================================
   static async forceFetchJogadores(): Promise<JogadorDomain[]> {
     console.log('[JogadorRepository] Baixando lista online (todos jogadores)...');
@@ -236,9 +253,13 @@ export class JogadorRepository {
       return [];
     }
 
-    const jogadoresComId = onlineList.map(j => ({ ...j, id: j.index }));
-    const db = await this.getDb();
+    const jogadoresComId = onlineList.map(j => ({
+      ...j,
+      id: Number(j.id), // 👈 preserva id da planilha
+      index: j.index,
+    }));
 
+    const db = await this.getDb();
     await db.clear(this.STORE);
     await db.bulkPut(this.STORE, jogadoresComId);
     console.log('[JogadorRepository] Cache atualizado com lista online (todos jogadores).');
@@ -261,6 +282,4 @@ export class JogadorRepository {
 
     return jogadoresComId;
   }
-
-
 }

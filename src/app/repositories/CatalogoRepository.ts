@@ -35,7 +35,8 @@ export class CatalogoRepository {
 
     const itemFinal: CatalogoDomain = {
       ...created,
-      id: created?.index || Date.now(),
+      id: Number(created?.id) || Date.now(), // 👈 usa sempre id da planilha
+      index: created?.index,                 // 👈 mantém index separado
     };
 
     const db = await this.getDb();
@@ -53,7 +54,7 @@ export class CatalogoRepository {
 
     const updated = await ScriptClient.controllerUpdateByIndex({
       tab: this.TAB,
-      index: item.index,
+      index: item.index, // 👈 update sempre por index (linha)
       attrs: item,
       folderId: this.FOLDER_ID,
     });
@@ -61,6 +62,8 @@ export class CatalogoRepository {
     const itemFinal: CatalogoDomain = {
       ...item,
       ...updated,
+      id: Number(updated?.id || item.id), // 👈 preserva id da planilha
+      index: updated?.index || item.index,
     };
 
     const db = await this.getDb();
@@ -76,7 +79,13 @@ export class CatalogoRepository {
   static async getAllItens(): Promise<CatalogoDomain[]> {
     console.log('[CatalogoRepository] getAllItens...');
     const onlineList = await ScriptClient.controllerGetAll<CatalogoDomain>({ tab: this.TAB });
-    return Array.isArray(onlineList) ? onlineList : [];
+    return Array.isArray(onlineList)
+      ? onlineList.map(i => ({
+          ...i,
+          id: Number(i.id),  // 👈 garante id como número
+          index: i.index,
+        }))
+      : [];
   }
 
   // =========================================================
@@ -99,9 +108,14 @@ export class CatalogoRepository {
       return [];
     }
 
-    const itensComId = onlineList.map(i => ({ ...i, id: i.index }));
-    const db = await this.getDb();
+    // 👇 Agora preserva id da planilha corretamente
+    const itensComId = onlineList.map(i => ({
+      ...i,
+      id: Number(i.id),
+      index: i.index,
+    }));
 
+    const db = await this.getDb();
     await db.clear(this.STORE);
     await db.bulkPut(this.STORE, itensComId);
     console.log('[CatalogoRepository] Cache atualizado com lista online.');
@@ -163,18 +177,24 @@ export class CatalogoRepository {
   static async deleteItem(id: number): Promise<boolean> {
     console.log('[CatalogoRepository] Excluindo item...', id);
 
-    // Exclui no servidor
+    // ❗ Atenção: exclusão no servidor precisa ser pelo index, não pelo id
+    const db = await this.getDb();
+    const item = await db.get<CatalogoDomain>(this.STORE, id);
+
+    if (!item) {
+      console.warn('[CatalogoRepository] Item não encontrado no cache:', id);
+      return false;
+    }
+
     await ScriptClient.controllerDeleteByIndex({
       tab: this.TAB,
-      index: id,
+      index: item.index, // 👈 exclusão pela linha (index)
     });
 
     // Exclui local
-    const db = await this.getDb();
     await db.delete(this.STORE, id);
 
     console.log('[CatalogoRepository] Item excluído do cache/local:', id);
     return true;
   }
-
 }

@@ -1,4 +1,3 @@
-import { AuthService } from '../core/auth/AuthService';
 import { IndexedDBClient } from '../core/db/IndexedDBClient';
 import { ScriptClient } from '../core/script/ScriptClient';
 import { ReceitaDomain } from '../domain/ReceitaDomain';
@@ -31,7 +30,8 @@ export class ReceitasRepository {
 
     const receitaFinal: ReceitaDomain = {
       ...created,
-      id: created?.index || Date.now(),
+      id: Number(created?.id) || Date.now(), // 👈 usa id da planilha
+      index: created?.index,                 // 👈 mantém index separado
     };
 
     const db = await this.getDb();
@@ -49,13 +49,15 @@ export class ReceitasRepository {
 
     const updated = await ScriptClient.controllerUpdateByIndex({
       tab: this.TAB,
-      index: receita.index,
+      index: receita.index, // 👈 update sempre pelo index
       attrs: receita,
     });
 
     const receitaFinal: ReceitaDomain = {
       ...receita,
       ...updated,
+      id: Number(updated?.id || receita.id), // 👈 preserva id real
+      index: updated?.index || receita.index,
     };
 
     const db = await this.getDb();
@@ -71,7 +73,14 @@ export class ReceitasRepository {
   static async getAllReceitas(): Promise<ReceitaDomain[]> {
     console.log('[ReceitasRepository] getAllReceitas...');
     const onlineList = await ScriptClient.controllerGetAll<ReceitaDomain>({ tab: this.TAB });
-    return Array.isArray(onlineList) ? onlineList : [];
+
+    return Array.isArray(onlineList)
+      ? onlineList.map(r => ({
+          ...r,
+          id: Number(r.id), // 👈 garante id como número
+          index: r.index,
+        }))
+      : [];
   }
 
   // =========================================================
@@ -94,9 +103,13 @@ export class ReceitasRepository {
       return [];
     }
 
-    const receitasComId = onlineList.map(r => ({ ...r, id: r.index }));
-    const db = await this.getDb();
+    const receitasComId = onlineList.map(r => ({
+      ...r,
+      id: Number(r.id), // 👈 sempre usa id real da planilha
+      index: r.index,
+    }));
 
+    const db = await this.getDb();
     await db.clear(this.STORE);
     await db.bulkPut(this.STORE, receitasComId);
     console.log('[ReceitasRepository] Cache atualizado com lista online.');
@@ -158,14 +171,21 @@ export class ReceitasRepository {
   static async deleteReceita(id: number): Promise<boolean> {
     console.log('[ReceitasRepository] Excluindo receita...', id);
 
-    // Exclui no servidor
+    const db = await this.getDb();
+    const receita = await db.get<ReceitaDomain>(this.STORE, id);
+
+    if (!receita) {
+      console.warn('[ReceitasRepository] Receita não encontrada no cache:', id);
+      return false;
+    }
+
+    // Exclui no servidor pelo index (linha da planilha)
     await ScriptClient.controllerDeleteByIndex({
       tab: this.TAB,
-      index: id,
+      index: receita.index,
     });
 
-    // Exclui local
-    const db = await this.getDb();
+    // Exclui local pelo id real
     await db.delete(this.STORE, id);
 
     console.log('[ReceitasRepository] Receita excluída do cache/local:', id);

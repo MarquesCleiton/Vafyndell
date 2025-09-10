@@ -9,7 +9,7 @@ import { AuthService } from '../../core/auth/AuthService';
   selector: 'app-jogador',
   templateUrl: './jogador.html',
   styleUrls: ['./jogador.css'],
-  imports: [CommonModule], // 👈 aqui garante suporte ao *ngIf, *ngFor
+  imports: [CommonModule],
 })
 export class Jogador implements OnInit {
   jogador: (JogadorDomain & {
@@ -21,37 +21,42 @@ export class Jogador implements OnInit {
   atributos: any[] = [];
   loading = true;
 
-  constructor(private router: Router) { }
+  constructor(private router: Router) {}
 
   async ngOnInit() {
     console.log('[Jogador] Iniciando carregamento...');
     this.loading = true;
 
     try {
+      const user = AuthService.getUser();
+      if (!user?.email) throw new Error('Usuário não autenticado.');
 
-      // segue fluxo normalmente...
-      const jogadorLocal = await JogadorRepository.getLocalJogador();
+      // 1️⃣ Primeiro tenta pegar local
+      let jogadorLocal = await JogadorRepository.getLocalJogador();
 
       if (jogadorLocal) {
         console.log('[Jogador] Jogador local encontrado:', jogadorLocal);
         this.setJogador(jogadorLocal);
 
-        (async () => {
-          const updated = await JogadorRepository.syncJogadores();
+        // dispara sync em paralelo (não bloqueia UI)
+        JogadorRepository.syncJogadores().then(async updated => {
           if (updated) {
             const jogadorAtualizado = await JogadorRepository.getLocalJogador();
             if (jogadorAtualizado) this.setJogador(jogadorAtualizado);
           }
-        })();
+        });
+        return; // já exibiu algo
+      }
+
+      // 2️⃣ Se não havia local → carrega síncrono (force fetch)
+      console.log('[Jogador] Nenhum jogador local → carregando online...');
+      jogadorLocal = await JogadorRepository.forceFetchJogador();
+
+      if (jogadorLocal) {
+        this.setJogador(jogadorLocal);
       } else {
-        console.log('[Jogador] Nenhum jogador local. Buscando online...');
-        const jogadorOnline = await JogadorRepository.forceFetchJogador();
-        if (jogadorOnline) {
-          this.setJogador(jogadorOnline);
-        } else {
-          console.warn('[Jogador] Nenhum jogador encontrado online → cadastro');
-          this.router.navigate(['/cadastro-jogador']);
-        }
+        console.warn('[Jogador] Nenhum jogador encontrado nem online → cadastro');
+        this.router.navigate(['/cadastro-jogador']);
       }
     } catch (err) {
       console.error('[Jogador] Erro ao carregar Jogador:', err);
@@ -60,26 +65,26 @@ export class Jogador implements OnInit {
     }
   }
 
-
   private setJogador(jogador: JogadorDomain) {
     // Vida base cadastrada ou calculada
-    const vidaBase = jogador.pontos_de_vida > 0
-      ? jogador.pontos_de_vida
-      : jogador.energia + jogador.constituicao;
+    const vidaBase =
+      jogador.pontos_de_vida && jogador.pontos_de_vida > 0
+        ? jogador.pontos_de_vida
+        : jogador.energia + jogador.constituicao;
 
     const fatorCura = Math.floor(jogador.energia / 3);
     const deslocamento = Math.floor(jogador.destreza / 3);
 
-    // Se armadura > 0 → vida atual não desconta dano
-    // Se armadura == 0 → vida atual desconta o dano tomado
-    const vidaAtual = jogador.classe_de_armadura > 0
-      ? vidaBase
-      : vidaBase - (jogador.dano_tomado || 0);
+    // Vida atual segue a regra da armadura
+    const vidaAtual =
+      jogador.classe_de_armadura > 0
+        ? vidaBase
+        : vidaBase - (jogador.dano_tomado || 0);
 
     this.jogador = {
       ...jogador,
-      pontos_de_vida: vidaBase, // vida base cadastrada ou calculada
-      vida_atual: vidaAtual,    // vida exibida
+      pontos_de_vida: vidaBase,
+      vida_atual: vidaAtual,
       fator_cura: fatorCura,
       deslocamento: deslocamento,
     };
@@ -96,11 +101,7 @@ export class Jogador implements OnInit {
       { label: 'Carisma', value: jogador.carisma, mod: calcMod(jogador.carisma), icon: '😎' },
       { label: 'Energia', value: jogador.energia, mod: calcMod(jogador.energia), icon: '⚡' },
     ];
-
-    this.loading = false;
   }
-
-
 
   editarJogador() {
     this.router.navigate(['/edicao-jogador']);

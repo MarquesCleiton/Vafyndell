@@ -72,17 +72,18 @@ export class OficinaService {
     receitas: ReceitaDomain[],
     inventario: InventarioDomain[],
   ): (CatalogoDomain & { fabricavel: boolean })[] {
-    // 🔑 Mapeia inventário para acesso rápido
+    // 🔑 Mapeia inventário para acesso rápido (por ID do item de catálogo)
     const estoque = new Map<number, number>();
     inventario.forEach(i => {
       const atual = estoque.get(i.item_catalogo) || 0;
       estoque.set(i.item_catalogo, atual + i.quantidade);
     });
 
-    // 🔑 Itens fabricáveis de fato (devem ter ao menos 1 ingrediente)
+
+    // 🔑 Itens fabricáveis de fato (devem ter pelo menos 1 ingrediente)
     const fabricaveis = catalogo.filter(c => {
       const ingredientes = receitas.filter(r => r.fabricavel === c.id);
-      return ingredientes.length > 0; // só entra se tiver ingredientes definidos
+      return ingredientes.length > 0;
     });
 
     return fabricaveis
@@ -96,7 +97,6 @@ export class OficinaService {
         });
 
         if (!possuiAlgumIngrediente) {
-          // ❌ não tem nenhum ingrediente → não aparece
           return null;
         }
 
@@ -106,11 +106,14 @@ export class OficinaService {
           return qtdNoEstoque >= ing.quantidade;
         });
 
+
+
         return {
           ...item,
-          fabricavel: podeFabricar, // true = pronto para fabricar, false = aparece mas falta algo
+          fabricavel: podeFabricar,
         };
       })
       .filter((i): i is CatalogoDomain & { fabricavel: boolean } => i !== null);
   }
+
 }
