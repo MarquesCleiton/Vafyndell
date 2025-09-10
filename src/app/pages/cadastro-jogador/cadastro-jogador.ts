@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
+
 import { JogadorRepository } from '../../repositories/JogadorRepository';
 import { JogadorDomain } from '../../domain/jogadorDomain';
 import { AuthService } from '../../core/auth/AuthService';
@@ -21,37 +22,36 @@ type AtributoChave = keyof Pick<
   styleUrls: ['./cadastro-jogador.css'],
 })
 export class CadastroJogador {
-jogador: JogadorDomain = {
-  index: 0,
-  id: 0,
-  email: '',
-  imagem: '',
-  nome_do_jogador: '',
-  personagem: '',
-  pontos_de_vida: 0,
-  alinhamento: '',
-  classe_de_armadura: 0,
-  forca: 0,
-  destreza: 0,
-  constituicao: 0,
-  inteligencia: 0,
-  sabedoria: 0,
-  carisma: 0,
-  energia: 0,
-  nivel: 1,
-  xp: 0,
-  dano_tomado: 0,
-  tipo_jogador: '',
-  efeitos_temporarios: '',
-  registo_de_jogo: '',
+  jogador: JogadorDomain = {
+    index: 0,
+    id: 0,
+    email: '',
+    imagem: '',
+    nome_do_jogador: '',
+    personagem: '',
+    pontos_de_vida: 0,
+    alinhamento: '',
+    classe_de_armadura: 0,
+    forca: 0,
+    destreza: 0,
+    constituicao: 0,
+    inteligencia: 0,
+    sabedoria: 0,
+    carisma: 0,
+    energia: 0,
+    nivel: 1,
+    xp: 0,
+    dano_tomado: 0,
+    tipo_jogador: '',
+    efeitos_temporarios: '',
+    registo_de_jogo: '',
 
-  // 🔑 Novos campos exigidos pelo JogadorDomain (default vazio)
-  classificacao: '',
-  tipo: '',
-  descricao: '',
-  ataques: '',
-};
-
+    // Novos campos
+    classificacao: '',
+    tipo: '',
+    descricao: '',
+    ataques: '',
+  };
 
   atributosNumericos = [
     { key: 'nivel' as AtributoChave, label: 'Nível', icon: '🏅' },
@@ -66,7 +66,7 @@ jogador: JogadorDomain = {
     { key: 'classe_de_armadura' as AtributoChave, label: 'Armadura', icon: '🛡️' },
   ];
 
-  salvando = false; // estado de loading no botão salvar
+  salvando = false;
 
   // 🔢 Atributos calculados
   get vida() { return this.jogador.energia + this.jogador.constituicao; }
@@ -113,15 +113,13 @@ jogador: JogadorDomain = {
       if (!user?.email) throw new Error('Usuário não autenticado');
       this.jogador.email = user.email;
 
-      // 🔄 sincroniza antes de salvar
+      // 🔄 valida cache local antes de calcular IDs
       await JogadorRepository.syncJogadores();
 
-      // pega todos os jogadores para calcular próximo índice
-      const todos = await JogadorRepository.getAllJogadores();
-      let maxIndex = 0;
-      if (todos.length > 0) {
-        maxIndex = Math.max(...todos.map(j => j.index || 0));
-      }
+      // pega todos os jogadores locais para calcular próximo índice
+      const locais = await JogadorRepository.getLocalJogadores();
+      const maxIndex = locais.length > 0 ? Math.max(...locais.map(j => j.index || 0)) : 0;
+
       this.jogador.index = maxIndex + 1;
       this.jogador.id = maxIndex + 1;
 

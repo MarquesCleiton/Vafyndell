@@ -4,32 +4,27 @@ export class IndexedDBClient {
   private db: IDBDatabase | null = null;
   private storeNames: Set<string> = new Set();
 
-  /** 🔑 Factory para criar instância já inicializada */
+  /** Stores padrão do app */
+  private static DEFAULT_STORES = [
+    'Catalogo',
+    'Inventario',
+    'Receitas',
+    'Personagem',
+    'Npcs',
+    'Anotacoes',
+    'metadados',
+  ];
+
   static async create(): Promise<IndexedDBClient> {
     const client = new IndexedDBClient();
     await client.init();
     return client;
   }
 
-  /** 🔒 construtor privado → força usar .create() */
-  private constructor() {
-    console.log('[IndexedDBClient] Constructor chamado');
-  }
+  private constructor() {}
 
-  /** Inicializa o banco (pega versão já existente se houver) */
   private async init(): Promise<void> {
-    if (this.db) {
-      console.log('[IndexedDBClient] Banco já inicializado.');
-      return;
-    }
-
-    const dbInfo = await indexedDB.databases?.();
-    const existing = dbInfo?.find(d => d.name === this.DB_NAME);
-
-    if (existing?.version && existing.version > this.DB_VERSION) {
-      this.DB_VERSION = existing.version;
-      console.log(`[IndexedDBClient] Ajustando versão para ${this.DB_VERSION}`);
-    }
+    if (this.db) return;
 
     return new Promise((resolve, reject) => {
       console.log(`[IndexedDBClient] Abrindo banco ${this.DB_NAME} v${this.DB_VERSION}...`);
@@ -46,50 +41,19 @@ export class IndexedDBClient {
 
       request.onupgradeneeded = (event: any) => {
         const db = event.target.result as IDBDatabase;
-        console.log('[IndexedDBClient] Upgrade do banco. Stores existentes:', Array.from(db.objectStoreNames));
-      };
-    });
-  }
-
-  /** Cria a store se não existir (aumentando versão do DB) */
-  private async ensureStore(storeName: string): Promise<void> {
-    if (this.storeNames.has(storeName)) return;
-
-    console.log(`[IndexedDBClient] Store "${storeName}" não existe → recriando DB...`);
-    this.db?.close();
-
-    const dbInfo = await indexedDB.databases?.();
-    const existing = dbInfo?.find(d => d.name === this.DB_NAME);
-    const currentVersion = existing?.version ?? this.DB_VERSION;
-
-    this.DB_VERSION = Math.max(this.DB_VERSION, currentVersion) + 1;
-
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
-
-      request.onerror = () => reject(request.error);
-
-      request.onupgradeneeded = (event: any) => {
-        const db = event.target.result as IDBDatabase;
-        if (!db.objectStoreNames.contains(storeName)) {
-          db.createObjectStore(storeName, { keyPath: 'id' });
-          console.log(`[IndexedDBClient] Store criada: ${storeName}`);
-        }
-      };
-
-      request.onsuccess = () => {
-        this.db = request.result;
-        this.storeNames = new Set(Array.from(this.db!.objectStoreNames));
-        console.log('[IndexedDBClient] Banco reaberto com stores:', Array.from(this.storeNames));
-        resolve();
+        console.log('[IndexedDBClient] Upgrade → garantindo stores...');
+        IndexedDBClient.DEFAULT_STORES.forEach((store) => {
+          if (!db.objectStoreNames.contains(store)) {
+            db.createObjectStore(store, { keyPath: 'id' });
+            console.log(`[IndexedDBClient] Store criada: ${store}`);
+          }
+        });
       };
     });
   }
 
   // ============ CRUD ============
-
   async put<T extends { id: any }>(storeName: string, value: T): Promise<void> {
-    await this.ensureStore(storeName);
     return new Promise((resolve, reject) => {
       const tx = this.db!.transaction(storeName, 'readwrite');
       tx.objectStore(storeName).put(value);
@@ -99,7 +63,6 @@ export class IndexedDBClient {
   }
 
   async bulkPut<T extends { id: any }>(storeName: string, values: T[]): Promise<void> {
-    await this.ensureStore(storeName);
     return new Promise((resolve, reject) => {
       const tx = this.db!.transaction(storeName, 'readwrite');
       const store = tx.objectStore(storeName);
@@ -110,7 +73,6 @@ export class IndexedDBClient {
   }
 
   async get<T>(storeName: string, key: any): Promise<T | null> {
-    if (!this.storeNames.has(storeName)) return null;
     return new Promise((resolve, reject) => {
       const tx = this.db!.transaction(storeName, 'readonly');
       const req = tx.objectStore(storeName).get(key);
@@ -120,7 +82,6 @@ export class IndexedDBClient {
   }
 
   async getAll<T>(storeName: string): Promise<T[]> {
-    if (!this.storeNames.has(storeName)) return [];
     return new Promise((resolve, reject) => {
       const tx = this.db!.transaction(storeName, 'readonly');
       const req = tx.objectStore(storeName).getAll();
@@ -130,7 +91,6 @@ export class IndexedDBClient {
   }
 
   async delete(storeName: string, key: any): Promise<void> {
-    if (!this.storeNames.has(storeName)) return;
     return new Promise((resolve, reject) => {
       const tx = this.db!.transaction(storeName, 'readwrite');
       tx.objectStore(storeName).delete(key);
@@ -140,7 +100,6 @@ export class IndexedDBClient {
   }
 
   async clear(storeName: string): Promise<void> {
-    if (!this.storeNames.has(storeName)) return;
     return new Promise((resolve, reject) => {
       const tx = this.db!.transaction(storeName, 'readwrite');
       tx.objectStore(storeName).clear();

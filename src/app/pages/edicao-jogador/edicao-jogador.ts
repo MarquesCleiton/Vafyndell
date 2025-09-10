@@ -10,7 +10,7 @@ type AtributoChave = keyof Pick<
   JogadorDomain,
   'forca' | 'destreza' | 'constituicao' | 'inteligencia' |
   'sabedoria' | 'carisma' | 'energia' | 'classe_de_armadura' |
-    'nivel' | 'xp'
+  'nivel' | 'xp'
 >;
 
 @Component({
@@ -21,7 +21,7 @@ type AtributoChave = keyof Pick<
   styleUrls: ['./edicao-jogador.css'],
 })
 export class EdicaoJogador implements OnInit {
-  jogador: JogadorDomain | null = null; // 👈 começa nulo até carregar
+  jogador: JogadorDomain | null = null;
   salvando = false;
 
   atributosNumericos = [
@@ -76,7 +76,6 @@ export class EdicaoJogador implements OnInit {
 
     try {
       this.salvando = true;
-
       const user = AuthService.getUser();
       if (!user?.email) throw new Error('Usuário não autenticado');
       this.jogador.email = user.email;
@@ -94,17 +93,32 @@ export class EdicaoJogador implements OnInit {
   }
 
   async ngOnInit() {
-    const encontrado = await JogadorRepository.getCurrentJogador();
-    if (!encontrado) {
-      window.alert('Nenhum jogador encontrado. Vá para o cadastro primeiro.');
-      this.router.navigate(['/cadastro']);
-      return;
+    try {
+      const encontrado = await JogadorRepository.getCurrentJogador();
+      if (!encontrado) {
+        window.alert('Nenhum jogador encontrado. Vá para o cadastro primeiro.');
+        this.router.navigate(['/cadastro-jogador']);
+        return;
+      }
+
+      this.jogador = encontrado;
+
+      // dispara sync em paralelo
+      JogadorRepository.syncJogadores().then(async updated => {
+        if (updated) {
+          const atualizado = await JogadorRepository.getCurrentJogador();
+          if (atualizado) this.jogador = atualizado;
+        }
+      });
+    } catch (err) {
+      console.error('[EdicaoJogador] Erro ao carregar jogador:', err);
+      this.router.navigate(['/login']);
     }
-    this.jogador = encontrado;
   }
+
   cancelar() {
     this.router.navigate(['/jogador']);
   }
 
-  constructor(private router: Router) { }
+  constructor(private router: Router) {}
 }

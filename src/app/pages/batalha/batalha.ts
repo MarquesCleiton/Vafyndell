@@ -23,7 +23,7 @@ export class Batalha implements OnInit {
 
   JogadorUtils = JogadorUtils; // 👈 expõe no template
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   async ngOnInit() {
     console.log('[Batalha] ngOnInit → carregando jogadores...');
@@ -36,22 +36,21 @@ export class Batalha implements OnInit {
         this.carregando = false;
       }
 
-      // 2. Em paralelo, valida online
-      JogadorRepository.syncJogadores().then(async updated => {
+      // 2. Sync em paralelo
+      (async () => {
+        const updated = await JogadorRepository.syncJogadores();
         if (updated) {
           const atualizados = await JogadorRepository.getLocalJogadores();
           this.jogadores = atualizados;
           this.aplicarFiltro();
         }
-      });
+      })();
 
-      // 3. Se não havia nada local, força fetch
-      if (locais.length === 0) {
-        const online = await JogadorRepository.forceFetchJogador();
-        if (online) {
-          this.jogadores = Array.isArray(online) ? online : [online];
-          this.aplicarFiltro();
-        }
+      // 3. Se não havia nada local, força fetch online
+      if (!locais.length) {
+        const online = await JogadorRepository.forceFetchJogadores(); // 👈 plural agora
+        this.jogadores = online;
+        this.aplicarFiltro();
         this.carregando = false;
       }
     } catch (err) {
@@ -59,6 +58,7 @@ export class Batalha implements OnInit {
       this.carregando = false;
     }
   }
+
 
   aplicarFiltro() {
     const termo = this.filtro.toLowerCase().trim();

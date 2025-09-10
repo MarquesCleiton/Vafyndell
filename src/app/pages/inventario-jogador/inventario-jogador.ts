@@ -32,7 +32,7 @@ export class InventarioJogador implements OnInit {
     categorias: 0,
   };
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   private calcularResumo() {
     const todosItens = this.categorias.flatMap(c => c.itens);
@@ -54,37 +54,42 @@ export class InventarioJogador implements OnInit {
       const user = AuthService.getUser();
       if (!user?.email) throw new Error('Usuário não autenticado.');
 
-      // 1. Carrega primeiro do cache local
-      const inventarioLocal = await InventarioRepository.getLocalInventarioByJogador(user.email);
+      // 1. Sempre tenta catálogo primeiro
       const catalogoLocal = await CatalogoRepository.getLocalItens();
 
-      if (inventarioLocal?.length) {
-        console.log('[InventarioJogador] Inventário local encontrado.');
+      // 2. Depois inventário local
+      const inventarioLocal = await InventarioRepository.getLocalInventarioByJogador(user.email);
+
+      if (catalogoLocal?.length && inventarioLocal?.length) {
+        console.log('[InventarioJogador] Dados locais encontrados.');
         this.processarInventario(inventarioLocal, catalogoLocal);
-        this.carregando = false; // libera a UI logo
+        this.carregando = false;
       }
 
-      // 2. Em paralelo, valida se precisa atualizar cache
-      Promise.all([
-        InventarioRepository.syncInventario(),
-        CatalogoRepository.syncItens(),
-      ]).then(async ([invSync, catSync]) => {
-        if (invSync || catSync) {
+      // 3. Sincronização → garante ordem: catálogo → inventário
+      (async () => {
+        const catSync = await CatalogoRepository.syncItens();
+        const invSync = await InventarioRepository.syncInventario();
+
+        if (catSync || invSync) {
           console.log('[InventarioJogador] Sync trouxe alterações. Atualizando cache...');
-          const inventarioAtualizado = await InventarioRepository.getLocalInventarioByJogador(user.email);
           const catalogoAtualizado = await CatalogoRepository.getLocalItens();
+          const inventarioAtualizado = await InventarioRepository.getLocalInventarioByJogador(user.email);
           this.processarInventario(inventarioAtualizado, catalogoAtualizado);
         } else {
           console.log('[InventarioJogador] Sync concluído. Nenhuma alteração detectada.');
         }
-      });
+      })();
 
-      // 3. Se não tinha nada local, força buscar online
+      // 4. Fallback online se nada local existir
       if (!inventarioLocal?.length) {
-        console.log('[InventarioJogador] Nenhum inventário local. Buscando online...');
-        const inventarioOnline = await InventarioRepository.forceFetchInventario();
+        console.log('[InventarioJogador] Nenhum inventário local. Forçando fetch online...');
+        await CatalogoRepository.forceFetchItens();
         const catalogoOnline = await CatalogoRepository.getLocalItens();
+
+        const inventarioOnline = await InventarioRepository.forceFetchInventario();
         this.processarInventario(inventarioOnline, catalogoOnline);
+
         this.carregando = false;
       }
     } catch (err) {
@@ -92,6 +97,7 @@ export class InventarioJogador implements OnInit {
       this.carregando = false;
     }
   }
+
 
   /** Função auxiliar para montar categorias e resumo */
   private processarInventario(inventarioBruto: InventarioDomain[], catalogo: CatalogoDomain[]) {

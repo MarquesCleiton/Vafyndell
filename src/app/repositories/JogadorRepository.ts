@@ -178,26 +178,32 @@ export class JogadorRepository {
   }
 
   // =========================================================
-  // 📌 Recupera jogador atual
+  // 📌 Recupera jogador atual (refatorado para consistência)
   // =========================================================
   static async getCurrentJogador(): Promise<JogadorDomain | null> {
     console.log('[JogadorRepository] getCurrentJogador iniciado.');
     const user = AuthService.getUser();
     if (!user) throw new Error('Usuário não autenticado.');
 
+    // Primeiro tenta local
     let jogadorLocal = await this.getLocalJogador();
     if (jogadorLocal) {
-      this.syncJogadores()
-        .then(async updated => {
-          if (updated) jogadorLocal = await this.getLocalJogador();
-        })
-        .catch(err => console.error('[JogadorRepository] Erro ao sincronizar:', err));
+      console.log('[JogadorRepository] Jogador local encontrado.');
+      // dispara sync em paralelo, mas retorna já o jogador local
+      this.syncJogadores().then(async updated => {
+        if (updated) {
+          console.log('[JogadorRepository] Jogador atualizado após sync.');
+          jogadorLocal = await this.getLocalJogador();
+        }
+      }).catch(err => console.error('[JogadorRepository] Erro ao sincronizar:', err));
 
       return jogadorLocal;
     }
 
+    // Se não tem local, força fetch online
     return await this.forceFetchJogador();
   }
+
 
 
   // =========================================================
@@ -217,5 +223,44 @@ export class JogadorRepository {
     console.log('[JogadorRepository] Jogador excluído do cache/local:', id);
     return true;
   }
+
+  // =========================================================
+  // 📌 Força buscar todos online (atualiza cache e metadados)
+  // =========================================================
+  static async forceFetchJogadores(): Promise<JogadorDomain[]> {
+    console.log('[JogadorRepository] Baixando lista online (todos jogadores)...');
+    const onlineList = await this.getAllJogadores();
+
+    if (!onlineList.length) {
+      console.warn('[JogadorRepository] Nenhum jogador encontrado online.');
+      return [];
+    }
+
+    const jogadoresComId = onlineList.map(j => ({ ...j, id: j.index }));
+    const db = await this.getDb();
+
+    await db.clear(this.STORE);
+    await db.bulkPut(this.STORE, jogadoresComId);
+    console.log('[JogadorRepository] Cache atualizado com lista online (todos jogadores).');
+
+    // 🔄 Atualiza metadados
+    const onlineMetaList = await ScriptClient.controllerGetAll<{ SheetName: string; UltimaModificacao: string }>({
+      tab: 'Metadados',
+    });
+
+    if (Array.isArray(onlineMetaList)) {
+      const onlineMeta = onlineMetaList.find(m => m.SheetName === this.TAB);
+      if (onlineMeta) {
+        await db.put(this.META_STORE, {
+          id: this.TAB,
+          UltimaModificacao: onlineMeta.UltimaModificacao,
+        });
+        console.log('[JogadorRepository] Metadados locais atualizados:', onlineMeta);
+      }
+    }
+
+    return jogadoresComId;
+  }
+
 
 }

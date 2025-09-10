@@ -36,36 +36,34 @@ export class ItemCatalogo implements OnInit {
         return;
       }
 
-      // 1. Carrega primeiro do cache local
-      let itensLocais = await CatalogoRepository.getLocalItens();
-      let encontrado = itensLocais.find(i => String(i.id) === String(id)) || null;
+      // 1. Carrega cache local
+      const locais = await CatalogoRepository.getLocalItens();
+      let encontrado = locais.find(i => String(i.id) === id) || null;
 
       if (encontrado) {
         this.item = encontrado;
-        this.carregando = false; // já mostra algo
+        this.carregando = false; // libera UI rápido
       }
 
-      // 2. Em paralelo, sincroniza e reprocessa se houver update
+      // 2. Sincroniza em paralelo
       CatalogoRepository.syncItens().then(async updated => {
         if (updated) {
           console.log('[ItemCatalogo] Sync trouxe alterações. Recarregando...');
-          const itensAtualizados = await CatalogoRepository.getLocalItens();
-          const atualizado = itensAtualizados.find(i => String(i.id) === String(id)) || null;
+          const atualizados = await CatalogoRepository.getLocalItens();
+          const atualizado = atualizados.find(i => String(i.id) === id);
           if (atualizado) this.item = atualizado;
-        } else {
-          console.log('[ItemCatalogo] Sync concluído. Nenhuma alteração detectada.');
         }
       });
 
-      // 3. Se não havia nada local, força buscar online
+      // 3. Fallback se não achou local
       if (!encontrado) {
-        console.log('[ItemCatalogo] Item não encontrado localmente. Forçando fetch online...');
+        console.log('[ItemCatalogo] Não encontrado localmente → forçando fetch online');
         const online = await CatalogoRepository.forceFetchItens();
-        const achadoOnline = online.find(i => String(i.id) === String(id)) || null;
+        const achadoOnline = online.find(i => String(i.id) === id);
         if (achadoOnline) {
           this.item = achadoOnline;
         } else {
-          console.warn('[ItemCatalogo] Item não encontrado nem online.');
+          console.warn('[ItemCatalogo] Item não encontrado nem online');
           this.router.navigate(['/catalogo']);
         }
         this.carregando = false;
@@ -95,11 +93,10 @@ export class ItemCatalogo implements OnInit {
   excluirItem() {
     if (!this.item) return;
 
-    const confirmacao = confirm(`🗑️ Deseja realmente excluir o item "${this.item.nome}"?`);
+    const confirmacao = confirm(`🗑️ Deseja excluir o item "${this.item.nome}"?`);
     if (!confirmacao) return;
 
     this.processandoExcluir = true;
-
     CatalogoRepository.deleteItem(this.item.id)
       .then(() => {
         alert('✅ Item excluído com sucesso!');
@@ -109,8 +106,6 @@ export class ItemCatalogo implements OnInit {
         console.error('[ItemCatalogo] Erro ao excluir item:', err);
         alert('❌ Erro ao excluir item. Veja o console.');
       })
-      .finally(() => {
-        this.processandoExcluir = false;
-      });
+      .finally(() => (this.processandoExcluir = false));
   }
 }

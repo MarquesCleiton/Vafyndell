@@ -34,14 +34,14 @@ export class JogadorDetalhesBatalha implements OnInit {
     }
 
     try {
-      // cache first
-      let locais = await JogadorRepository.getLocalJogadores();
+      // 1. Cache first
+      const locais = await JogadorRepository.getLocalJogadores();
       let encontrado = locais.find(j => String(j.id) === String(id)) || null;
 
       if (encontrado) {
         this.setJogador(encontrado);
 
-        // sincroniza em paralelo
+        // 2. Sync paralelo
         JogadorRepository.syncJogadores().then(async updated => {
           if (updated) {
             const atualizados = await JogadorRepository.getLocalJogadores();
@@ -50,10 +50,11 @@ export class JogadorDetalhesBatalha implements OnInit {
           }
         });
       } else {
-        // fallback online
-        const online = await JogadorRepository.forceFetchJogador();
-        if (online && String(online.id) === String(id)) {
-          this.setJogador(online);
+        // 3. Fallback online → busca todos e tenta localizar
+        const onlineTodos = await JogadorRepository.getAllJogadores();
+        const achadoOnline = onlineTodos.find(j => String(j.id) === String(id));
+        if (achadoOnline) {
+          this.setJogador(achadoOnline);
         }
       }
     } catch (err) {
@@ -63,58 +64,52 @@ export class JogadorDetalhesBatalha implements OnInit {
     }
   }
 
-private setJogador(jogador: JogadorDomain) {
-  // Vida base cadastrada ou calculada
-  const vidaBase = jogador.pontos_de_vida && jogador.pontos_de_vida > 0
-    ? jogador.pontos_de_vida
-    : jogador.energia + jogador.constituicao;
+  private setJogador(jogador: JogadorDomain) {
+    const vidaBase = jogador.pontos_de_vida && jogador.pontos_de_vida > 0
+      ? jogador.pontos_de_vida
+      : jogador.energia + jogador.constituicao;
 
-  const fatorCura = Math.floor(jogador.energia / 3);
-  const deslocamento = Math.floor(jogador.destreza / 3);
+    const fatorCura = Math.floor(jogador.energia / 3);
+    const deslocamento = Math.floor(jogador.destreza / 3);
 
-  // Vida atual segue a regra da armadura
-  const vidaAtual = jogador.classe_de_armadura > 0
-    ? vidaBase
-    : vidaBase - (jogador.dano_tomado || 0);
+    const vidaAtual = jogador.classe_de_armadura > 0
+      ? vidaBase
+      : vidaBase - (jogador.dano_tomado || 0);
 
-  this.jogador = {
-    ...jogador,
-    pontos_de_vida: vidaBase,
-    vida_atual: vidaAtual,
-    fator_cura: fatorCura,
-    deslocamento: deslocamento,
-  };
+    this.jogador = {
+      ...jogador,
+      pontos_de_vida: vidaBase,
+      vida_atual: vidaAtual,
+      fator_cura: fatorCura,
+      deslocamento: deslocamento,
+    };
 
-  const calcMod = (valor: number) => Math.floor((valor - 10) / 2);
+    const calcMod = (valor: number) => Math.floor((valor - 10) / 2);
 
-  this.atributos = [
-    { label: 'Força', value: jogador.forca, mod: calcMod(jogador.forca), icon: '💪' },
-    { label: 'Destreza', value: jogador.destreza, mod: calcMod(jogador.destreza), icon: '🤸‍♂️' },
-    { label: 'Constituição', value: jogador.constituicao, mod: calcMod(jogador.constituicao), icon: '🪨' },
-    { label: 'Inteligência', value: jogador.inteligencia, mod: calcMod(jogador.inteligencia), icon: '🧠' },
-    { label: 'Sabedoria', value: jogador.sabedoria, mod: calcMod(jogador.sabedoria), icon: '📖' },
-    { label: 'Carisma', value: jogador.carisma, mod: calcMod(jogador.carisma), icon: '😎' },
-    { label: 'Energia', value: jogador.energia, mod: calcMod(jogador.energia), icon: '⚡' },
-  ];
-}
-
-
-
+    this.atributos = [
+      { label: 'Força', value: jogador.forca, mod: calcMod(jogador.forca), icon: '💪' },
+      { label: 'Destreza', value: jogador.destreza, mod: calcMod(jogador.destreza), icon: '🤸‍♂️' },
+      { label: 'Constituição', value: jogador.constituicao, mod: calcMod(jogador.constituicao), icon: '🪨' },
+      { label: 'Inteligência', value: jogador.inteligencia, mod: calcMod(jogador.inteligencia), icon: '🧠' },
+      { label: 'Sabedoria', value: jogador.sabedoria, mod: calcMod(jogador.sabedoria), icon: '📖' },
+      { label: 'Carisma', value: jogador.carisma, mod: calcMod(jogador.carisma), icon: '😎' },
+      { label: 'Energia', value: jogador.energia, mod: calcMod(jogador.energia), icon: '⚡' },
+    ];
+  }
 
   editarJogador() {
     if (!this.jogador) return;
 
-    // se for NPC → abre no cadastro-npc
     if (!this.jogador.email) {
+      // NPC
       this.router.navigate(['/cadastro-npc', this.jogador.id], {
         queryParams: { returnUrl: this.router.url },
       });
-      return;
+    } else {
+      // Jogador real
+      this.router.navigate(['/cadastro-jogador', this.jogador.id], {
+        queryParams: { returnUrl: this.router.url },
+      });
     }
-
-    // se for Jogador real → abre no cadastro-jogador
-    this.router.navigate(['/cadastro-jogador', this.jogador.id], {
-      queryParams: { returnUrl: this.router.url },
-    });
   }
 }

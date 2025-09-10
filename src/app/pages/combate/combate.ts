@@ -45,14 +45,45 @@ export class Combate implements OnInit {
   constructor(private router: Router, private route: ActivatedRoute) {}
 
   async ngOnInit() {
-    this.todosJogadores = await JogadorRepository.getLocalJogadores();
+    try {
+      console.log('[Combate] Iniciando carregamento de jogadores...');
+      // 1. Carrega local primeiro
+      let locais = await JogadorRepository.getLocalJogadores();
+      if (locais.length) {
+        this.todosJogadores = locais;
+      }
 
-    // Pré-preencher ofensor = jogador atual
+      // 2. Em paralelo, dispara sync
+      JogadorRepository.syncJogadores().then(async updated => {
+        if (updated) {
+          console.log('[Combate] Jogadores atualizados após sync.');
+          this.todosJogadores = await JogadorRepository.getLocalJogadores();
+          this.prepararSelecoes();
+        }
+      });
+
+      // 3. Se não havia local, força buscar online
+      if (!locais.length) {
+        console.log('[Combate] Nenhum jogador local. Buscando online...');
+        const online = await JogadorRepository.forceFetchJogador();
+        if (online) {
+          this.todosJogadores = Array.isArray(online) ? online : [online];
+        }
+      }
+
+      // Preenche ofensor e vítima iniciais
+      this.prepararSelecoes();
+    } catch (err) {
+      console.error('[Combate] Erro ao carregar jogadores:', err);
+    }
+  }
+
+  /** 🔑 Define o ofensor (usuário atual) e vítima (rota) */
+  private prepararSelecoes() {
     const user = AuthService.getUser();
     this.ofensorSelecionado =
       this.todosJogadores.find(j => j.email === user?.email) || null;
 
-    // Pré-preencher vítima = ID da rota
     const vitimaId = this.route.snapshot.paramMap.get('id');
     if (vitimaId) {
       this.vitimaSelecionada =
@@ -73,14 +104,18 @@ export class Combate implements OnInit {
   }
 
   async registrarCombate(form: NgForm) {
-    if (form.invalid || !this.ofensorSelecionado || !this.vitimaSelecionada)
+    if (form.invalid || !this.ofensorSelecionado || !this.vitimaSelecionada) return;
+
+    if (this.dano <= 0) {
+      alert('⚠️ Informe um valor de dano válido.');
       return;
+    }
 
     this.salvando = true;
     try {
       let danoAplicado = this.dano;
 
-      // Armadura atual
+      // Estado atual da vítima
       let caAtual = this.vitimaSelecionada.classe_de_armadura || 0;
       let danoTomadoAtual = this.vitimaSelecionada.dano_tomado || 0;
 
@@ -90,7 +125,7 @@ export class Combate implements OnInit {
           this.vitimaSelecionada.classe_de_armadura = caAtual - danoAplicado;
           danoAplicado = 0;
         } else {
-          // Parte do dano quebra a armadura, sobra o excedente
+          // Parte quebra a armadura, o excedente vira dano
           this.vitimaSelecionada.classe_de_armadura = 0;
           danoAplicado -= caAtual;
           this.vitimaSelecionada.dano_tomado = danoTomadoAtual + danoAplicado;
@@ -103,7 +138,6 @@ export class Combate implements OnInit {
       // Atualiza no repositório
       await JogadorRepository.updateJogador(this.vitimaSelecionada);
 
-      // Log
       console.log('⚔️ Combate registrado:', {
         ofensor: this.ofensorSelecionado,
         vitima: this.vitimaSelecionada,
@@ -113,7 +147,6 @@ export class Combate implements OnInit {
         efeitos: this.efeitos,
       });
 
-      // Feedback ao usuário
       alert(
         `✅ ${this.ofensorSelecionado.personagem} causou ${this.dano} de dano em ${this.vitimaSelecionada.personagem}!\n` +
         `🛡️ Armadura restante: ${this.vitimaSelecionada.classe_de_armadura}\n` +

@@ -43,6 +43,7 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
     if (id) {
       this.editMode = true;
       try {
+        // 1. Busca local primeiro
         const locais = await AnotacaoRepository.getLocalAnotacoes();
         const existente = locais.find(a => String(a.id) === id);
         if (existente) {
@@ -50,6 +51,7 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
           this.scheduleAutoExpand();
         }
 
+        // 2. Em paralelo, dispara sync
         AnotacaoRepository.syncAnotacoes().then(async updated => {
           if (updated) {
             const atualizadas = await AnotacaoRepository.getLocalAnotacoes();
@@ -61,6 +63,7 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
           }
         });
 
+        // 3. Se não tinha local, força buscar online
         if (!existente) {
           const online = await AnotacaoRepository.forceFetchAnotacoes();
           const achada = online.find(a => String(a.id) === id);
@@ -79,6 +82,7 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
     this.scheduleAutoExpand();
   }
 
+  /** 🔑 agenda o auto expand depois da renderização */
   private scheduleAutoExpand() {
     this.zone.runOutsideAngular(() => {
       setTimeout(() => this.applyAutoExpand(), 0);
@@ -109,13 +113,13 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
       reader.readAsDataURL(file);
     }
   }
-
   removerImagem() {
     this.anotacao.imagem = '';
   }
 
   async salvar(form: NgForm) {
     if (form.invalid) return;
+
     try {
       this.salvando = true;
       const user = AuthService.getUser();
@@ -128,16 +132,22 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
         await AnotacaoRepository.updateAnotacao(this.anotacao);
         window.alert('✅ Anotação atualizada!');
       } else {
-        const todas = await AnotacaoRepository.getAllAnotacoes();
-        const maxIndex = todas.length > 0 ? Math.max(...todas.map(a => a.index || 0)) : 0;
+        // 🔄 sincroniza para garantir maxIndex atualizado
+        await AnotacaoRepository.syncAnotacoes();
+
+        const locais = await AnotacaoRepository.getLocalAnotacoes();
+        const maxIndex = locais.length > 0 ? Math.max(...locais.map(a => a.index || 0)) : 0;
+
         this.anotacao.index = maxIndex + 1;
         this.anotacao.id = maxIndex + 1;
+
         await AnotacaoRepository.createAnotacao(this.anotacao);
         window.alert('✅ Anotação criada!');
       }
+
       this.router.navigate(['/anotacoes']);
     } catch (err) {
-      console.error('[CriarAnotacao] Erro ao salvar:', err);
+      console.error('[CriarAnotacao] Erro ao salvar anotação:', err);
       window.alert('❌ Erro ao salvar anotação.');
     } finally {
       this.salvando = false;

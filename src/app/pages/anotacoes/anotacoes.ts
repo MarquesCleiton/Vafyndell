@@ -19,7 +19,7 @@ export class Anotacoes implements OnInit {
   carregando = true;
   filtro = '';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   async ngOnInit() {
     try {
@@ -27,22 +27,25 @@ export class Anotacoes implements OnInit {
       this.carregando = true;
 
       // 1. Busca local
-      let locais = await AnotacaoRepository.getLocalAnotacoes();
+      const locais = await AnotacaoRepository.getLocalAnotacoes();
       if (locais.length) {
         this.processarAnotacoes(locais);
         this.carregando = false;
       }
 
       // 2. Valida online em paralelo
-      AnotacaoRepository.syncAnotacoes().then(async updated => {
+      (async () => {
+        const updated = await AnotacaoRepository.syncAnotacoes();
         if (updated) {
+          console.log('[Anotacoes] Sync trouxe alterações.');
           const atualizadas = await AnotacaoRepository.getLocalAnotacoes();
           this.processarAnotacoes(atualizadas);
         }
-      });
+      })();
 
-      // 3. Se não havia nada local
+      // 3. Se não havia nada local → fallback online
       if (!locais.length) {
+        console.log('[Anotacoes] Nenhuma anotação local. Buscando online...');
         const online = await AnotacaoRepository.forceFetchAnotacoes();
         this.processarAnotacoes(online);
         this.carregando = false;
@@ -52,6 +55,7 @@ export class Anotacoes implements OnInit {
       this.carregando = false;
     }
   }
+
 
   /** Agrupa anotações por data (ignora hora) */
   private processarAnotacoes(itens: AnotacaoDomain[]) {

@@ -66,7 +66,7 @@ export class CadastroNpc implements OnInit, AfterViewInit {
     private route: ActivatedRoute,
     private el: ElementRef,
     private zone: NgZone
-  ) {}
+  ) { }
 
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -165,16 +165,20 @@ export class CadastroNpc implements OnInit, AfterViewInit {
       if (!user?.email) throw new Error('Usuário não autenticado');
       this.npc.email = user.email;
 
+      // 🔄 garante cache atualizado
       await NpcRepository.syncNpcs();
 
       if (this.editMode) {
         await NpcRepository.updateNpc(this.npc);
         window.alert('✅ NPC atualizado com sucesso!');
       } else {
-        const todos = await NpcRepository.getLocalNpcs();
-        const maxIndex = todos.length > 0 ? Math.max(...todos.map(n => n.index || 0)) : 0;
+        // usa o cache local atualizado para calcular próximo ID
+        const locais = await NpcRepository.getLocalNpcs();
+        const maxIndex = locais.length > 0 ? Math.max(...locais.map(n => n.index || 0)) : 0;
+
         this.npc.index = maxIndex + 1;
         this.npc.id = maxIndex + 1;
+
         await NpcRepository.createNpc(this.npc);
         window.alert('✅ NPC criado com sucesso!');
       }
@@ -187,6 +191,7 @@ export class CadastroNpc implements OnInit, AfterViewInit {
       this.salvando = false;
     }
   }
+
 
   cancelar() {
     this.router.navigate(['/npcs']);

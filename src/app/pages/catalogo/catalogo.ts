@@ -20,42 +20,66 @@ export class Catalogo implements OnInit {
 
   constructor(private router: Router) {}
 
-  async ngOnInit() {
-    try {
-      console.log('[Catalogo] Iniciando carregamento...');
-      this.carregando = true;
+async ngOnInit() {
+  try {
+    console.log('[Catalogo] Iniciando carregamento...');
+    this.carregando = true;
 
-      // 1. Carrega itens locais primeiro
-      let itens = await CatalogoRepository.getLocalItens();
-      if (itens.length) {
-        console.log('[Catalogo] Itens locais encontrados:', itens.length);
-        this.processarItens(itens);
-        this.carregando = false; // já libera a UI
-      }
-
-      // 2. Em paralelo, sincroniza catálogo
-      CatalogoRepository.syncItens().then(async updated => {
-        if (updated) {
-          console.log('[Catalogo] Sync trouxe alterações. Recarregando...');
-          const atualizados = await CatalogoRepository.getLocalItens();
-          this.processarItens(atualizados);
-        } else {
-          console.log('[Catalogo] Sync concluído. Nenhuma alteração detectada.');
-        }
-      });
-
-      // 3. Se não havia nada local, força buscar online
-      if (!itens.length) {
-        console.log('[Catalogo] Nenhum item local. Buscando online...');
-        const online = await CatalogoRepository.forceFetchItens();
-        this.processarItens(online);
-        this.carregando = false;
-      }
-    } catch (err) {
-      console.error('[Catalogo] Erro ao carregar itens:', err);
+    // 1. Carrega itens locais primeiro
+    let itens = await CatalogoRepository.getLocalItens();
+    if (itens.length) {
+      console.log('[Catalogo] Itens locais encontrados:', itens.length);
+      this.processarItens(itens);
       this.carregando = false;
     }
+
+    // 2. Em paralelo, sincroniza
+    CatalogoRepository.syncItens().then(async updated => {
+      if (updated) {
+        console.log('[Catalogo] Sync trouxe alterações. Recarregando...');
+        const atualizados = await CatalogoRepository.getLocalItens();
+        this.processarItens(atualizados);
+      }
+    });
+
+    // 3. Se não havia nada local, força buscar online
+    if (!itens.length) {
+      console.log('[Catalogo] Nenhum item local. Buscando online...');
+      const online = await CatalogoRepository.forceFetchItens();
+      this.processarItens(online);
+      this.carregando = false;
+    }
+  } catch (err) {
+    console.error('[Catalogo] Erro ao carregar itens:', err);
+    this.carregando = false;
   }
+}
+
+aplicarFiltro() {
+  const termo = this.filtro.toLowerCase();
+  if (!termo) {
+    this.categoriasFiltradas = [...this.categorias];
+    return;
+  }
+
+  this.categoriasFiltradas = this.categorias
+    .map(c => ({
+      ...c,
+      itens: c.itens.filter(i =>
+        String(i.nome || '').toLowerCase().includes(termo) ||
+        String(i.raridade || '').toLowerCase().includes(termo) ||
+        String(i.efeito || '').toLowerCase().includes(termo) ||
+        String(i.colateral || '').toLowerCase().includes(termo) ||
+        String(i.categoria || '').toLowerCase().includes(termo)
+      ),
+    }))
+    .filter(c => c.itens.length > 0);
+}
+
+abrirItem(item: CatalogoDomain) {
+  this.router.navigate(['/item-catalogo', item.id]);
+}
+
 
   /** 🔄 Função auxiliar para agrupar itens por categoria */
   private processarItens(itens: CatalogoDomain[]) {
@@ -85,33 +109,10 @@ export class Catalogo implements OnInit {
     this.router.navigate(['/cadastro-item-catalogo']);
   }
 
-  aplicarFiltro() {
-    const termo = this.filtro.toLowerCase();
-    if (!termo) {
-      this.categoriasFiltradas = [...this.categorias];
-      return;
-    }
-
-    this.categoriasFiltradas = this.categorias
-      .map(c => ({
-        ...c,
-        itens: c.itens.filter(i =>
-          String(i.nome || '').toLowerCase().includes(termo) ||
-          String(i.raridade || '').toLowerCase().includes(termo) ||
-          String(i.efeito || '').toLowerCase().includes(termo) ||
-          String(i.colateral || '').toLowerCase().includes(termo)
-        ),
-      }))
-      .filter(c => c.itens.length > 0);
-  }
 
   /** ✅ Método seguro para retornar classe de raridade */
   getRaridadeClass(raridade: any): string {
     if (!raridade) return 'comum';
     return String(raridade).toLowerCase();
-  }
-
-  abrirItem(item: any) {
-    this.router.navigate(['/item-catalogo', item.id]);
   }
 }

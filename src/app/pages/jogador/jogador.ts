@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { JogadorRepository } from '../../repositories/JogadorRepository';
 import { JogadorDomain } from '../../domain/jogadorDomain';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../core/auth/AuthService';
 
 @Component({
   selector: 'app-jogador',
@@ -23,39 +24,42 @@ export class Jogador implements OnInit {
   constructor(private router: Router) { }
 
   async ngOnInit() {
-    console.log('[Jogador] ngOnInit → carregando jogador...');
+    console.log('[Jogador] Iniciando carregamento...');
+    this.loading = true;
 
     try {
-      // 1. Busca local primeiro
-      let jogadorLocal = await JogadorRepository.getLocalJogador();
+
+      // segue fluxo normalmente...
+      const jogadorLocal = await JogadorRepository.getLocalJogador();
+
       if (jogadorLocal) {
         console.log('[Jogador] Jogador local encontrado:', jogadorLocal);
         this.setJogador(jogadorLocal);
 
-        // 2. Em paralelo, valida online
-        JogadorRepository.syncJogadores().then(async updated => {
+        (async () => {
+          const updated = await JogadorRepository.syncJogadores();
           if (updated) {
-            console.log('[Jogador] Cache atualizado. Recarregando jogador...');
-            const atualizado = await JogadorRepository.getLocalJogador();
-            if (atualizado) this.setJogador(atualizado);
+            const jogadorAtualizado = await JogadorRepository.getLocalJogador();
+            if (jogadorAtualizado) this.setJogador(jogadorAtualizado);
           }
-        });
+        })();
       } else {
-        console.log('[Jogador] Nenhum jogador local. Tentando buscar online...');
-        // 3. Se não tem local, busca online
+        console.log('[Jogador] Nenhum jogador local. Buscando online...');
         const jogadorOnline = await JogadorRepository.forceFetchJogador();
         if (jogadorOnline) {
           this.setJogador(jogadorOnline);
         } else {
-          console.warn('[Jogador] Nenhum jogador encontrado online → redirecionando para o cadastro');
+          console.warn('[Jogador] Nenhum jogador encontrado online → cadastro');
           this.router.navigate(['/cadastro-jogador']);
         }
       }
     } catch (err) {
       console.error('[Jogador] Erro ao carregar Jogador:', err);
-      this.router.navigate(['/login']);
+    } finally {
+      this.loading = false;
     }
   }
+
 
   private setJogador(jogador: JogadorDomain) {
     // Vida base cadastrada ou calculada

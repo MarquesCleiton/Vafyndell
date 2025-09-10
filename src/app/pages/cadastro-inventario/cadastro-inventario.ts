@@ -49,29 +49,30 @@ export class CadastroInventario implements OnInit {
   constructor(
     private router: Router,
     private route: ActivatedRoute
-  ) {}
+  ) { }
 
   async ngOnInit() {
     try {
       console.log('[CadastroInventario] Iniciando carregamento...');
 
-      // 1. Carrega catálogo local primeiro
+      // 1. Catálogo local primeiro
       this.catalogoItens = await CatalogoRepository.getLocalItens();
       this.catalogoFiltrado = this.catalogoItens;
 
-      // 2. Em paralelo, sincroniza catálogo
-      CatalogoRepository.syncItens().then(async updated => {
+      // 2. Em paralelo, dispara sync catálogo
+      (async () => {
+        const updated = await CatalogoRepository.syncItens();
         if (updated) {
           console.log('[CadastroInventario] Catálogo atualizado. Recarregando...');
           this.catalogoItens = await CatalogoRepository.getLocalItens();
           this.catalogoFiltrado = this.catalogoItens;
         }
-      });
+      })();
 
-      // 🔑 pega returnUrl da query string
+      // 🔑 pega returnUrl
       this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
 
-      // 3. Verifica se está em modo edição
+      // 3. Verifica edição
       const id = Number(this.route.snapshot.paramMap.get('id'));
       if (id) {
         this.editando = true;
@@ -79,39 +80,34 @@ export class CadastroInventario implements OnInit {
         const user = AuthService.getUser();
         if (!user?.email) throw new Error('Usuário não autenticado.');
 
-        // Busca local primeiro
+        // Busca inventário local
         const inventarioLocal = await InventarioRepository.getLocalInventarioByJogador(user.email);
         this.inventarioAtual = inventarioLocal.find(i => i.id === id) || null;
 
         if (this.inventarioAtual) {
-          this.selecionado = this.catalogoItens.find(c => c.id === this.inventarioAtual!.item_catalogo) || null;
-          this.quantidade = this.inventarioAtual.quantidade;
-          this.filtro = this.selecionado?.nome || '';
+          await this.carregarItemSelecionado(this.inventarioAtual);
         }
 
-        // Em paralelo, sincroniza inventário
-        InventarioRepository.syncInventario().then(async updated => {
+        // Em paralelo, sync inventário
+        (async () => {
+          const updated = await InventarioRepository.syncInventario();
           if (updated) {
             console.log('[CadastroInventario] Inventário atualizado. Recarregando item...');
             const atualizado = await InventarioRepository.getLocalInventarioByJogador(user.email);
             const inventarioRecarregado = atualizado.find(i => i.id === id);
             if (inventarioRecarregado) {
               this.inventarioAtual = inventarioRecarregado;
-              this.selecionado = this.catalogoItens.find(c => c.id === inventarioRecarregado.item_catalogo) || null;
-              this.quantidade = inventarioRecarregado.quantidade;
-              this.filtro = this.selecionado?.nome || '';
+              await this.carregarItemSelecionado(this.inventarioAtual);
             }
           }
-        });
+        })();
 
-        // Se não encontrou local, força buscar online
+        // Fallback: se não tinha local
         if (!this.inventarioAtual) {
           const inventarioOnline = await InventarioRepository.forceFetchInventario();
           this.inventarioAtual = inventarioOnline.find(i => i.id === id) || null;
           if (this.inventarioAtual) {
-            this.selecionado = this.catalogoItens.find(c => c.id === this.inventarioAtual!.item_catalogo) || null;
-            this.quantidade = this.inventarioAtual.quantidade;
-            this.filtro = this.selecionado?.nome || '';
+            await this.carregarItemSelecionado(this.inventarioAtual);
           }
         }
       }
@@ -119,6 +115,19 @@ export class CadastroInventario implements OnInit {
       console.error('[CadastroInventario] Erro ao carregar:', err);
     }
   }
+
+  private async carregarItemSelecionado(inventario: InventarioDomain) {
+    // 🔑 garante que o catálogo esteja carregado
+    if (!this.catalogoItens.length) {
+      this.catalogoItens = await CatalogoRepository.getLocalItens();
+      this.catalogoFiltrado = this.catalogoItens;
+    }
+
+    this.selecionado = this.catalogoItens.find(c => c.id === inventario.item_catalogo) || null;
+    this.quantidade = inventario.quantidade;
+    this.filtro = this.selecionado?.nome || '';
+  }
+
 
   filtrarItens() {
     const normalizar = (texto: string) =>

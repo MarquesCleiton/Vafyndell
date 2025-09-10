@@ -88,13 +88,17 @@ export class AnotacaoRepository {
     // =========================================================
     static async getLocalAnotacoes(): Promise<AnotacaoDomain[]> {
         const user = AuthService.getUser();
-        if (!user) throw new Error('Usuário não autenticado.');
+        if (!user) {
+            console.warn('[AnotacaoRepository] Usuário não autenticado → retornando []');
+            return [];
+        }
 
         const db = await this.getDb();
         const todas = await db.getAll<AnotacaoDomain>(this.STORE);
 
         return todas.filter(a => a.jogador === user.email);
     }
+
 
     // =========================================================
     // 📌 Força buscar online e atualizar cache
