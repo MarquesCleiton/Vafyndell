@@ -17,31 +17,55 @@ export class OficinaService {
     const user = AuthService.getUser();
     if (!user?.email) throw new Error('Usuário não autenticado');
 
-    // 1. Busca dados locais
-    let [catalogo, receitas, inventario] = await Promise.all([
+    // 1️⃣ Cache first: tenta buscar tudo local
+    let [catalogo, inventario, receitas] = await Promise.all([
       CatalogoRepository.getLocalItens(),
-      ReceitasRepository.getLocalReceitas(),
       InventarioRepository.getLocalInventarioByJogador(user.email),
+      ReceitasRepository.getLocalReceitas(),
     ]);
 
-    // 2. Se qualquer um estiver vazio → faz carregamento síncrono
-    if (!catalogo.length || !receitas.length || !inventario.length) {
-      console.log('[OficinaService] Cache incompleto → carregando dados síncronos...');
-
-      // 📌 Catálogo primeiro
-      await CatalogoRepository.syncItens();
-      catalogo = await CatalogoRepository.getLocalItens();
-
-      // 📌 Inventário depois
-      await InventarioRepository.syncInventario();
-      inventario = await InventarioRepository.getLocalInventarioByJogador(user.email);
-
-      // 📌 Receitas por último
-      await ReceitasRepository.syncReceitas();
-      receitas = await ReceitasRepository.getLocalReceitas();
+    // 2️⃣ Libera UI rápido se já tinha algo local
+    if (catalogo.length && inventario.length && receitas.length) {
+      // dispara sync em paralelo
+      this.sincronizar(user.email).catch(err =>
+        console.error('[OficinaService] Erro ao sincronizar:', err)
+      );
+      return this.processar(catalogo, receitas, inventario);
     }
 
+    // 3️⃣ Se faltou algo → carrega síncrono na ordem correta
+    console.log('[OficinaService] Cache incompleto → carregando dados síncronos...');
+
+    // Catálogo primeiro
+    await CatalogoRepository.syncItens();
+    catalogo = await CatalogoRepository.getLocalItens();
+
+    // Inventário depois
+    await InventarioRepository.syncInventario();
+    inventario = await InventarioRepository.getLocalInventarioByJogador(user.email);
+
+    // Receitas por último
+    await ReceitasRepository.syncReceitas();
+    receitas = await ReceitasRepository.getLocalReceitas();
+
     return this.processar(catalogo, receitas, inventario);
+  }
+
+  /**
+   * 🔄 Dispara sincronizações em paralelo para manter atualizado
+   */
+  private async sincronizar(email: string) {
+    const [catSync, invSync, recSync] = await Promise.all([
+      CatalogoRepository.syncItens(),
+      InventarioRepository.syncInventario(),
+      ReceitasRepository.syncReceitas(),
+    ]);
+
+    if (catSync || invSync || recSync) {
+      console.log('[OficinaService] Alguma tabela foi atualizada → dados locais recarregados');
+    } else {
+      console.log('[OficinaService] Nenhuma alteração nas tabelas.');
+    }
   }
 
   /**
