@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { CatalogoDomain } from '../../domain/CatalogoDomain';
-import { OficinaService } from '../../../services/OficinaService'; // 👈 lógica que junta Inventario+Receitas+Catalogo
+import { OficinaService } from '../../services/OficinaService';
 
 @Component({
   selector: 'app-oficina',
@@ -75,7 +75,7 @@ export class Oficina implements OnInit {
            this.normalize(i.efeito).includes(termo) ||
            this.normalize(i.descricao).includes(termo))
         );
-        return { ...c, itens, expandido: true }; // 👈 pesquisa expande tudo
+        return { ...c, itens, expandido: true };
       })
       .filter(c => c.itens.length > 0);
   }
@@ -84,7 +84,7 @@ export class Oficina implements OnInit {
     return text
       .toLowerCase()
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, ''); // remove acentos
+      .replace(/[\u0300-\u036f]/g, '');
   }
 
   getRaridadeClass(raridade: string): string {

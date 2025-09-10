@@ -55,10 +55,10 @@ export class App {
   protected readonly isLogged = signal(false); // 👈 novo
 
   private titles: Record<string, string> = {
-    '/jogador': 'Klug Orin',
+    '/jogador': 'Jogador',
     '/edicao-jogador': 'Skills',
     '/inventario': 'Inventário',
-    '/criar': 'Criar',
+    '/oficina': 'Oficina',
     '/batalha': 'Batalha',
     '/notas': 'Notas'
   };

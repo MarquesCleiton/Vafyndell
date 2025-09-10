@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
-import { CatalogoRepository } from '../app/repositories/CatalogoRepository';
-import { ReceitasRepository } from '../app/repositories/ReceitasRepository';
-import { InventarioRepository } from '../app/repositories/InventarioRepository';
-import { CatalogoDomain } from '../app/domain/CatalogoDomain';
-import { ReceitaDomain } from '../app/domain/ReceitaDomain';
-import { InventarioDomain } from '../app/domain/InventarioDomain';
-import { AuthService } from '../app/core/auth/AuthService';
+import { CatalogoRepository } from '../repositories/CatalogoRepository';
+import { ReceitasRepository } from '../repositories/ReceitasRepository';
+import { InventarioRepository } from '../repositories/InventarioRepository';
+import { CatalogoDomain } from '../domain/CatalogoDomain';
+import { ReceitaDomain } from '../domain/ReceitaDomain';
+import { InventarioDomain } from '../domain/InventarioDomain';
+import { AuthService } from '../core/auth/AuthService';
 
 @Injectable({ providedIn: 'root' })
 export class OficinaService {
@@ -26,7 +26,6 @@ export class OficinaService {
 
     // 2️⃣ Libera UI rápido se já tinha algo local
     if (catalogo.length && inventario.length && receitas.length) {
-      // dispara sync em paralelo
       this.sincronizar(user.email).catch(err =>
         console.error('[OficinaService] Erro ao sincronizar:', err)
       );
@@ -36,15 +35,12 @@ export class OficinaService {
     // 3️⃣ Se faltou algo → carrega síncrono na ordem correta
     console.log('[OficinaService] Cache incompleto → carregando dados síncronos...');
 
-    // Catálogo primeiro
     await CatalogoRepository.syncItens();
     catalogo = await CatalogoRepository.getLocalItens();
 
-    // Inventário depois
     await InventarioRepository.syncInventario();
     inventario = await InventarioRepository.getLocalInventarioByJogador(user.email);
 
-    // Receitas por último
     await ReceitasRepository.syncReceitas();
     receitas = await ReceitasRepository.getLocalReceitas();
 
@@ -83,22 +79,38 @@ export class OficinaService {
       estoque.set(i.item_catalogo, atual + i.quantidade);
     });
 
-    // 🔑 Itens que são fabricáveis
-    const fabricaveisIds = new Set(receitas.map(r => r.fabricavel));
-    const fabricaveis = catalogo.filter(c => fabricaveisIds.has(c.id));
-
-    return fabricaveis.map(item => {
-      const ingredientes = receitas.filter(r => r.fabricavel === item.id);
-
-      const podeFabricar = ingredientes.every(ing => {
-        const qtdNoEstoque = estoque.get(ing.catalogo) || 0;
-        return qtdNoEstoque >= ing.quantidade;
-      });
-
-      return {
-        ...item,
-        fabricavel: podeFabricar,
-      };
+    // 🔑 Itens fabricáveis de fato (devem ter ao menos 1 ingrediente)
+    const fabricaveis = catalogo.filter(c => {
+      const ingredientes = receitas.filter(r => r.fabricavel === c.id);
+      return ingredientes.length > 0; // só entra se tiver ingredientes definidos
     });
+
+    return fabricaveis
+      .map(item => {
+        const ingredientes = receitas.filter(r => r.fabricavel === item.id);
+
+        // 1️⃣ Jogador possui pelo menos 1 ingrediente?
+        const possuiAlgumIngrediente = ingredientes.some(ing => {
+          const qtdNoEstoque = estoque.get(ing.catalogo) || 0;
+          return qtdNoEstoque > 0;
+        });
+
+        if (!possuiAlgumIngrediente) {
+          // ❌ não tem nenhum ingrediente → não aparece
+          return null;
+        }
+
+        // 2️⃣ Verifica se pode fabricar (todos ingredientes suficientes)
+        const podeFabricar = ingredientes.every(ing => {
+          const qtdNoEstoque = estoque.get(ing.catalogo) || 0;
+          return qtdNoEstoque >= ing.quantidade;
+        });
+
+        return {
+          ...item,
+          fabricavel: podeFabricar, // true = pronto para fabricar, false = aparece mas falta algo
+        };
+      })
+      .filter((i): i is CatalogoDomain & { fabricavel: boolean } => i !== null);
   }
 }
