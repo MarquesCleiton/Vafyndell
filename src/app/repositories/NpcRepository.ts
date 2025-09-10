@@ -4,7 +4,7 @@ import { ScriptClient } from '../core/script/ScriptClient';
 import { NpcDomain } from '../domain/NpcDomain';
 
 export class NpcRepository {
-  private static TAB = 'Npcs';
+  private static TAB = 'NPCs';
   private static STORE = this.TAB;
   private static META_STORE = 'metadados';
 
