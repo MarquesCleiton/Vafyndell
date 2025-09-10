@@ -1,0 +1,23 @@
+/* ===== Cards de receitas ===== */
+.catalogo-card {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 14px;
+  transition: all 0.2s ease-in-out;
+}
+.catalogo-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+}
+
+/* ===== Texto ===== */
+.descricao-text {
+  color: #cfcfcf !important;
+}
+
+/* ===== Raridade ===== */
+.raridade.comum { color: #999; }
+.raridade.incomum { color: #6fbf73; }
+.raridade.raro { color: #4a90e2; }
+.raridade.épico { color: #9b7ecb; }
+.raridade.lendário { color: #d4af37; }

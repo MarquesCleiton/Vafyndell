@@ -29,6 +29,7 @@ export const routes: Routes = [
   { path: 'anotacoes', loadComponent: () => import('./pages/anotacoes/anotacoes').then((m) => m.Anotacoes) },
   { path: 'criar-anotacao', loadComponent: () => import('./pages/criar-anotacao/criar-anotacao').then((m) => m.CriarAnotacao) },
   { path: 'criar-anotacao/:id', loadComponent: () => import('./pages/criar-anotacao/criar-anotacao').then((m) => m.CriarAnotacao) },
+  { path: 'oficina', loadComponent: () => import('./pages/oficina/oficina').then((m) => m.Oficina) },
 
   // 🔑 aqui está o ajuste → rota com parâmetro :id
   { path: 'item-catalogo/:id', loadComponent: () => import('./pages/item-catalogo/item-catalogo').then((m) => m.ItemCatalogo) },

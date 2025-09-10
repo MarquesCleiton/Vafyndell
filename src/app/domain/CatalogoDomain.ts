@@ -1,3 +1,5 @@
+import { ReceitaDomain } from "./ReceitaDomain";
+
 export interface CatalogoDomain {
   index: number;                // índice incremental na planilha
   id: number;                   // id único (pode ser igual ao index)
@@ -24,7 +26,3 @@ export interface IngredienteDomain {
   quantidade: number;        // quantidade exigida
 }
 
-export interface ReceitaDomain {
-  fabricavel: CatalogoDomain;       // o item que pode ser fabricado
-  ingredientes: IngredienteDomain[];// ingredientes necessários
-}
