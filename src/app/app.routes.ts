@@ -30,6 +30,7 @@ export const routes: Routes = [
   { path: 'criar-anotacao', loadComponent: () => import('./pages/criar-anotacao/criar-anotacao').then((m) => m.CriarAnotacao) },
   { path: 'criar-anotacao/:id', loadComponent: () => import('./pages/criar-anotacao/criar-anotacao').then((m) => m.CriarAnotacao) },
   { path: 'oficina', loadComponent: () => import('./pages/oficina/oficina').then((m) => m.Oficina) },
+  { path: 'skills-jogador', loadComponent: () => import('./pages/skills-jogador/skills-jogador').then((m) => m.SkillsJogador) },
 
   // 🔑 aqui está o ajuste → rota com parâmetro :id
   { path: 'item-catalogo/:id', loadComponent: () => import('./pages/item-catalogo/item-catalogo').then((m) => m.ItemCatalogo) },

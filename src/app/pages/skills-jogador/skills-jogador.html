@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>🚧 Em Construção 🚧</title>
+  <style>
+    body {
+      background: repeating-linear-gradient(
+        45deg,
+        yellow,
+        yellow 20px,
+        black 20px,
+        black 40px
+      );
+      font-family: "Comic Sans MS", cursive, sans-serif;
+      text-align: center;
+      padding: 50px;
+      color: white;
+    }
+    .container {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 30px;
+      border-radius: 20px;
+      display: inline-block;
+      animation: treme 0.2s infinite alternate;
+    }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 10px;
+    }
+    .gif {
+      font-size: 5rem;
+      animation: gira 2s linear infinite;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+    p {
+      font-size: 1.2rem;
+      margin: 10px 0;
+    }
+    @keyframes gira {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes treme {
+      from { transform: translateX(-5px); }
+      to { transform: translateX(5px); }
+    }
+    .pisca {
+      animation: pisca 1s infinite;
+      font-weight: bold;
+    }
+    @keyframes pisca {
+      0%, 50%, 100% { opacity: 1; }
+      25%, 75% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="gif">👷‍♂️</div>
+    <h1>🚧 Página em Construção 🚧</h1>
+    <p>Nosso engenheiro esqueceu a pá e foi buscar coxinha 🥟</p>
+    <p class="pisca">Por favor, volte em 42 anos-luz ✨</p>
+    <p>Enquanto isso, imagine um pato dançando lambada 🦆💃</p>
+  </div>
+</body>
+</html>
