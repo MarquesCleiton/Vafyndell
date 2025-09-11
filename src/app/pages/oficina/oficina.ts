@@ -3,8 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
-import { CatalogoDomain } from '../../domain/CatalogoDomain';
-import { OficinaService } from '../../services/OficinaService';
+import { OficinaService, ReceitaComStatus } from '../../services/OficinaService';
 
 @Component({
   selector: 'app-oficina',
@@ -14,14 +13,21 @@ import { OficinaService } from '../../services/OficinaService';
   styleUrls: ['./oficina.css'],
 })
 export class Oficina implements OnInit {
-  categorias: { nome: string; itens: (CatalogoDomain & { fabricavel: boolean })[]; expandido: boolean }[] = [];
-  categoriasFiltradas: { nome: string; itens: (CatalogoDomain & { fabricavel: boolean })[]; expandido: boolean }[] = [];
+  categorias: { nome: string; itens: ReceitaComStatus[]; expandido: boolean }[] = [];
+  categoriasFiltradas: { nome: string; itens: ReceitaComStatus[]; expandido: boolean }[] = [];
 
   carregando = true;
   filtro = '';
   fabricaveisOnly = false;
 
-  constructor(private router: Router, private oficinaService: OficinaService) {}
+  // controle de loading por ação
+  loadingAction: { [id: number]: 'criar' | 'falha' | null } = {};
+
+  // toast global
+  mensagem: string | null = null;
+  mensagemTipo: 'sucesso' | 'erro' | null = null;
+
+  constructor(private router: Router, private oficinaService: OficinaService) { }
 
   async ngOnInit() {
     try {
@@ -35,8 +41,8 @@ export class Oficina implements OnInit {
     }
   }
 
-  private processarItens(itens: (CatalogoDomain & { fabricavel: boolean })[]) {
-    const mapa = new Map<string, (CatalogoDomain & { fabricavel: boolean })[]>();
+  private processarItens(itens: ReceitaComStatus[]) {
+    const mapa = new Map<string, ReceitaComStatus[]>();
 
     itens.forEach(i => {
       const cat = i.categoria || 'Outros';
@@ -71,9 +77,9 @@ export class Oficina implements OnInit {
         const itens = c.itens.filter(i =>
           (!this.fabricaveisOnly || i.fabricavel) &&
           (this.normalize(i.nome).includes(termo) ||
-           this.normalize(i.raridade).includes(termo) ||
-           this.normalize(i.efeito).includes(termo) ||
-           this.normalize(i.descricao).includes(termo))
+            this.normalize(i.raridade).includes(termo) ||
+            this.normalize(i.efeito).includes(termo) ||
+            this.normalize(i.descricao).includes(termo))
         );
         return { ...c, itens, expandido: true };
       })
@@ -90,5 +96,61 @@ export class Oficina implements OnInit {
   getRaridadeClass(raridade: string): string {
     if (!raridade) return 'comum';
     return raridade.toLowerCase();
+  }
+
+  async criarItem(rec: ReceitaComStatus) {
+    this.loadingAction[rec.id] = 'criar';
+    try {
+      await this.oficinaService.criarItem(rec);
+      alert(`✅ ${rec.nome} criado com sucesso!`);
+      await this.atualizarItem(rec.id);
+    } catch (err) {
+      console.error(err);
+      alert(`❌ Não foi possível criar ${rec.nome}.`);
+    } finally {
+      this.loadingAction[rec.id] = null;
+    }
+  }
+
+  async forcarFalha(rec: ReceitaComStatus) {
+    this.loadingAction[rec.id] = 'falha';
+    try {
+      await this.oficinaService.forcarFalha(rec);
+      alert(`⚠️ Falha simulada em ${rec.nome}. Ingredientes consumidos.`);
+      await this.atualizarItem(rec.id);
+    } catch (err) {
+      console.error(err);
+      alert(`❌ Não foi possível forçar falha em ${rec.nome}.`);
+    } finally {
+      this.loadingAction[rec.id] = null;
+    }
+  }
+
+
+  private async atualizarItem(id: number) {
+    try {
+      const receitas = await this.oficinaService.getPossiveisReceitas();
+      const atualizado = receitas.find(r => r.id === id);
+      if (!atualizado) return;
+
+      this.categorias.forEach(cat => {
+        const index = cat.itens.findIndex(i => i.id === id);
+        if (index !== -1) cat.itens[index] = atualizado;
+      });
+
+      this.aplicarFiltro();
+    } catch (err) {
+      console.error('[Oficina] Erro ao atualizar item:', err);
+    }
+  }
+
+  private showMensagem(msg: string, tipo: 'sucesso' | 'erro') {
+    this.mensagem = msg;
+    this.mensagemTipo = tipo;
+
+    setTimeout(() => {
+      this.mensagem = null;
+      this.mensagemTipo = null;
+    }, 3000);
   }
 }
