@@ -10,7 +10,7 @@ export class IndexedDBClient {
     'Inventario',
     'Receitas',
     'Personagem',
-    'Npcs',
+    'NPCs',
     'Anotacoes',
     'metadados',
   ];
