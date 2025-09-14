@@ -41,7 +41,7 @@ export class Combate implements OnInit {
   efeitos = '';
   salvando = false;
 
-  private repo = new BaseRepository<JogadorDomain>('Jogadores', 'Personagem');
+  private repo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
 
   constructor(private router: Router, private route: ActivatedRoute) {}
 

@@ -80,23 +80,36 @@ export class OficinaService {
     receitas: ReceitaDomain[],
     inventario: InventarioDomain[]
   ): ReceitaComStatus[] {
+    // 🔑 Mapeia inventário
     const estoque = new Map<string, number>();
     inventario.forEach((i) => {
-      const atual = estoque.get(i.item_catalogo) || 0;
-      estoque.set(i.item_catalogo, atual + i.quantidade);
+      const key = String(i.item_catalogo);
+      const atual = estoque.get(key) || 0;
+      estoque.set(key, atual + (i.quantidade || 0));
     });
+    console.log('[OficinaService] Estoque calculado:', Array.from(estoque.entries()));
 
+    // 🔑 Itens fabricáveis (devem ter pelo menos 1 ingrediente)
     const fabricaveis = catalogo.filter((c) =>
-      receitas.some((r) => r.fabricavel === c.id)
+      receitas.some((r) => String(r.fabricavel) === String(c.id))
     );
+    console.log('[OficinaService] Fabricáveis encontrados:', fabricaveis.length);
 
     return fabricaveis
       .map((item) => {
         const ingredientes: IngredienteDetalhado[] = receitas
-          .filter((r) => r.fabricavel === item.id)
+          .filter((r) => String(r.fabricavel) === String(item.id))
           .map((ing) => {
-            const qtdInventario = estoque.get(ing.catalogo) || 0;
-            const ref = catalogo.find((c) => c.id === ing.catalogo);
+            const qtdInventario = estoque.get(String(ing.catalogo)) || 0;
+            const ref = catalogo.find((c) => String(c.id) === String(ing.catalogo));
+
+            if (!ref) {
+              console.warn(
+                '[OficinaService] ❗ Ingrediente não encontrado no catálogo:',
+                ing.catalogo
+              );
+            }
+
             return {
               ...ing,
               quantidadeInventario: qtdInventario,
@@ -105,9 +118,12 @@ export class OficinaService {
             };
           });
 
+        // Verifica se pode fabricar (todos ingredientes suficientes)
         const podeFabricar = ingredientes.every(
           (ing) => ing.quantidadeInventario >= ing.quantidade
         );
+
+        // Se não possui nenhum ingrediente, descarta
         const possuiAlgum = ingredientes.some((ing) => ing.quantidadeInventario > 0);
         if (!possuiAlgum) return null;
 
@@ -119,6 +135,7 @@ export class OficinaService {
       })
       .filter((i): i is ReceitaComStatus => i !== null);
   }
+
 
   async criarItem(receita: ReceitaComStatus): Promise<void> {
     const user = AuthService.getUser();

@@ -37,7 +37,6 @@ export class InventarioJogador implements OnInit {
     categorias: 0,
   };
 
-  // ✅ Agora usando o BaseRepository
   private catalogoRepo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
   private inventarioRepo = new BaseRepository<InventarioDomain>('Inventario', 'Inventario');
 
@@ -45,15 +44,17 @@ export class InventarioJogador implements OnInit {
 
   async ngOnInit() {
     try {
-      console.log('[InventarioJogador] Iniciando carregamento...');
+      console.log('[InventarioJogador] 🔄 Iniciando carregamento...');
       this.carregando = true;
 
       const user = AuthService.getUser();
       if (!user?.email) throw new Error('Usuário não autenticado.');
 
+      console.log('[InventarioJogador] Usuário logado:', user.email);
+
       await this.loadLocalAndSync(user.email);
     } catch (err) {
-      console.error('[InventarioJogador] Erro ao carregar inventário:', err);
+      console.error('[InventarioJogador] ❌ Erro ao carregar inventário:', err);
     } finally {
       this.carregando = false;
     }
@@ -61,40 +62,57 @@ export class InventarioJogador implements OnInit {
 
   /** 🔄 Carrega catálogo e inventário do cache, depois sincroniza */
   private async loadLocalAndSync(email: string) {
-    // 1. Carrega cache local
+    console.log('[InventarioJogador] 📦 Carregando cache local...');
     const [catalogoLocal, inventarioLocal] = await Promise.all([
       this.catalogoRepo.getLocal(),
       this.inventarioRepo.getLocal(),
     ]);
 
+    console.log('[InventarioJogador] Catalogo local:', catalogoLocal.length, catalogoLocal);
+    console.log('[InventarioJogador] Inventario local bruto:', inventarioLocal.length, inventarioLocal);
+
     const meusItens = inventarioLocal.filter(i => i.jogador === email);
+    console.log('[InventarioJogador] Inventario filtrado para', email, ':', meusItens.length, meusItens);
+
     this.processarInventario(meusItens, catalogoLocal);
 
-    // 2. Sincroniza em paralelo (catálogo primeiro, depois inventário)
+    // 2. Sincroniza em paralelo
     (async () => {
+      console.log('[InventarioJogador] 🔄 Iniciando sync...');
       const catSync = await this.catalogoRepo.sync();
       const invSync = await this.inventarioRepo.sync();
 
+      console.log('[InventarioJogador] Resultado do sync → catalogo:', catSync, 'inventario:', invSync);
+
       if (catSync || invSync) {
-        console.log('[InventarioJogador] Sync trouxe alterações.');
+        console.log('[InventarioJogador] ✅ Sync trouxe alterações. Recarregando...');
         const [catAtualizado, invAtualizado] = await Promise.all([
           this.catalogoRepo.getLocal(),
           this.inventarioRepo.getLocal(),
         ]);
+        console.log('[InventarioJogador] Catalogo atualizado:', catAtualizado.length);
+        console.log('[InventarioJogador] Inventario atualizado bruto:', invAtualizado.length);
+
         const meusAtualizados = invAtualizado.filter(i => i.jogador === email);
+        console.log('[InventarioJogador] Inventario atualizado filtrado:', meusAtualizados.length, meusAtualizados);
+
         this.processarInventario(meusAtualizados, catAtualizado);
       }
     })();
 
-    // 3. Se não havia nada local, força fetch online
+    // 3. Se não havia nada local
     if (!meusItens.length) {
-      console.log('[InventarioJogador] Nenhum inventário local. Forçando fetch online...');
+      console.warn('[InventarioJogador] ⚠️ Nenhum inventário local. Forçando fetch online...');
       await this.catalogoRepo.forceFetch();
       const catalogoOnline = await this.catalogoRepo.getLocal();
+      console.log('[InventarioJogador] Catalogo online carregado:', catalogoOnline.length);
 
       await this.inventarioRepo.forceFetch();
       const inventarioOnline = await this.inventarioRepo.getLocal();
+      console.log('[InventarioJogador] Inventario online bruto:', inventarioOnline.length);
+
       const meusOnline = inventarioOnline.filter(i => i.jogador === email);
+      console.log('[InventarioJogador] Inventario online filtrado:', meusOnline.length, meusOnline);
 
       this.processarInventario(meusOnline, catalogoOnline);
     }
@@ -102,10 +120,19 @@ export class InventarioJogador implements OnInit {
 
   /** 🔧 Monta categorias e resumo */
   private processarInventario(inventarioBruto: InventarioDomain[], catalogo: CatalogoDomain[]) {
+    console.log('[InventarioJogador] 🛠️ Processando inventário...');
+    console.log('[InventarioJogador] Entrada inventarioBruto:', inventarioBruto);
+    console.log('[InventarioJogador] Entrada catalogo:', catalogo);
+
     const inventarioDetalhado: InventarioDetalhado[] = inventarioBruto.map(inv => {
-      const detalhe = catalogo.find(c => c.id === inv.item_catalogo);
+      const detalhe = catalogo.find(c => String(c.id) === String(inv.item_catalogo)); 
+      if (!detalhe) {
+        console.warn('[InventarioJogador] ❗ Item de inventário sem detalhe no catálogo:', inv);
+      }
       return { ...inv, itemDetalhe: detalhe };
     });
+
+    console.log('[InventarioJogador] Inventario detalhado:', inventarioDetalhado);
 
     // preserva expandido
     const estados = new Map(this.categorias.map(c => [c.nome, c.expandido]));
@@ -127,6 +154,9 @@ export class InventarioJogador implements OnInit {
 
     this.categoriasFiltradas = [...this.categorias];
     this.calcularResumo();
+
+    console.log('[InventarioJogador] ✅ Categorias finais:', this.categorias);
+    console.log('[InventarioJogador] ✅ Resumo:', this.resumo);
   }
 
   private calcularResumo() {

@@ -21,7 +21,7 @@ export class JogadorDetalhesBatalha implements OnInit {
   atributos: any[] = [];
   loading = true;
 
-  private repo = new BaseRepository<JogadorDomain>('Jogadores', 'Personagem');
+  private repo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
 
   constructor(
     private route: ActivatedRoute,
