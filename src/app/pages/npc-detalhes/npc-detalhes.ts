@@ -5,6 +5,7 @@ import { CommonModule, Location } from '@angular/common';
 import { BaseRepository } from '../../repositories/BaseRepository';
 import { NpcDomain } from '../../domain/NpcDomain';
 import { JogadorDomain } from '../../domain/jogadorDomain';
+import { IdUtils } from '../../core/utils/IdUtils'; 
 
 @Component({
   selector: 'app-npc-detalhes',
@@ -22,13 +23,13 @@ export class NpcDetalhes implements OnInit {
 
   // ✅ Reuso do BaseRepository
   private npcRepo = new BaseRepository<NpcDomain>('NPCs', 'NPCs');
-  private jogadorRepo = new BaseRepository<JogadorDomain>('Jogadores', 'Jogadores');
+  private jogadorRepo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private location: Location
-  ) {}
+  ) { }
 
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -51,7 +52,6 @@ export class NpcDetalhes implements OnInit {
           const atualizados = await this.npcRepo.getLocal();
           const atualizado = atualizados.find(n => String(n.id) === String(id));
           if (atualizado) {
-            // só atualiza campos → evita "quebra de imersão"
             if (this.npc) Object.assign(this.npc, atualizado);
             else this.npc = { ...atualizado };
           }
@@ -106,29 +106,36 @@ export class NpcDetalhes implements OnInit {
   }
 
   /** ➕ Adicionar NPC como "jogador" no campo de batalha */
+  /** ➕ Adicionar NPC como "jogador" no campo de batalha */
   async adicionarAoCampo() {
     if (!this.npc) return;
     this.processandoAdicionar = true;
 
     try {
-      // 1. Carrega jogadores existentes
-      const jogadores = await this.jogadorRepo.getLocal();
+      // 1. Carrega jogadores do cache (cache first)
+      let jogadores = await this.jogadorRepo.getLocal();
 
-      // 2. Pega base do nome e procura quantos já existem
+      // 2. Sincroniza em paralelo → se atualizar, substitui
+      this.jogadorRepo.sync().then(async updated => {
+        if (updated) {
+          jogadores = await this.jogadorRepo.getLocal();
+        }
+      });
+
+      // 3. Calcula próximo número baseado no cache atual (rápido)
       const baseName = this.npc.nome.trim();
       const existentes = jogadores
         .map(j => j.personagem.match(/^(\d+) - (.+)$/))
         .filter(m => m && m[2] === baseName)
         .map(m => parseInt(m![1], 10));
 
-      // 3. Calcula próximo número
       const proximoNumero = existentes.length > 0 ? Math.max(...existentes) + 1 : 1;
 
-      // 4. Cria registro de jogador NPC com atributos herdados
+      // 4. Cria registro de jogador NPC
       const novoNpcJogador: JogadorDomain = {
-        index: 0, // será definido no servidor
-        id: 0,    // idem
-        email: '', // NPC não tem email
+        index: 0, // servidor define
+        id: IdUtils.generateULID(),
+        email: '',
         imagem: this.npc.imagem || '',
         nome_do_jogador: 'NPC',
         personagem: `${proximoNumero} - ${baseName}`,
@@ -149,7 +156,6 @@ export class NpcDetalhes implements OnInit {
         efeitos_temporarios: '',
         registo_de_jogo: '',
 
-        // 🔑 novos campos herdados do NPC
         classificacao: this.npc.classificacao,
         tipo: this.npc.tipo,
         descricao: this.npc.descricao,
@@ -158,7 +164,6 @@ export class NpcDetalhes implements OnInit {
 
       await this.jogadorRepo.create(novoNpcJogador);
       alert(`✅ ${novoNpcJogador.personagem} adicionado ao campo de batalha!`);
-
     } catch (err) {
       console.error('[NpcDetalhes] Erro ao adicionar NPC no campo de batalha:', err);
       alert('❌ Erro ao adicionar NPC. Veja o console.');
@@ -166,4 +171,5 @@ export class NpcDetalhes implements OnInit {
       this.processandoAdicionar = false;
     }
   }
+
 }

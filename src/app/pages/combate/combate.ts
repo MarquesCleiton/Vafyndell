@@ -11,9 +11,9 @@ import { MatOptionModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
-import { JogadorRepository } from '../../repositories/JogadorRepository';
 import { JogadorDomain } from '../../domain/jogadorDomain';
 import { AuthService } from '../../core/auth/AuthService';
+import { BaseRepository } from '../../repositories/BaseRepository';
 
 @Component({
   selector: 'app-combate',
@@ -42,33 +42,33 @@ export class Combate implements OnInit {
   efeitos = '';
   salvando = false;
 
+  private repo = new BaseRepository<JogadorDomain>('Jogadores', 'Personagem');
+
   constructor(private router: Router, private route: ActivatedRoute) {}
 
   async ngOnInit() {
     try {
       console.log('[Combate] Iniciando carregamento de jogadores...');
-      // 1. Carrega local primeiro
-      let locais = await JogadorRepository.getLocalJogadores();
+      // 1️⃣ Local primeiro
+      let locais = await this.repo.getLocal();
       if (locais.length) {
         this.todosJogadores = locais;
       }
 
-      // 2. Em paralelo, dispara sync
-      JogadorRepository.syncJogadores().then(async updated => {
+      // 2️⃣ Sync em paralelo
+      this.repo.sync().then(async updated => {
         if (updated) {
           console.log('[Combate] Jogadores atualizados após sync.');
-          this.todosJogadores = await JogadorRepository.getLocalJogadores();
+          this.todosJogadores = await this.repo.getLocal();
           this.prepararSelecoes();
         }
       });
 
-      // 3. Se não havia local, força buscar online
+      // 3️⃣ Fallback online
       if (!locais.length) {
         console.log('[Combate] Nenhum jogador local. Buscando online...');
-        const online = await JogadorRepository.forceFetchJogador();
-        if (online) {
-          this.todosJogadores = Array.isArray(online) ? online : [online];
-        }
+        const online = await this.repo.forceFetch();
+        this.todosJogadores = online;
       }
 
       // Preenche ofensor e vítima iniciais
@@ -136,7 +136,7 @@ export class Combate implements OnInit {
       }
 
       // Atualiza no repositório
-      await JogadorRepository.updateJogador(this.vitimaSelecionada);
+      await this.repo.update(this.vitimaSelecionada);
 
       console.log('⚔️ Combate registrado:', {
         ofensor: this.ofensorSelecionado,
@@ -149,8 +149,8 @@ export class Combate implements OnInit {
 
       alert(
         `✅ ${this.ofensorSelecionado.personagem} causou ${this.dano} de dano em ${this.vitimaSelecionada.personagem}!\n` +
-        `🛡️ Armadura restante: ${this.vitimaSelecionada.classe_de_armadura}\n` +
-        `💥 Dano total sofrido: ${this.vitimaSelecionada.dano_tomado}`
+          `🛡️ Armadura restante: ${this.vitimaSelecionada.classe_de_armadura}\n` +
+          `💥 Dano total sofrido: ${this.vitimaSelecionada.dano_tomado}`
       );
 
       this.router.navigate(['/batalha']);

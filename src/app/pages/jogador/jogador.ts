@@ -1,14 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { JogadorRepository } from '../../repositories/JogadorRepository';
-import { JogadorDomain } from '../../domain/jogadorDomain';
 import { CommonModule } from '@angular/common';
+
+import { JogadorDomain } from '../../domain/jogadorDomain';
 import { AuthService } from '../../core/auth/AuthService';
+import { BaseRepository } from '../../repositories/BaseRepository';
 
 @Component({
   selector: 'app-jogador',
   templateUrl: './jogador.html',
   styleUrls: ['./jogador.css'],
+  standalone: true,
   imports: [CommonModule],
 })
 export class Jogador implements OnInit {
@@ -21,6 +23,9 @@ export class Jogador implements OnInit {
   atributos: any[] = [];
   loading = true;
 
+  // ✅ agora usa BaseRepository
+  private repo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
+
   constructor(private router: Router) {}
 
   async ngOnInit() {
@@ -32,17 +37,17 @@ export class Jogador implements OnInit {
       if (!user?.email) throw new Error('Usuário não autenticado.');
 
       // 1️⃣ Primeiro tenta pegar local
-      let jogadorLocal = await JogadorRepository.getLocalJogador();
+      let jogadorLocal = (await this.repo.getLocal()).find(j => j.email === user.email);
 
       if (jogadorLocal) {
         console.log('[Jogador] Jogador local encontrado:', jogadorLocal);
         this.setJogador(jogadorLocal);
 
         // dispara sync em paralelo (não bloqueia UI)
-        JogadorRepository.syncJogadores().then(async updated => {
+        this.repo.sync().then(async updated => {
           if (updated) {
-            const jogadorAtualizado = await JogadorRepository.getLocalJogador();
-            if (jogadorAtualizado) this.setJogador(jogadorAtualizado);
+            const atualizado = (await this.repo.getLocal()).find(j => j.email === user.email);
+            if (atualizado) this.setJogador(atualizado);
           }
         });
         return; // já exibiu algo
@@ -50,7 +55,8 @@ export class Jogador implements OnInit {
 
       // 2️⃣ Se não havia local → carrega síncrono (force fetch)
       console.log('[Jogador] Nenhum jogador local → carregando online...');
-      jogadorLocal = await JogadorRepository.forceFetchJogador();
+      const online = await this.repo.forceFetch();
+      jogadorLocal = online.find(j => j.email === user.email);
 
       if (jogadorLocal) {
         this.setJogador(jogadorLocal);
@@ -60,6 +66,7 @@ export class Jogador implements OnInit {
       }
     } catch (err) {
       console.error('[Jogador] Erro ao carregar Jogador:', err);
+      this.router.navigate(['/login']);
     } finally {
       this.loading = false;
     }
@@ -89,7 +96,7 @@ export class Jogador implements OnInit {
       deslocamento: deslocamento,
     };
 
-    // função auxiliar para calcular modificador
+    // função auxiliar para calcular modificador estilo D&D
     const calcMod = (valor: number) => Math.floor((valor - 10) / 2);
 
     this.atributos = [

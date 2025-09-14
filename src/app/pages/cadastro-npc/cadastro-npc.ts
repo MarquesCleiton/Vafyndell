@@ -2,9 +2,11 @@ import { Component, OnInit, AfterViewInit, ElementRef, NgZone } from '@angular/c
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
-import { NpcRepository } from '../../repositories/NpcRepository';
+import { BaseRepository } from '../../repositories/BaseRepository';
 import { NpcDomain } from '../../domain/NpcDomain';
 import { AuthService } from '../../core/auth/AuthService';
+import { ImageUtils } from '../../core/utils/ImageUtils';
+import { IdUtils } from '../../core/utils/IdUtils';
 
 type AtributoChave = keyof Pick<
   NpcDomain,
@@ -22,7 +24,7 @@ type AtributoChave = keyof Pick<
 })
 export class CadastroNpc implements OnInit, AfterViewInit {
   npc: NpcDomain = {
-    id: 0,
+    id: '', // ULID será atribuído no salvar
     index: 0,
     imagem: '',
     nome: '',
@@ -61,28 +63,30 @@ export class CadastroNpc implements OnInit, AfterViewInit {
   salvando = false;
   editMode = false;
 
+  private repo = new BaseRepository<NpcDomain>('NPCs', 'NPCs');
+
   constructor(
     private router: Router,
     private route: ActivatedRoute,
     private el: ElementRef,
     private zone: NgZone
-  ) { }
+  ) {}
 
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.editMode = true;
       try {
-        const locais = await NpcRepository.getLocalNpcs();
+        const locais = await this.repo.getLocal();
         const existente = locais.find(n => String(n.id) === id);
         if (existente) {
           this.npc = { ...existente };
           this.scheduleAutoExpand();
         }
 
-        NpcRepository.syncNpcs().then(async updated => {
+        this.repo.sync().then(async updated => {
           if (updated) {
-            const atualizados = await NpcRepository.getLocalNpcs();
+            const atualizados = await this.repo.getLocal();
             const atualizado = atualizados.find(n => String(n.id) === id);
             if (atualizado) {
               this.npc = { ...atualizado };
@@ -92,7 +96,7 @@ export class CadastroNpc implements OnInit, AfterViewInit {
         });
 
         if (!existente) {
-          const online = await NpcRepository.forceFetchNpcs();
+          const online = await this.repo.forceFetch();
           const achadoOnline = online.find(n => String(n.id) === id);
           if (achadoOnline) {
             this.npc = { ...achadoOnline };
@@ -109,14 +113,12 @@ export class CadastroNpc implements OnInit, AfterViewInit {
     this.scheduleAutoExpand();
   }
 
-  /** agenda o auto expand depois da renderização */
   private scheduleAutoExpand() {
     this.zone.runOutsideAngular(() => {
       setTimeout(() => this.applyAutoExpand(), 0);
     });
   }
 
-  /** Ajusta dinamicamente os textareas */
   private applyAutoExpand() {
     const textareas = this.el.nativeElement.querySelectorAll('textarea.auto-expand');
     textareas.forEach((ta: HTMLTextAreaElement) => {
@@ -124,7 +126,6 @@ export class CadastroNpc implements OnInit, AfterViewInit {
       const maxHeight = 200;
       ta.style.height = Math.min(ta.scrollHeight, maxHeight) + 'px';
 
-      // listener para inputs
       ta.oninput = () => {
         ta.style.height = 'auto';
         ta.style.height = Math.min(ta.scrollHeight, maxHeight) + 'px';
@@ -142,17 +143,19 @@ export class CadastroNpc implements OnInit, AfterViewInit {
     this.setValor(campo, this.getValor(campo) + delta);
   }
 
-  onFileChange(event: Event) {
+  async onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.npc.imagem = reader.result as string;
-      };
-      reader.readAsDataURL(file);
+      try {
+        // 📌 Otimiza imagem antes de salvar
+        this.npc.imagem = await ImageUtils.toOptimizedBase64(file, 0.7, 1024);
+      } catch (err) {
+        console.error('[CadastroNpc] Erro ao otimizar imagem:', err);
+      }
     }
   }
+
   removerImagem() {
     this.npc.imagem = '';
   }
@@ -165,21 +168,20 @@ export class CadastroNpc implements OnInit, AfterViewInit {
       if (!user?.email) throw new Error('Usuário não autenticado');
       this.npc.email = user.email;
 
-      // 🔄 garante cache atualizado
-      await NpcRepository.syncNpcs();
+      await this.repo.sync();
 
       if (this.editMode) {
-        await NpcRepository.updateNpc(this.npc);
+        await this.repo.update(this.npc);
         window.alert('✅ NPC atualizado com sucesso!');
       } else {
-        // usa o cache local atualizado para calcular próximo ID
-        const locais = await NpcRepository.getLocalNpcs();
+        // garante index sequencial (apenas para compatibilidade com Script)
+        const locais = await this.repo.getLocal();
         const maxIndex = locais.length > 0 ? Math.max(...locais.map(n => n.index || 0)) : 0;
 
         this.npc.index = maxIndex + 1;
-        this.npc.id = maxIndex + 1;
+        this.npc.id = IdUtils.generateULID(); // ✅ ULID no ID
 
-        await NpcRepository.createNpc(this.npc);
+        await this.repo.create(this.npc);
         window.alert('✅ NPC criado com sucesso!');
       }
 
@@ -191,7 +193,6 @@ export class CadastroNpc implements OnInit, AfterViewInit {
       this.salvando = false;
     }
   }
-
 
   cancelar() {
     this.router.navigate(['/npcs']);

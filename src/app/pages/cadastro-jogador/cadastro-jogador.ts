@@ -3,15 +3,23 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 
-import { JogadorRepository } from '../../repositories/JogadorRepository';
 import { JogadorDomain } from '../../domain/jogadorDomain';
 import { AuthService } from '../../core/auth/AuthService';
+import { IdUtils } from '../../core/utils/IdUtils';
+import { BaseRepository } from '../../repositories/BaseRepository';
 
 type AtributoChave = keyof Pick<
   JogadorDomain,
-  'forca' | 'destreza' | 'constituicao' | 'inteligencia' |
-  'sabedoria' | 'carisma' | 'energia' | 'classe_de_armadura' | 
-  'nivel' | 'xp'
+  | 'forca'
+  | 'destreza'
+  | 'constituicao'
+  | 'inteligencia'
+  | 'sabedoria'
+  | 'carisma'
+  | 'energia'
+  | 'classe_de_armadura'
+  | 'nivel'
+  | 'xp'
 >;
 
 @Component({
@@ -24,7 +32,7 @@ type AtributoChave = keyof Pick<
 export class CadastroJogador {
   jogador: JogadorDomain = {
     index: 0,
-    id: 0,
+    id: '', // ULID
     email: '',
     imagem: '',
     nome_do_jogador: '',
@@ -46,7 +54,7 @@ export class CadastroJogador {
     efeitos_temporarios: '',
     registo_de_jogo: '',
 
-    // Novos campos
+    // extras
     classificacao: '',
     tipo: '',
     descricao: '',
@@ -68,11 +76,22 @@ export class CadastroJogador {
 
   salvando = false;
 
+  // 🔗 repositório genérico
+  private repo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
+
   // 🔢 Atributos calculados
-  get vida() { return this.jogador.energia + this.jogador.constituicao; }
-  get vidaTotal() { return this.vida + this.jogador.classe_de_armadura; }
-  get fatorCura() { return Math.floor(this.jogador.energia / 3); }
-  get deslocamento() { return Math.floor(this.jogador.destreza / 3); }
+  get vida() {
+    return this.jogador.energia + this.jogador.constituicao;
+  }
+  get vidaTotal() {
+    return this.vida + this.jogador.classe_de_armadura;
+  }
+  get fatorCura() {
+    return Math.floor(this.jogador.energia / 3);
+  }
+  get deslocamento() {
+    return Math.floor(this.jogador.destreza / 3);
+  }
 
   // Ajustar valores
   getValor(campo: AtributoChave): number {
@@ -108,22 +127,23 @@ export class CadastroJogador {
     try {
       this.salvando = true;
 
-      // garante usuário logado
       const user = AuthService.getUser();
       if (!user?.email) throw new Error('Usuário não autenticado');
       this.jogador.email = user.email;
 
-      // 🔄 valida cache local antes de calcular IDs
-      await JogadorRepository.syncJogadores();
+      // 🔄 sincroniza antes
+      await this.repo.sync();
 
-      // pega todos os jogadores locais para calcular próximo índice
-      const locais = await JogadorRepository.getLocalJogadores();
-      const maxIndex = locais.length > 0 ? Math.max(...locais.map(j => j.index || 0)) : 0;
+      // gera ULID
+      this.jogador.id = IdUtils.generateULID();
 
+      // calcula próximo index incremental
+      const locais = await this.repo.getLocal();
+      const maxIndex =
+        locais.length > 0 ? Math.max(...locais.map(j => j.index || 0)) : 0;
       this.jogador.index = maxIndex + 1;
-      this.jogador.id = maxIndex + 1;
 
-      await JogadorRepository.createJogador(this.jogador);
+      await this.repo.create(this.jogador);
 
       window.alert('✅ Jogador salvo com sucesso!');
       this.router.navigate(['/jogador']);

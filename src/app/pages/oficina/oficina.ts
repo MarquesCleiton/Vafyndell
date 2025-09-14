@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-
 import { OficinaService, ReceitaComStatus } from '../../services/OficinaService';
 
 @Component({
@@ -20,23 +19,23 @@ export class Oficina implements OnInit {
   filtro = '';
   fabricaveisOnly = false;
 
-  // controle de loading por ação
-  loadingAction: { [id: number]: 'criar' | 'falha' | null } = {};
+  // controle de loading por ação (agora ULID string)
+  loadingAction: { [id: string]: 'criar' | 'falha' | null } = {};
 
   // toast global
   mensagem: string | null = null;
   mensagemTipo: 'sucesso' | 'erro' | null = null;
 
-  constructor(private router: Router, private oficinaService: OficinaService) { }
+  constructor(private router: Router, private oficinaService: OficinaService) {}
 
   async ngOnInit() {
     try {
       this.carregando = true;
       const receitas = await this.oficinaService.getPossiveisReceitas();
       this.processarItens(receitas);
-      this.carregando = false;
     } catch (err) {
       console.error('[Oficina] Erro ao carregar receitas:', err);
+    } finally {
       this.carregando = false;
     }
   }
@@ -44,7 +43,7 @@ export class Oficina implements OnInit {
   private processarItens(itens: ReceitaComStatus[]) {
     const mapa = new Map<string, ReceitaComStatus[]>();
 
-    itens.forEach(i => {
+    itens.forEach((i) => {
       const cat = i.categoria || 'Outros';
       if (!mapa.has(cat)) mapa.set(cat, []);
       mapa.get(cat)!.push(i);
@@ -73,24 +72,22 @@ export class Oficina implements OnInit {
     }
 
     this.categoriasFiltradas = this.categorias
-      .map(c => {
-        const itens = c.itens.filter(i =>
-          (!this.fabricaveisOnly || i.fabricavel) &&
-          (this.normalize(i.nome).includes(termo) ||
-            this.normalize(i.raridade).includes(termo) ||
-            this.normalize(i.efeito).includes(termo) ||
-            this.normalize(i.descricao).includes(termo))
+      .map((c) => {
+        const itens = c.itens.filter(
+          (i) =>
+            (!this.fabricaveisOnly || i.fabricavel) &&
+            (this.normalize(i.nome).includes(termo) ||
+              this.normalize(i.raridade).includes(termo) ||
+              this.normalize(i.efeito).includes(termo) ||
+              this.normalize(i.descricao).includes(termo))
         );
         return { ...c, itens, expandido: true };
       })
-      .filter(c => c.itens.length > 0);
+      .filter((c) => c.itens.length > 0);
   }
 
   normalize(text: string = ''): string {
-    return text
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
+    return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   }
 
   getRaridadeClass(raridade: string): string {
@@ -102,11 +99,11 @@ export class Oficina implements OnInit {
     this.loadingAction[rec.id] = 'criar';
     try {
       await this.oficinaService.criarItem(rec);
-      alert(`✅ ${rec.nome} criado com sucesso!`);
+      this.showMensagem(`✅ ${rec.nome} criado com sucesso!`, 'sucesso');
       await this.atualizarItem(rec.id);
     } catch (err) {
       console.error(err);
-      alert(`❌ Não foi possível criar ${rec.nome}.`);
+      this.showMensagem(`❌ Não foi possível criar ${rec.nome}.`, 'erro');
     } finally {
       this.loadingAction[rec.id] = null;
     }
@@ -116,25 +113,24 @@ export class Oficina implements OnInit {
     this.loadingAction[rec.id] = 'falha';
     try {
       await this.oficinaService.forcarFalha(rec);
-      alert(`⚠️ Falha simulada em ${rec.nome}. Ingredientes consumidos.`);
+      this.showMensagem(`⚠️ Falha simulada em ${rec.nome}. Ingredientes consumidos.`, 'erro');
       await this.atualizarItem(rec.id);
     } catch (err) {
       console.error(err);
-      alert(`❌ Não foi possível forçar falha em ${rec.nome}.`);
+      this.showMensagem(`❌ Não foi possível forçar falha em ${rec.nome}.`, 'erro');
     } finally {
       this.loadingAction[rec.id] = null;
     }
   }
 
-
-  private async atualizarItem(id: number) {
+  private async atualizarItem(id: string) {
     try {
       const receitas = await this.oficinaService.getPossiveisReceitas();
-      const atualizado = receitas.find(r => r.id === id);
+      const atualizado = receitas.find((r) => r.id === id);
       if (!atualizado) return;
 
-      this.categorias.forEach(cat => {
-        const index = cat.itens.findIndex(i => i.id === id);
+      this.categorias.forEach((cat) => {
+        const index = cat.itens.findIndex((i) => i.id === id);
         if (index !== -1) cat.itens[index] = atualizado;
       });
 

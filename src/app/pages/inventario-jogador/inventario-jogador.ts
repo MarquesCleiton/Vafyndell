@@ -2,14 +2,20 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { InventarioRepository } from '../../repositories/InventarioRepository';
-import { CatalogoRepository } from '../../repositories/CatalogoRepository';
+
 import { InventarioDomain } from '../../domain/InventarioDomain';
 import { CatalogoDomain } from '../../domain/CatalogoDomain';
 import { AuthService } from '../../core/auth/AuthService';
+import { BaseRepository } from '../../repositories/BaseRepository';
 
 interface InventarioDetalhado extends InventarioDomain {
   itemDetalhe?: CatalogoDomain;
+}
+
+interface CategoriaInventario {
+  nome: string;
+  itens: InventarioDetalhado[];
+  expandido: boolean;
 }
 
 @Component({
@@ -20,8 +26,8 @@ interface InventarioDetalhado extends InventarioDomain {
   styleUrls: ['./inventario-jogador.css'],
 })
 export class InventarioJogador implements OnInit {
-  categorias: { nome: string; itens: InventarioDetalhado[]; expandido: boolean }[] = [];
-  categoriasFiltradas: { nome: string; itens: InventarioDetalhado[]; expandido: boolean }[] = [];
+  categorias: CategoriaInventario[] = [];
+  categoriasFiltradas: CategoriaInventario[] = [];
   carregando = true;
   filtro = '';
 
@@ -32,7 +38,97 @@ export class InventarioJogador implements OnInit {
     categorias: 0,
   };
 
-  constructor(private router: Router) { }
+  // ✅ Agora usando o BaseRepository
+  private catalogoRepo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
+  private inventarioRepo = new BaseRepository<InventarioDomain>('Inventario', 'Inventario');
+
+  constructor(private router: Router) {}
+
+  async ngOnInit() {
+    try {
+      console.log('[InventarioJogador] Iniciando carregamento...');
+      this.carregando = true;
+
+      const user = AuthService.getUser();
+      if (!user?.email) throw new Error('Usuário não autenticado.');
+
+      await this.loadLocalAndSync(user.email);
+    } catch (err) {
+      console.error('[InventarioJogador] Erro ao carregar inventário:', err);
+    } finally {
+      this.carregando = false;
+    }
+  }
+
+  /** 🔄 Carrega catálogo e inventário do cache, depois sincroniza */
+  private async loadLocalAndSync(email: string) {
+    // 1. Carrega cache local
+    const [catalogoLocal, inventarioLocal] = await Promise.all([
+      this.catalogoRepo.getLocal(),
+      this.inventarioRepo.getLocal(),
+    ]);
+
+    const meusItens = inventarioLocal.filter(i => i.jogador === email);
+    this.processarInventario(meusItens, catalogoLocal);
+
+    // 2. Sincroniza em paralelo (catálogo primeiro, depois inventário)
+    (async () => {
+      const catSync = await this.catalogoRepo.sync();
+      const invSync = await this.inventarioRepo.sync();
+
+      if (catSync || invSync) {
+        console.log('[InventarioJogador] Sync trouxe alterações.');
+        const [catAtualizado, invAtualizado] = await Promise.all([
+          this.catalogoRepo.getLocal(),
+          this.inventarioRepo.getLocal(),
+        ]);
+        const meusAtualizados = invAtualizado.filter(i => i.jogador === email);
+        this.processarInventario(meusAtualizados, catAtualizado);
+      }
+    })();
+
+    // 3. Se não havia nada local, força fetch online
+    if (!meusItens.length) {
+      console.log('[InventarioJogador] Nenhum inventário local. Forçando fetch online...');
+      await this.catalogoRepo.forceFetch();
+      const catalogoOnline = await this.catalogoRepo.getLocal();
+
+      await this.inventarioRepo.forceFetch();
+      const inventarioOnline = await this.inventarioRepo.getLocal();
+      const meusOnline = inventarioOnline.filter(i => i.jogador === email);
+
+      this.processarInventario(meusOnline, catalogoOnline);
+    }
+  }
+
+  /** 🔧 Monta categorias e resumo */
+  private processarInventario(inventarioBruto: InventarioDomain[], catalogo: CatalogoDomain[]) {
+    const inventarioDetalhado: InventarioDetalhado[] = inventarioBruto.map(inv => {
+      const detalhe = catalogo.find(c => c.id === inv.item_catalogo);
+      return { ...inv, itemDetalhe: detalhe };
+    });
+
+    // preserva expandido
+    const estados = new Map(this.categorias.map(c => [c.nome, c.expandido]));
+
+    const mapa = new Map<string, InventarioDetalhado[]>();
+    inventarioDetalhado.forEach(i => {
+      const cat = i.itemDetalhe?.categoria || 'Outros';
+      if (!mapa.has(cat)) mapa.set(cat, []);
+      mapa.get(cat)!.push(i);
+    });
+
+    this.categorias = Array.from(mapa.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([nome, itens]) => ({
+        nome,
+        itens,
+        expandido: estados.get(nome) ?? false,
+      }));
+
+    this.categoriasFiltradas = [...this.categorias];
+    this.calcularResumo();
+  }
 
   private calcularResumo() {
     const todosItens = this.categorias.flatMap(c => c.itens);
@@ -44,85 +140,6 @@ export class InventarioJogador implements OnInit {
       0
     );
     this.resumo.categorias = this.categorias.length;
-  }
-
-  async ngOnInit() {
-    try {
-      console.log('[InventarioJogador] Iniciando carregamento...');
-      this.carregando = true;
-
-      const user = AuthService.getUser();
-      if (!user?.email) throw new Error('Usuário não autenticado.');
-
-      // 1. Sempre tenta catálogo primeiro
-      const catalogoLocal = await CatalogoRepository.getLocalItens();
-
-      // 2. Depois inventário local
-      const inventarioLocal = await InventarioRepository.getLocalInventarioByJogador(user.email);
-
-      if (catalogoLocal?.length && inventarioLocal?.length) {
-        console.log('[InventarioJogador] Dados locais encontrados.');
-        this.processarInventario(inventarioLocal, catalogoLocal);
-        this.carregando = false;
-      }
-
-      // 3. Sincronização → garante ordem: catálogo → inventário
-      (async () => {
-        const catSync = await CatalogoRepository.syncItens();
-        const invSync = await InventarioRepository.syncInventario();
-
-        if (catSync || invSync) {
-          console.log('[InventarioJogador] Sync trouxe alterações. Atualizando cache...');
-          const catalogoAtualizado = await CatalogoRepository.getLocalItens();
-          const inventarioAtualizado = await InventarioRepository.getLocalInventarioByJogador(user.email);
-          this.processarInventario(inventarioAtualizado, catalogoAtualizado);
-        } else {
-          console.log('[InventarioJogador] Sync concluído. Nenhuma alteração detectada.');
-        }
-      })();
-
-      // 4. Fallback online se nada local existir
-      if (!inventarioLocal?.length) {
-        console.log('[InventarioJogador] Nenhum inventário local. Forçando fetch online...');
-        await CatalogoRepository.forceFetchItens();
-        const catalogoOnline = await CatalogoRepository.getLocalItens();
-
-        const inventarioOnline = await InventarioRepository.forceFetchInventario();
-        this.processarInventario(inventarioOnline, catalogoOnline);
-
-        this.carregando = false;
-      }
-    } catch (err) {
-      console.error('[InventarioJogador] Erro ao carregar inventário:', err);
-      this.carregando = false;
-    }
-  }
-
-
-  /** Função auxiliar para montar categorias e resumo */
-  private processarInventario(inventarioBruto: InventarioDomain[], catalogo: CatalogoDomain[]) {
-    const inventarioDetalhado: InventarioDetalhado[] = inventarioBruto.map(inv => {
-      const detalhe = catalogo.find(c => c.id === inv.item_catalogo);
-      return { ...inv, itemDetalhe: detalhe };
-    });
-
-    const mapa = new Map<string, InventarioDetalhado[]>();
-    inventarioDetalhado.forEach(i => {
-      const cat = i.itemDetalhe?.categoria || 'Outros';
-      if (!mapa.has(cat)) mapa.set(cat, []);
-      mapa.get(cat)!.push(i);
-    });
-
-    this.categorias = Array.from(mapa.entries())
-      .sort((a, b) => String(a[0] || '').localeCompare(String(b[0] || '')))
-      .map(([nome, itens]) => ({ nome: String(nome || 'Outros'), itens, expandido: false }));
-
-    this.categoriasFiltradas = [...this.categorias];
-    this.calcularResumo();
-  }
-
-  toggleCategoria(cat: any) {
-    cat.expandido = !cat.expandido;
   }
 
   aplicarFiltro() {
@@ -144,8 +161,14 @@ export class InventarioJogador implements OnInit {
       .filter(c => c.itens.length > 0);
   }
 
-  abrirItem(itemId: number) {
-    this.router.navigate(['/item-inventario', itemId]);
+  toggleCategoria(cat: CategoriaInventario) {
+    cat.expandido = !cat.expandido;
+  }
+
+  abrirItem(itemId: string) {
+    this.router.navigate(['/item-inventario', itemId], {
+      queryParams: { returnUrl: '/inventario-jogador' },
+    });
   }
 
   novoItemInventario() {

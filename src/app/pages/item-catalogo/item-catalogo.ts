@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { CatalogoRepository } from '../../repositories/CatalogoRepository';
-import { CatalogoDomain } from '../../domain/CatalogoDomain';
 import { Location } from '@angular/common';
+
+import { CatalogoDomain } from '../../domain/CatalogoDomain';
+import { BaseRepository } from '../../repositories/BaseRepository';
 
 @Component({
   selector: 'app-item-catalogo',
@@ -18,6 +19,9 @@ export class ItemCatalogo implements OnInit {
 
   processandoEditar = false;
   processandoExcluir = false;
+
+  // ✅ Reuso do BaseRepository
+  private repo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
 
   constructor(
     private route: ActivatedRoute,
@@ -36,30 +40,30 @@ export class ItemCatalogo implements OnInit {
         return;
       }
 
-      // 1. Carrega cache local
-      const locais = await CatalogoRepository.getLocalItens();
-      let encontrado = locais.find(i => String(i.id) === id) || null;
+      // 1️⃣ Carrega cache local
+      const locais = await this.repo.getLocal();
+      let encontrado = locais.find((i) => String(i.id) === id) || null;
 
       if (encontrado) {
         this.item = encontrado;
         this.carregando = false; // libera UI rápido
       }
 
-      // 2. Sincroniza em paralelo
-      CatalogoRepository.syncItens().then(async updated => {
+      // 2️⃣ Sincroniza em paralelo
+      this.repo.sync().then(async (updated) => {
         if (updated) {
           console.log('[ItemCatalogo] Sync trouxe alterações. Recarregando...');
-          const atualizados = await CatalogoRepository.getLocalItens();
-          const atualizado = atualizados.find(i => String(i.id) === id);
+          const atualizados = await this.repo.getLocal();
+          const atualizado = atualizados.find((i) => String(i.id) === id);
           if (atualizado) this.item = atualizado;
         }
       });
 
-      // 3. Fallback se não achou local
+      // 3️⃣ Fallback se não achou local
       if (!encontrado) {
         console.log('[ItemCatalogo] Não encontrado localmente → forçando fetch online');
-        const online = await CatalogoRepository.forceFetchItens();
-        const achadoOnline = online.find(i => String(i.id) === id);
+        const online = await this.repo.forceFetch();
+        const achadoOnline = online.find((i) => String(i.id) === id);
         if (achadoOnline) {
           this.item = achadoOnline;
         } else {
@@ -90,22 +94,22 @@ export class ItemCatalogo implements OnInit {
     }, 300);
   }
 
-  excluirItem() {
+  async excluirItem() {
     if (!this.item) return;
 
     const confirmacao = confirm(`🗑️ Deseja excluir o item "${this.item.nome}"?`);
     if (!confirmacao) return;
 
     this.processandoExcluir = true;
-    CatalogoRepository.deleteItem(this.item.id)
-      .then(() => {
-        alert('✅ Item excluído com sucesso!');
-        this.router.navigate(['/catalogo']);
-      })
-      .catch(err => {
-        console.error('[ItemCatalogo] Erro ao excluir item:', err);
-        alert('❌ Erro ao excluir item. Veja o console.');
-      })
-      .finally(() => (this.processandoExcluir = false));
+    try {
+      await this.repo.delete(String(this.item.id));
+      alert('✅ Item excluído com sucesso!');
+      this.router.navigate(['/catalogo']);
+    } catch (err) {
+      console.error('[ItemCatalogo] Erro ao excluir item:', err);
+      alert('❌ Erro ao excluir item. Veja o console.');
+    } finally {
+      this.processandoExcluir = false;
+    }
   }
 }

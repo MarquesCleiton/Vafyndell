@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { JogadorRepository } from '../../repositories/JogadorRepository';
-import { JogadorDomain, JogadorUtils } from '../../domain/jogadorDomain';
 import { Router } from '@angular/router';
+
+import { JogadorDomain, JogadorUtils } from '../../domain/jogadorDomain';
+import { BaseRepository } from '../../repositories/BaseRepository';
 
 @Component({
   selector: 'app-batalha',
@@ -18,37 +19,40 @@ export class Batalha implements OnInit {
   carregando = true;
   filtro = '';
 
-  // estados de loading por jogador
-  processando: { [id: number]: 'abrir' | 'excluir' | 'espada' | 'recuperar' | null } = {};
+  // ✅ agora indexado por string (ULID)
+  processando: Record<string, 'abrir' | 'excluir' | 'espada' | 'recuperar' | null> = {};
 
   JogadorUtils = JogadorUtils; // 👈 expõe no template
 
-  constructor(private router: Router) { }
+  // 🔗 Repositório genérico
+  private repo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
+
+  constructor(private router: Router) {}
 
   async ngOnInit() {
     console.log('[Batalha] ngOnInit → carregando jogadores...');
     try {
-      // 1. Busca local primeiro
-      const locais = await JogadorRepository.getLocalJogadores();
+      // 1️⃣ Busca local primeiro
+      const locais = await this.repo.getLocal();
       if (locais.length > 0) {
         this.jogadores = locais;
         this.aplicarFiltro();
         this.carregando = false;
       }
 
-      // 2. Sync em paralelo
+      // 2️⃣ Sync em paralelo
       (async () => {
-        const updated = await JogadorRepository.syncJogadores();
+        const updated = await this.repo.sync();
         if (updated) {
-          const atualizados = await JogadorRepository.getLocalJogadores();
+          const atualizados = await this.repo.getLocal();
           this.jogadores = atualizados;
           this.aplicarFiltro();
         }
       })();
 
-      // 3. Se não havia nada local, força fetch online
+      // 3️⃣ Se não havia nada local, força fetch online
       if (!locais.length) {
-        const online = await JogadorRepository.forceFetchJogadores(); // 👈 plural agora
+        const online = await this.repo.forceFetch();
         this.jogadores = online;
         this.aplicarFiltro();
         this.carregando = false;
@@ -58,7 +62,6 @@ export class Batalha implements OnInit {
       this.carregando = false;
     }
   }
-
 
   aplicarFiltro() {
     const termo = this.filtro.toLowerCase().trim();
@@ -105,7 +108,7 @@ export class Batalha implements OnInit {
 
     this.processando[j.id] = 'excluir';
     try {
-      await JogadorRepository.deleteJogador(j.id);
+      await this.repo.delete(j.id); // 👈 usando BaseRepository
       this.jogadores = this.jogadores.filter(x => x.id !== j.id);
       this.aplicarFiltro();
       alert('✅ NPC removido da batalha!');

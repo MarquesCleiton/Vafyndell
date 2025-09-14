@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
 
 // Angular Material
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -11,12 +11,12 @@ import { MatOptionModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
-// Domínios e Repositórios
+// Domínios e utilitários
 import { CatalogoDomain } from '../../domain/CatalogoDomain';
 import { InventarioDomain } from '../../domain/InventarioDomain';
-import { CatalogoRepository } from '../../repositories/CatalogoRepository';
-import { InventarioRepository } from '../../repositories/InventarioRepository';
+import { BaseRepository } from '../../repositories/BaseRepository';
 import { AuthService } from '../../core/auth/AuthService';
+import { IdUtils } from '../../core/utils/IdUtils';
 
 @Component({
   selector: 'app-cadastro-inventario',
@@ -46,66 +46,68 @@ export class CadastroInventario implements OnInit {
   inventarioAtual: InventarioDomain | null = null;
   returnUrl: string | null = null;
 
+  // ✅ Repositories genéricos
+  private catalogoRepo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
+  private inventarioRepo = new BaseRepository<InventarioDomain>('Inventario', 'Inventario');
+
   constructor(
     private router: Router,
     private route: ActivatedRoute
-  ) { }
+  ) {}
 
   async ngOnInit() {
     try {
       console.log('[CadastroInventario] Iniciando carregamento...');
 
-      // 1. Catálogo local primeiro
-      this.catalogoItens = await CatalogoRepository.getLocalItens();
-      this.catalogoFiltrado = this.catalogoItens;
-
-      // 2. Em paralelo, dispara sync catálogo
-      (async () => {
-        const updated = await CatalogoRepository.syncItens();
-        if (updated) {
-          console.log('[CadastroInventario] Catálogo atualizado. Recarregando...');
-          this.catalogoItens = await CatalogoRepository.getLocalItens();
-          this.catalogoFiltrado = this.catalogoItens;
-        }
-      })();
-
       // 🔑 pega returnUrl
       this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
 
-      // 3. Verifica edição
-      const id = Number(this.route.snapshot.paramMap.get('id'));
-      if (id) {
+      // 1️⃣ Catálogo local primeiro
+      this.catalogoItens = await this.catalogoRepo.getLocal();
+      this.catalogoFiltrado = this.catalogoItens;
+
+      // 2️⃣ Sync catálogo em paralelo
+      this.catalogoRepo.sync().then(async (updated) => {
+        if (updated) {
+          console.log('[CadastroInventario] Catálogo atualizado. Recarregando...');
+          this.catalogoItens = await this.catalogoRepo.getLocal();
+          this.catalogoFiltrado = this.catalogoItens;
+        }
+      });
+
+      // 3️⃣ Verifica edição
+      const idParam = this.route.snapshot.paramMap.get('id');
+      if (idParam) {
         this.editando = true;
 
         const user = AuthService.getUser();
         if (!user?.email) throw new Error('Usuário não autenticado.');
 
-        // Busca inventário local
-        const inventarioLocal = await InventarioRepository.getLocalInventarioByJogador(user.email);
-        this.inventarioAtual = inventarioLocal.find(i => i.id === id) || null;
+        // Inventário local do jogador
+        const inventarioLocal = await this.inventarioRepo.getLocal();
+        this.inventarioAtual = inventarioLocal.find((i) => String(i.id) === idParam) || null;
 
         if (this.inventarioAtual) {
           await this.carregarItemSelecionado(this.inventarioAtual);
         }
 
-        // Em paralelo, sync inventário
-        (async () => {
-          const updated = await InventarioRepository.syncInventario();
+        // Sync inventário em paralelo
+        this.inventarioRepo.sync().then(async (updated) => {
           if (updated) {
             console.log('[CadastroInventario] Inventário atualizado. Recarregando item...');
-            const atualizado = await InventarioRepository.getLocalInventarioByJogador(user.email);
-            const inventarioRecarregado = atualizado.find(i => i.id === id);
+            const atualizado = await this.inventarioRepo.getLocal();
+            const inventarioRecarregado = atualizado.find((i) => String(i.id) === idParam);
             if (inventarioRecarregado) {
               this.inventarioAtual = inventarioRecarregado;
               await this.carregarItemSelecionado(this.inventarioAtual);
             }
           }
-        })();
+        });
 
-        // Fallback: se não tinha local
+        // Fallback: força fetch se não tinha nada
         if (!this.inventarioAtual) {
-          const inventarioOnline = await InventarioRepository.forceFetchInventario();
-          this.inventarioAtual = inventarioOnline.find(i => i.id === id) || null;
+          const inventarioOnline = await this.inventarioRepo.forceFetch();
+          this.inventarioAtual = inventarioOnline.find((i) => String(i.id) === idParam) || null;
           if (this.inventarioAtual) {
             await this.carregarItemSelecionado(this.inventarioAtual);
           }
@@ -117,17 +119,15 @@ export class CadastroInventario implements OnInit {
   }
 
   private async carregarItemSelecionado(inventario: InventarioDomain) {
-    // 🔑 garante que o catálogo esteja carregado
     if (!this.catalogoItens.length) {
-      this.catalogoItens = await CatalogoRepository.getLocalItens();
+      this.catalogoItens = await this.catalogoRepo.getLocal();
       this.catalogoFiltrado = this.catalogoItens;
     }
 
-    this.selecionado = this.catalogoItens.find(c => c.id === inventario.item_catalogo) || null;
+    this.selecionado = this.catalogoItens.find((c) => c.id === inventario.item_catalogo) || null;
     this.quantidade = inventario.quantidade;
     this.filtro = this.selecionado?.nome || '';
   }
-
 
   filtrarItens() {
     const normalizar = (texto: string) =>
@@ -143,7 +143,7 @@ export class CadastroInventario implements OnInit {
       return;
     }
 
-    this.catalogoFiltrado = this.catalogoItens.filter(c =>
+    this.catalogoFiltrado = this.catalogoItens.filter((c) =>
       normalizar(c.nome).includes(termo)
     );
   }
@@ -186,19 +186,19 @@ export class CadastroInventario implements OnInit {
           item_catalogo: this.selecionado.id,
           quantidade: this.quantidade,
         };
-        await InventarioRepository.updateInventario(atualizado);
+        await this.inventarioRepo.update(atualizado);
       } else {
-        const todos = await InventarioRepository.getLocalInventarioByJogador(user.email);
-        const maxIndex = todos.length > 0 ? Math.max(...todos.map(i => i.index || 0)) : 0;
+        const todos = await this.inventarioRepo.getLocal();
+        const maxIndex = todos.length > 0 ? Math.max(...todos.map((i) => i.index || 0)) : 0;
 
         const novo: InventarioDomain = {
-          id: maxIndex + 1,
+          id: IdUtils.generateULID(),
           index: maxIndex + 1,
           jogador: user.email,
           item_catalogo: this.selecionado.id,
           quantidade: this.quantidade,
         };
-        await InventarioRepository.createInventario(novo);
+        await this.inventarioRepo.create(novo);
       }
 
       alert('✅ Item salvo no inventário!');

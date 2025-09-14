@@ -2,9 +2,12 @@ import { Component, AfterViewInit, ElementRef, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
-import { CatalogoRepository } from '../../repositories/CatalogoRepository';
+
 import { CatalogoDomain } from '../../domain/CatalogoDomain';
+import { BaseRepository } from '../../repositories/BaseRepository';
 import { AuthService } from '../../core/auth/AuthService';
+import { IdUtils } from '../../core/utils/IdUtils';
+import { ImageUtils } from '../../core/utils/ImageUtils';
 
 @Component({
   selector: 'app-cadastro-item-catalogo',
@@ -15,8 +18,8 @@ import { AuthService } from '../../core/auth/AuthService';
 })
 export class CadastroItemCatalogo implements OnInit, AfterViewInit {
   item: CatalogoDomain = {
+    id: '',        // agora string ULID
     index: 0,
-    id: 0,
     nome: '',
     unidade_medida: '',
     peso: 0,
@@ -48,6 +51,8 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
     'Ferramentas', 'Outros',
   ];
 
+  private repo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
+
   constructor(
     private router: Router,
     private el: ElementRef,
@@ -59,26 +64,26 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
     if (id) {
       this.editMode = true;
       try {
-        // 1. Carrega local primeiro
-        const itensLocais = await CatalogoRepository.getLocalItens();
+        // 1️⃣ Carrega local primeiro
+        const itensLocais = await this.repo.getLocal();
         const existente = itensLocais.find(i => String(i.id) === id);
         if (existente) {
           this.item = { ...existente };
         }
 
-        // 2. Em paralelo, sincroniza
-        CatalogoRepository.syncItens().then(async updated => {
+        // 2️⃣ Em paralelo, sincroniza
+        this.repo.sync().then(async updated => {
           if (updated) {
             console.log('[CadastroItemCatalogo] Sync trouxe alterações. Recarregando item...');
-            const itensAtualizados = await CatalogoRepository.getLocalItens();
+            const itensAtualizados = await this.repo.getLocal();
             const atualizado = itensAtualizados.find(i => String(i.id) === id);
             if (atualizado) this.item = { ...atualizado };
           }
         });
 
-        // 3. Se não havia local, força buscar online
+        // 3️⃣ Se não havia local, força buscar online
         if (!existente) {
-          const online = await CatalogoRepository.forceFetchItens();
+          const online = await this.repo.forceFetch();
           const achadoOnline = online.find(i => String(i.id) === id);
           if (achadoOnline) this.item = { ...achadoOnline };
         }
@@ -100,16 +105,16 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
     });
   }
 
-  // Upload imagem
-  onFileChange(event: Event) {
+  // Upload imagem com otimização
+  async onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.item.imagem = reader.result as string;
-      };
-      reader.readAsDataURL(file);
+      try {
+        this.item.imagem = await ImageUtils.toOptimizedBase64(file, 0.7, 1024);
+      } catch (err) {
+        console.error('[CadastroItemCatalogo] Erro ao otimizar imagem:', err);
+      }
     }
   }
 
@@ -129,16 +134,17 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
       this.item.email = user.email;
 
       if (this.editMode) {
-        await CatalogoRepository.updateItem(this.item);
+        await this.repo.update(this.item);
         window.alert('✅ Item atualizado com sucesso!');
       } else {
-        // 1. Usa local para calcular próximo índice
-        const todosLocais = await CatalogoRepository.getLocalItens();
+        // 1️⃣ Usa local para calcular próximo índice
+        const todosLocais = await this.repo.getLocal();
         const maxIndex = todosLocais.length > 0 ? Math.max(...todosLocais.map(i => i.index || 0)) : 0;
-        this.item.index = maxIndex + 1;
-        this.item.id = maxIndex + 1;
 
-        await CatalogoRepository.createItem(this.item);
+        this.item.id = IdUtils.generateULID(); // ULID único
+        this.item.index = maxIndex + 1;
+
+        await this.repo.create(this.item);
         window.alert('✅ Item criado com sucesso!');
       }
 

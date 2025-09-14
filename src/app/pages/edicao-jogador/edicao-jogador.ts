@@ -2,15 +2,16 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
-import { JogadorRepository } from '../../repositories/JogadorRepository';
+
 import { JogadorDomain } from '../../domain/jogadorDomain';
 import { AuthService } from '../../core/auth/AuthService';
+import { BaseRepository } from '../../repositories/BaseRepository';
 
 type AtributoChave = keyof Pick<
   JogadorDomain,
-  'forca' | 'destreza' | 'constituicao' | 'inteligencia' |
-  'sabedoria' | 'carisma' | 'energia' | 'classe_de_armadura' |
-  'nivel' | 'xp'
+  | 'forca' | 'destreza' | 'constituicao' | 'inteligencia'
+  | 'sabedoria' | 'carisma' | 'energia'
+  | 'classe_de_armadura' | 'nivel' | 'xp'
 >;
 
 @Component({
@@ -23,6 +24,8 @@ type AtributoChave = keyof Pick<
 export class EdicaoJogador implements OnInit {
   jogador: JogadorDomain | null = null;
   salvando = false;
+
+  private repo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
 
   atributosNumericos = [
     { key: 'nivel' as AtributoChave, label: 'Nível', icon: '🏅' },
@@ -42,6 +45,8 @@ export class EdicaoJogador implements OnInit {
   get vidaTotal() { return this.jogador ? this.vida + this.jogador.classe_de_armadura : 0; }
   get fatorCura() { return this.jogador ? Math.floor(this.jogador.energia / 3) : 0; }
   get deslocamento() { return this.jogador ? Math.floor(this.jogador.destreza / 3) : 0; }
+
+  constructor(private router: Router) {}
 
   // Ajustar valores
   getValor(campo: AtributoChave): number {
@@ -80,7 +85,7 @@ export class EdicaoJogador implements OnInit {
       if (!user?.email) throw new Error('Usuário não autenticado');
       this.jogador.email = user.email;
 
-      await JogadorRepository.updateJogador(this.jogador);
+      await this.repo.update(this.jogador);
 
       window.alert('✅ Jogador atualizado com sucesso!');
       this.router.navigate(['/jogador']);
@@ -94,22 +99,34 @@ export class EdicaoJogador implements OnInit {
 
   async ngOnInit() {
     try {
-      const encontrado = await JogadorRepository.getCurrentJogador();
-      if (!encontrado) {
-        window.alert('Nenhum jogador encontrado. Vá para o cadastro primeiro.');
-        this.router.navigate(['/cadastro-jogador']);
-        return;
+      const user = AuthService.getUser();
+      if (!user?.email) throw new Error('Usuário não autenticado');
+
+      // 1️⃣ Pega local primeiro
+      const local = (await this.repo.getLocal()).find(j => j.email === user.email);
+      if (local) {
+        this.jogador = local;
       }
 
-      this.jogador = encontrado;
-
-      // dispara sync em paralelo
-      JogadorRepository.syncJogadores().then(async updated => {
+      // 2️⃣ Sincroniza em paralelo
+      this.repo.sync().then(async updated => {
         if (updated) {
-          const atualizado = await JogadorRepository.getCurrentJogador();
+          const atualizado = (await this.repo.getLocal()).find(j => j.email === user.email);
           if (atualizado) this.jogador = atualizado;
         }
       });
+
+      // 3️⃣ Se não havia local → força fetch
+      if (!local) {
+        const online = await this.repo.forceFetch();
+        const encontrado = online.find(j => j.email === user.email);
+        if (encontrado) {
+          this.jogador = encontrado;
+        } else {
+          window.alert('Nenhum jogador encontrado. Vá para o cadastro primeiro.');
+          this.router.navigate(['/cadastro-jogador']);
+        }
+      }
     } catch (err) {
       console.error('[EdicaoJogador] Erro ao carregar jogador:', err);
       this.router.navigate(['/login']);
@@ -119,6 +136,4 @@ export class EdicaoJogador implements OnInit {
   cancelar() {
     this.router.navigate(['/jogador']);
   }
-
-  constructor(private router: Router) {}
 }

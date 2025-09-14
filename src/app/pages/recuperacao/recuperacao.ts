@@ -2,8 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { JogadorRepository } from '../../repositories/JogadorRepository';
+
 import { JogadorDomain, JogadorUtils } from '../../domain/jogadorDomain';
+import { BaseRepository } from '../../repositories/BaseRepository';
 
 @Component({
   selector: 'app-recuperacao',
@@ -21,13 +22,30 @@ export class Recuperacao implements OnInit {
 
   JogadorUtils = JogadorUtils; // expõe para o template
 
-  constructor(private route: ActivatedRoute, private router: Router) { }
+  private repo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
+
+  constructor(private route: ActivatedRoute, private router: Router) {}
 
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      const jogadores = await JogadorRepository.getLocalJogadores();
+      const jogadores = await this.repo.getLocal();
       this.jogador = jogadores.find(j => String(j.id) === id) || null;
+
+      // 🔄 dispara sync em paralelo
+      this.repo.sync().then(async updated => {
+        if (updated) {
+          const atualizados = await this.repo.getLocal();
+          const encontrado = atualizados.find(j => String(j.id) === id);
+          if (encontrado) this.jogador = encontrado;
+        }
+      });
+
+      // fallback se não encontrou local
+      if (!this.jogador) {
+        const online = await this.repo.forceFetch();
+        this.jogador = online.find(j => String(j.id) === id) || null;
+      }
     }
   }
 
@@ -72,21 +90,25 @@ export class Recuperacao implements OnInit {
       // aplica cura (não passa do máximo)
       const vidaRecuperada = Math.min(this.recuperar, vidaMaxRecuperavel);
       if (vidaRecuperada > 0) {
-        this.jogador.dano_tomado = Math.max(0, (this.jogador.dano_tomado || 0) - vidaRecuperada);
+        this.jogador.dano_tomado = Math.max(
+          0,
+          (this.jogador.dano_tomado || 0) - vidaRecuperada
+        );
       }
 
       // aplica armadura (sem limite)
       if (this.armadura > 0) {
-        this.jogador.classe_de_armadura = (this.jogador.classe_de_armadura || 0) + this.armadura;
+        this.jogador.classe_de_armadura =
+          (this.jogador.classe_de_armadura || 0) + this.armadura;
       }
 
-      await JogadorRepository.updateJogador(this.jogador);
+      await this.repo.update(this.jogador);
 
       alert(
         `✅ ${this.jogador.personagem} se recuperou!\n` +
-        `❤️ Vida: ${JogadorUtils.getVidaAtual(this.jogador)}/${vidaBase}\n` +
-        `🛡️ Armadura: ${this.jogador.classe_de_armadura}\n` +
-        (this.descricao ? `📝 ${this.descricao}` : '')
+          `❤️ Vida: ${JogadorUtils.getVidaAtual(this.jogador)}/${vidaBase}\n` +
+          `🛡️ Armadura: ${this.jogador.classe_de_armadura}\n` +
+          (this.descricao ? `📝 ${this.descricao}` : '')
       );
 
       this.router.navigate(['/batalha']);
@@ -97,5 +119,4 @@ export class Recuperacao implements OnInit {
       this.salvando = false;
     }
   }
-
 }

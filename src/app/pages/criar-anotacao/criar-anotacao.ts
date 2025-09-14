@@ -3,9 +3,11 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 
-import { AnotacaoRepository } from '../../repositories/AnotacaoRepository';
 import { AnotacaoDomain } from '../../domain/AnotacaoDomain';
 import { AuthService } from '../../core/auth/AuthService';
+import { IdUtils } from '../../core/utils/IdUtils';
+import { ImageUtils } from '../../core/utils/ImageUtils';
+import { BaseRepository } from '../../repositories/BaseRepository';
 
 @Component({
   selector: 'app-criar-anotacao',
@@ -16,7 +18,7 @@ import { AuthService } from '../../core/auth/AuthService';
 })
 export class CriarAnotacao implements OnInit, AfterViewInit {
   anotacao: AnotacaoDomain = {
-    id: 0,
+    id: '', // agora string ULID
     index: 0,
     jogador: '',
     autor: '',
@@ -31,6 +33,8 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
   excluindo = false;
   editMode = false;
 
+  private repo = new BaseRepository<AnotacaoDomain>('Anotacoes', 'Anotacoes');
+
   constructor(
     private router: Router,
     private route: ActivatedRoute,
@@ -43,19 +47,19 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
     if (id) {
       this.editMode = true;
       try {
-        // 1. Busca local primeiro
-        const locais = await AnotacaoRepository.getLocalAnotacoes();
-        const existente = locais.find(a => String(a.id) === id);
+        // 1. Busca local
+        const locais = await this.repo.getLocal();
+        const existente = locais.find((a) => String(a.id) === id);
         if (existente) {
           this.anotacao = { ...existente };
           this.scheduleAutoExpand();
         }
 
         // 2. Em paralelo, dispara sync
-        AnotacaoRepository.syncAnotacoes().then(async updated => {
+        this.repo.sync().then(async (updated) => {
           if (updated) {
-            const atualizadas = await AnotacaoRepository.getLocalAnotacoes();
-            const atualizado = atualizadas.find(a => String(a.id) === id);
+            const atualizadas = await this.repo.getLocal();
+            const atualizado = atualizadas.find((a) => String(a.id) === id);
             if (atualizado) {
               this.anotacao = { ...atualizado };
               this.scheduleAutoExpand();
@@ -65,8 +69,8 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
 
         // 3. Se não tinha local, força buscar online
         if (!existente) {
-          const online = await AnotacaoRepository.forceFetchAnotacoes();
-          const achada = online.find(a => String(a.id) === id);
+          const online = await this.repo.forceFetch();
+          const achada = online.find((a) => String(a.id) === id);
           if (achada) {
             this.anotacao = { ...achada };
             this.scheduleAutoExpand();
@@ -102,17 +106,19 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
     });
   }
 
-  onFileChange(event: Event) {
+  async onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.anotacao.imagem = reader.result as string;
-      };
-      reader.readAsDataURL(file);
+      try {
+        // 📌 Otimiza antes de salvar
+        this.anotacao.imagem = await ImageUtils.toOptimizedBase64(file, 0.7, 1024);
+      } catch (err) {
+        console.error('[CriarAnotacao] Erro ao otimizar imagem:', err);
+      }
     }
   }
+
   removerImagem() {
     this.anotacao.imagem = '';
   }
@@ -124,24 +130,24 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
       this.salvando = true;
       const user = AuthService.getUser();
       if (!user?.email) throw new Error('Usuário não autenticado');
+
       this.anotacao.autor = user.email;
       this.anotacao.jogador = user.email;
       this.anotacao.data = new Date().toISOString();
 
       if (this.editMode) {
-        await AnotacaoRepository.updateAnotacao(this.anotacao);
+        await this.repo.update(this.anotacao);
         window.alert('✅ Anotação atualizada!');
       } else {
-        // 🔄 sincroniza para garantir maxIndex atualizado
-        await AnotacaoRepository.syncAnotacoes();
+        // 🚀 ULID como ID único
+        this.anotacao.id = IdUtils.generateULID();
 
-        const locais = await AnotacaoRepository.getLocalAnotacoes();
-        const maxIndex = locais.length > 0 ? Math.max(...locais.map(a => a.index || 0)) : 0;
-
+        // 🔄 mantém index sequencial (apenas para controle visual/local)
+        const locais = await this.repo.getLocal();
+        const maxIndex = locais.length > 0 ? Math.max(...locais.map((a) => a.index || 0)) : 0;
         this.anotacao.index = maxIndex + 1;
-        this.anotacao.id = maxIndex + 1;
 
-        await AnotacaoRepository.createAnotacao(this.anotacao);
+        await this.repo.create(this.anotacao);
         window.alert('✅ Anotação criada!');
       }
 
@@ -165,7 +171,7 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
 
     try {
       this.excluindo = true;
-      await AnotacaoRepository.deleteAnotacao(this.anotacao.id);
+      await this.repo.delete(this.anotacao.id);
       window.alert('✅ Anotação excluída com sucesso!');
       this.router.navigate(['/anotacoes']);
     } catch (err) {

@@ -1,13 +1,14 @@
 import { AuthService } from '../core/auth/AuthService';
 import { IndexedDBClient } from '../core/db/IndexedDBClient';
 import { ScriptClientV2 } from '../core/script/ScriptClientV2';
+import { IdUtils } from '../core/utils/IdUtils';
 
 /**
  * Repository genérico baseado em IndexedDB + ScriptClientV2
  * - Suporta Cache First
  * - Suporta múltiplas operações em uma única chamada
  */
-export class BaseRepository<T extends { id: number; index: number }> {
+export class BaseRepository<T extends { id: string; index: number }> {
   private static META_STORE = 'metadados';
   private static dbPromise: Promise<IndexedDBClient> | null = null;
 
@@ -34,9 +35,10 @@ export class BaseRepository<T extends { id: number; index: number }> {
 
     const created = (result as any)[this.tab]?.[0];
     const entity: T = {
+      ...(item as any),
       ...created,
-      id: Number(created?.id) || Date.now(),
-      index: created?.index,
+      id: created?.id ? String(created.id) : IdUtils.generateULID(),
+      index: created?.index ?? 0,
     };
 
     const db = await this.getDb();
@@ -61,7 +63,7 @@ export class BaseRepository<T extends { id: number; index: number }> {
     const entity: T = {
       ...item,
       ...updated,
-      id: Number(updated?.id || item.id),
+      id: updated?.id ? String(updated.id) : item.id,
       index: updated?.index || item.index,
     };
 
@@ -71,7 +73,7 @@ export class BaseRepository<T extends { id: number; index: number }> {
     return entity;
   }
 
-  async delete(id: number): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     console.log(`[BaseRepository:${this.tab}] ▶️ delete → id=${id}`);
 
     const db = await this.getDb();
@@ -103,7 +105,7 @@ export class BaseRepository<T extends { id: number; index: number }> {
 
     return ((result as any)[this.tab] || []).map((r: any) => ({
       ...r,
-      id: Number(r.id),
+      id: String(r.id),
       index: r.index,
     }));
   }
@@ -121,7 +123,7 @@ export class BaseRepository<T extends { id: number; index: number }> {
 
     const list: T[] = ((result as any)[this.tab] || []).map((r: any) => ({
       ...r,
-      id: Number(r.id),
+      id: String(r.id),
       index: r.index,
     }));
 
@@ -195,7 +197,7 @@ export class BaseRepository<T extends { id: number; index: number }> {
     tabs.forEach((tab) => {
       mapped[tab] = ((result as any)[tab] || []).map((r: any) => ({
         ...r,
-        id: Number(r.id),
+        id: String(r.id),
         index: r.index,
       }));
     });
@@ -210,7 +212,7 @@ export class BaseRepository<T extends { id: number; index: number }> {
     Object.keys(result as any).forEach((tab) => {
       (result as any)[tab] = (result as any)[tab].map((r: any) => ({
         ...r,
-        id: Number(r.id),
+        id: String(r.id),
         index: r.index,
       }));
     });
@@ -225,7 +227,7 @@ export class BaseRepository<T extends { id: number; index: number }> {
     Object.keys(result as any).forEach((tab) => {
       (result as any)[tab] = (result as any)[tab].map((r: any) => ({
         ...r,
-        id: Number(r.id),
+        id: String(r.id),
         index: r.index,
       }));
     });

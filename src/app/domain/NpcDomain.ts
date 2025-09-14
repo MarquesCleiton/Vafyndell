@@ -1,5 +1,5 @@
 export interface NpcDomain {
-  id: number;
+  id: string;
   index: number;
   imagem: string;
   nome: string;

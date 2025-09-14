@@ -3,11 +3,10 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 
-import { InventarioRepository } from '../../repositories/InventarioRepository';
-import { CatalogoRepository } from '../../repositories/CatalogoRepository';
 import { InventarioDomain } from '../../domain/InventarioDomain';
 import { CatalogoDomain } from '../../domain/CatalogoDomain';
 import { AuthService } from '../../core/auth/AuthService';
+import { BaseRepository } from '../../repositories/BaseRepository';
 
 interface ItemInventarioDetalhe {
   inventario: InventarioDomain;
@@ -27,6 +26,10 @@ export class ItemInventario implements OnInit {
   processandoEditar = false;
   processandoExcluir = false;
 
+  // ✅ Reuso do BaseRepository
+  private inventarioRepo = new BaseRepository<InventarioDomain>('Inventario', 'Inventario');
+  private catalogoRepo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -38,48 +41,57 @@ export class ItemInventario implements OnInit {
       console.log('[ItemInventario] Iniciando carregamento...');
       this.carregando = true;
 
-      const idParam = this.route.snapshot.paramMap.get('id');
-      const id = idParam ? Number(idParam) : NaN;
-      if (isNaN(id)) throw new Error('ID inválido para item do inventário');
+      const id = this.route.snapshot.paramMap.get('id');
+      if (!id) throw new Error('ID inválido para item do inventário');
 
       const user = AuthService.getUser();
       if (!user?.email) throw new Error('Usuário não autenticado.');
 
-      // 1️⃣ Cache first → garante catálogo e inventário locais
-      const catalogoLocal = await CatalogoRepository.getLocalItens();
-      const inventarioLocal = await InventarioRepository.getLocalInventarioByJogador(user.email);
+      // 1️⃣ Cache first
+      const [catalogoLocal, inventarioLocal] = await Promise.all([
+        this.catalogoRepo.getLocal(),
+        this.inventarioRepo.getLocal(),
+      ]);
 
-      const encontrado = inventarioLocal.find(i => i.id === id);
+      const encontrado = inventarioLocal.find(i => i.id === id && i.jogador === user.email);
       if (encontrado) {
         this.item = this.montarDetalhe(encontrado, catalogoLocal);
-        this.carregando = false; // libera a UI rápido
+        this.carregando = false;
       }
 
-      // 2️⃣ Sync paralelo (catálogo + inventário)
-      Promise.all([
-        CatalogoRepository.syncItens(),
-        InventarioRepository.syncInventario(),
-      ]).then(async ([catSync, invSync]) => {
-        if (catSync || invSync) {
-          console.log('[ItemInventario] Sync trouxe alterações. Atualizando cache...');
-          const catalogoAtualizado = await CatalogoRepository.getLocalItens();
-          const inventarioAtualizado = await InventarioRepository.getLocalInventarioByJogador(user.email);
-          const atualizado = inventarioAtualizado.find(i => i.id === id);
-          if (atualizado) {
-            this.item = this.montarDetalhe(atualizado, catalogoAtualizado);
+      // 2️⃣ Sync paralelo
+      Promise.all([this.catalogoRepo.sync(), this.inventarioRepo.sync()]).then(
+        async ([catSync, invSync]) => {
+          if (catSync || invSync) {
+            console.log('[ItemInventario] Sync trouxe alterações.');
+            const [catalogoAtualizado, inventarioAtualizado] = await Promise.all([
+              this.catalogoRepo.getLocal(),
+              this.inventarioRepo.getLocal(),
+            ]);
+            const atualizado = inventarioAtualizado.find(
+              i => i.id === id && i.jogador === user.email
+            );
+            if (atualizado) {
+              this.item = this.montarDetalhe(atualizado, catalogoAtualizado);
+            }
           }
-        } else {
-          console.log('[ItemInventario] Sync concluído. Nenhuma alteração detectada.');
         }
-      });
+      );
 
-      // 3️⃣ Fallback → se não encontrou local, força buscar online
+      // 3️⃣ Fallback online
       if (!encontrado) {
         console.log('[ItemInventario] Item não encontrado localmente. Forçando fetch online...');
-        const catalogoOnline = await CatalogoRepository.forceFetchItens();
-        const inventarioOnline = await InventarioRepository.forceFetchInventario();
+        await this.catalogoRepo.forceFetch();
+        await this.inventarioRepo.forceFetch();
 
-        const achadoOnline = inventarioOnline.find(i => i.id === id);
+        const [catalogoOnline, inventarioOnline] = await Promise.all([
+          this.catalogoRepo.getLocal(),
+          this.inventarioRepo.getLocal(),
+        ]);
+
+        const achadoOnline = inventarioOnline.find(
+          i => i.id === id && i.jogador === user.email
+        );
         if (achadoOnline) {
           this.item = this.montarDetalhe(achadoOnline, catalogoOnline);
         } else {
@@ -93,7 +105,7 @@ export class ItemInventario implements OnInit {
     }
   }
 
-  /** 🔧 Helper para montar detalhe com catálogo */
+  /** 🔧 Monta detalhe juntando catálogo */
   private montarDetalhe(
     inventario: InventarioDomain,
     catalogo: CatalogoDomain[]
@@ -126,7 +138,7 @@ export class ItemInventario implements OnInit {
 
     this.processandoExcluir = true;
     try {
-      await InventarioRepository.deleteInventario(this.item.inventario.id);
+      await this.inventarioRepo.delete(this.item.inventario.id);
       alert('✅ Item removido do inventário!');
       this.router.navigate(['/inventario-jogador']);
     } catch (err) {

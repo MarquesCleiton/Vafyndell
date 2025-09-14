@@ -3,8 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
-import { AnotacaoRepository } from '../../repositories/AnotacaoRepository';
 import { AnotacaoDomain } from '../../domain/AnotacaoDomain';
+import { BaseRepository } from '../../repositories/BaseRepository';
+import { AuthService } from '../../core/auth/AuthService';
+
+interface SecaoAnotacao {
+  data: string;
+  itens: AnotacaoDomain[];
+  expandido: boolean;
+}
 
 @Component({
   selector: 'app-anotacoes',
@@ -14,104 +21,103 @@ import { AnotacaoDomain } from '../../domain/AnotacaoDomain';
   styleUrls: ['./anotacoes.css'],
 })
 export class Anotacoes implements OnInit {
-  secoes: { data: string; itens: AnotacaoDomain[]; expandido: boolean }[] = [];
-  secoesFiltradas: { data: string; itens: AnotacaoDomain[]; expandido: boolean }[] = [];
+  secoes: SecaoAnotacao[] = [];
+  secoesFiltradas: SecaoAnotacao[] = [];
   carregando = true;
   filtro = '';
 
-  constructor(private router: Router) { }
+  private repo = new BaseRepository<AnotacaoDomain>('Anotacoes', 'Anotacoes');
+
+  constructor(private router: Router) {}
 
   async ngOnInit() {
+    this.carregando = true;
     try {
-      console.log('[Anotacoes] Iniciando carregamento...');
-      this.carregando = true;
-
-      // 1. Busca local
-      const locais = await AnotacaoRepository.getLocalAnotacoes();
-      if (locais.length) {
-        this.processarAnotacoes(locais);
-        this.carregando = false;
-      }
-
-      // 2. Valida online em paralelo
-      (async () => {
-        const updated = await AnotacaoRepository.syncAnotacoes();
-        if (updated) {
-          console.log('[Anotacoes] Sync trouxe alterações.');
-          const atualizadas = await AnotacaoRepository.getLocalAnotacoes();
-          this.processarAnotacoes(atualizadas);
-        }
-      })();
-
-      // 3. Se não havia nada local → fallback online
-      if (!locais.length) {
-        console.log('[Anotacoes] Nenhuma anotação local. Buscando online...');
-        const online = await AnotacaoRepository.forceFetchAnotacoes();
-        this.processarAnotacoes(online);
-        this.carregando = false;
-      }
+      await this.loadLocalAndSync();
     } catch (err) {
       console.error('[Anotacoes] Erro ao carregar:', err);
+    } finally {
       this.carregando = false;
     }
   }
 
+  /** 🔄 Carrega cache local e sincroniza em paralelo */
+  private async loadLocalAndSync() {
+    const user = AuthService.getUser();
+    if (!user?.email) return;
 
-  /** Agrupa anotações por data (ignora hora) */
-  private processarAnotacoes(itens: AnotacaoDomain[]) {
+    // 1. Local
+    const locais = await this.repo.getLocal();
+    const minhasLocais = locais.filter(a => a.jogador === user.email);
+    this.processarSecoes(minhasLocais);
+
+    // 2. Sync paralelo
+    this.repo.sync().then(async (updated) => {
+      if (updated) {
+        const atualizadas = await this.repo.getLocal();
+        const minhasAtualizadas = atualizadas.filter(a => a.jogador === user.email);
+        this.processarSecoes(minhasAtualizadas);
+      }
+    });
+
+    // 3. Se não havia nada local
+    if (minhasLocais.length === 0) {
+      const online = await this.repo.forceFetch();
+      const minhasOnline = online.filter(a => a.jogador === user.email);
+      this.processarSecoes(minhasOnline);
+    }
+  }
+
+  /** Agrupa por data e mantém expandido */
+  private processarSecoes(lista: AnotacaoDomain[]) {
+    const estados = new Map(this.secoes.map(s => [s.data, s.expandido]));
     const mapa = new Map<string, AnotacaoDomain[]>();
 
-    itens.forEach(i => {
-      const rawData = i.data || '';
-      // Se tiver hora → pega só a parte da data
+    lista.forEach((a) => {
+      const rawData = a.data || '';
       const soData = rawData.includes('T') ? rawData.split('T')[0] : rawData;
       if (!mapa.has(soData)) mapa.set(soData, []);
-      mapa.get(soData)!.push(i);
+      mapa.get(soData)!.push(a);
     });
 
     this.secoes = Array.from(mapa.entries())
-      .sort((a, b) => {
-        const dataA = new Date(a[0]).getTime();
-        const dataB = new Date(b[0]).getTime();
-        return dataB - dataA; // mais recente primeiro
-      })
+      .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime())
       .map(([data, itens]) => ({
         data,
         itens: itens.sort((a, b) =>
           new Date(b.data || 0).getTime() - new Date(a.data || 0).getTime()
-        ), // dentro da sessão, mais novas primeiro
-        expandido: false,
+        ),
+        expandido: estados.get(data) ?? false,
       }));
 
     this.secoesFiltradas = [...this.secoes];
   }
 
-  toggleSecao(secao: any) {
-    secao.expandido = !secao.expandido;
-  }
-
   aplicarFiltro() {
-    const termo = this.filtro.toLowerCase();
+    const termo = this.filtro.toLowerCase().trim();
     if (!termo) {
       this.secoesFiltradas = [...this.secoes];
       return;
     }
 
     this.secoesFiltradas = this.secoes
-      .map(s => ({
+      .map((s) => ({
         ...s,
-        itens: s.itens.filter(i =>
-          String(i.titulo || '').toLowerCase().includes(termo) ||
-          String(i.descricao || '').toLowerCase().includes(termo) ||
-          String(i.tags || '').toLowerCase().includes(termo) ||
-          String(i.autor || '').toLowerCase().includes(termo)
+        itens: s.itens.filter((a) =>
+          String(a.titulo || '').toLowerCase().includes(termo) ||
+          String(a.descricao || '').toLowerCase().includes(termo) ||
+          String(a.tags || '').toLowerCase().includes(termo) ||
+          String(a.autor || '').toLowerCase().includes(termo)
         ),
-        expandido: true, // 👈 sempre expande quando há filtro
+        expandido: true,
       }))
-      .filter(s => s.itens.length > 0);
+      .filter((s) => s.itens.length > 0);
   }
 
-  /** Formata a data ISO para dd/MM/yyyy */
+  toggleSecao(secao: SecaoAnotacao) {
+    secao.expandido = !secao.expandido;
+  }
+
   formatarData(data: string): string {
     try {
       const d = data.includes('T') ? new Date(data) : new Date(data + 'T00:00:00');

@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { JogadorRepository } from '../../repositories/JogadorRepository';
 import { JogadorDomain } from '../../domain/jogadorDomain';
+import { BaseRepository } from '../../repositories/BaseRepository';
 
 @Component({
   selector: 'app-jogador-detalhes-batalha',
@@ -21,10 +21,12 @@ export class JogadorDetalhesBatalha implements OnInit {
   atributos: any[] = [];
   loading = true;
 
+  private repo = new BaseRepository<JogadorDomain>('Jogadores', 'Personagem');
+
   constructor(
     private route: ActivatedRoute,
     private router: Router
-  ) { }
+  ) {}
 
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -34,24 +36,24 @@ export class JogadorDetalhesBatalha implements OnInit {
     }
 
     try {
-      // 1. Cache first
-      const locais = await JogadorRepository.getLocalJogadores();
-      let encontrado = locais.find(j => String(j.id) === String(id)) || null;
+      // 1️⃣ Cache first
+      const locais = await this.repo.getLocal();
+      let encontrado = locais.find(j => String(j.id) === String(id));
 
       if (encontrado) {
         this.setJogador(encontrado);
 
-        // 2. Sync paralelo
-        JogadorRepository.syncJogadores().then(async updated => {
+        // 2️⃣ Sync paralelo
+        this.repo.sync().then(async updated => {
           if (updated) {
-            const atualizados = await JogadorRepository.getLocalJogadores();
+            const atualizados = await this.repo.getLocal();
             const atualizado = atualizados.find(j => String(j.id) === String(id));
             if (atualizado) this.setJogador(atualizado);
           }
         });
       } else {
-        // 3. Fallback online → busca todos e tenta localizar
-        const onlineTodos = await JogadorRepository.getAllJogadores();
+        // 3️⃣ Fallback online → busca todos e tenta localizar
+        const onlineTodos = await this.repo.forceFetch();
         const achadoOnline = onlineTodos.find(j => String(j.id) === String(id));
         if (achadoOnline) {
           this.setJogador(achadoOnline);
