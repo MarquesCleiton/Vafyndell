@@ -1,0 +1,200 @@
+import { Component, OnInit, AfterViewInit, ElementRef, NgZone } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { FormsModule, NgForm } from '@angular/forms';
+import { NpcDomain } from '../../../domain/NpcDomain';
+import { BaseRepository } from '../../../repositories/BaseRepository';
+import { ImageUtils } from '../../../core/utils/ImageUtils';
+import { AuthService } from '../../../core/auth/AuthService';
+import { IdUtils } from '../../../core/utils/IdUtils';
+
+type AtributoChave = keyof Pick<
+  NpcDomain,
+  'forca' | 'constituicao' | 'destreza' |
+  'sabedoria' | 'inteligencia' | 'energia' |
+  'classe_armadura' | 'pontos_de_vida' | 'xp'
+>;
+
+@Component({
+  selector: 'app-cadastro-npc',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './cadastro-npc.html',
+  styleUrls: ['./cadastro-npc.css'],
+})
+export class CadastroNpc implements OnInit, AfterViewInit {
+  npc: NpcDomain = {
+    id: '', // ULID será atribuído no salvar
+    index: 0,
+    imagem: '',
+    nome: '',
+    classificacao: 'Inimigo',
+    tipo: 'Comum',
+    descricao: '',
+    alinhamento: '',
+    pontos_de_vida: 0,
+    classe_armadura: 0,
+    forca: 0,
+    constituicao: 0,
+    destreza: 0,
+    sabedoria: 0,
+    inteligencia: 0,
+    energia: 0,
+    ataques: '',
+    xp: 0,
+    email: '',
+  };
+
+  atributosNumericos = [
+    { key: 'xp' as AtributoChave, label: 'XP', icon: '⭐' },
+    { key: 'pontos_de_vida' as AtributoChave, label: 'Vida', icon: '❤️' },
+    { key: 'classe_armadura' as AtributoChave, label: 'Armadura', icon: '🛡️' },
+    { key: 'forca' as AtributoChave, label: 'Força', icon: '💪' },
+    { key: 'constituicao' as AtributoChave, label: 'Constituição', icon: '🪨' },
+    { key: 'destreza' as AtributoChave, label: 'Destreza', icon: '🤸‍♂️' },
+    { key: 'sabedoria' as AtributoChave, label: 'Sabedoria', icon: '📖' },
+    { key: 'inteligencia' as AtributoChave, label: 'Inteligência', icon: '🧠' },
+    { key: 'energia' as AtributoChave, label: 'Energia', icon: '⚡' },
+  ];
+
+  classificacoes = ['Inimigo', 'Bestial'];
+  tipos = ['Comum', 'Elite', 'Mágico', 'Lendário'];
+
+  salvando = false;
+  editMode = false;
+
+  private repo = new BaseRepository<NpcDomain>('NPCs', 'NPCs');
+
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private el: ElementRef,
+    private zone: NgZone
+  ) {}
+
+  async ngOnInit() {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.editMode = true;
+      try {
+        const locais = await this.repo.getLocal();
+        const existente = locais.find(n => String(n.id) === id);
+        if (existente) {
+          this.npc = { ...existente };
+          this.scheduleAutoExpand();
+        }
+
+        this.repo.sync().then(async updated => {
+          if (updated) {
+            const atualizados = await this.repo.getLocal();
+            const atualizado = atualizados.find(n => String(n.id) === id);
+            if (atualizado) {
+              this.npc = { ...atualizado };
+              this.scheduleAutoExpand();
+            }
+          }
+        });
+
+        if (!existente) {
+          const online = await this.repo.forceFetch();
+          const achadoOnline = online.find(n => String(n.id) === id);
+          if (achadoOnline) {
+            this.npc = { ...achadoOnline };
+            this.scheduleAutoExpand();
+          }
+        }
+      } catch (err) {
+        console.error('[CadastroNpc] Erro ao carregar NPC:', err);
+      }
+    }
+  }
+
+  ngAfterViewInit() {
+    this.scheduleAutoExpand();
+  }
+
+  private scheduleAutoExpand() {
+    this.zone.runOutsideAngular(() => {
+      setTimeout(() => this.applyAutoExpand(), 0);
+    });
+  }
+
+  private applyAutoExpand() {
+    const textareas = this.el.nativeElement.querySelectorAll('textarea.auto-expand');
+    textareas.forEach((ta: HTMLTextAreaElement) => {
+      ta.style.height = 'auto';
+      const maxHeight = 200;
+      ta.style.height = Math.min(ta.scrollHeight, maxHeight) + 'px';
+
+      ta.oninput = () => {
+        ta.style.height = 'auto';
+        ta.style.height = Math.min(ta.scrollHeight, maxHeight) + 'px';
+      };
+    });
+  }
+
+  getValor(campo: AtributoChave): number {
+    return this.npc[campo] as number;
+  }
+  setValor(campo: AtributoChave, valor: number) {
+    this.npc[campo] = Math.max(0, valor) as any;
+  }
+  ajustarValor(campo: AtributoChave, delta: number) {
+    this.setValor(campo, this.getValor(campo) + delta);
+  }
+
+  async onFileChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      try {
+        // 📌 Otimiza imagem antes de salvar
+        this.npc.imagem = await ImageUtils.toOptimizedBase64(file, 0.7, 1024);
+      } catch (err) {
+        console.error('[CadastroNpc] Erro ao otimizar imagem:', err);
+      }
+    }
+  }
+
+  removerImagem() {
+    this.npc.imagem = '';
+  }
+
+  async salvar(form: NgForm) {
+    if (form.invalid) return;
+    try {
+      this.salvando = true;
+      const user = AuthService.getUser();
+      if (!user?.email) throw new Error('Usuário não autenticado');
+      this.npc.email = user.email;
+
+      await this.repo.sync();
+
+      if (this.editMode) {
+        await this.repo.update(this.npc);
+        window.alert('✅ NPC atualizado com sucesso!');
+      } else {
+        // garante index sequencial (apenas para compatibilidade com Script)
+        const locais = await this.repo.getLocal();
+        const maxIndex = locais.length > 0 ? Math.max(...locais.map(n => n.index || 0)) : 0;
+
+        this.npc.index = maxIndex + 1;
+        this.npc.id = IdUtils.generateULID(); // ✅ ULID no ID
+
+        await this.repo.create(this.npc);
+        window.alert('✅ NPC criado com sucesso!');
+      }
+
+      this.router.navigate(['/npcs']);
+    } catch (err) {
+      console.error('[CadastroNpc] Erro ao salvar NPC:', err);
+      window.alert('❌ Erro ao salvar NPC. Veja o console.');
+    } finally {
+      this.salvando = false;
+    }
+  }
+
+  cancelar() {
+    this.router.navigate(['/npcs']);
+  }
+}
