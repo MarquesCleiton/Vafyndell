@@ -1,10 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { Location } from '@angular/common';
-import { NpcRepository } from '../../repositories/NpcRepository';
+import { CommonModule, Location } from '@angular/common';
+
+import { BaseRepository } from '../../repositories/BaseRepository';
 import { NpcDomain } from '../../domain/NpcDomain';
-import { JogadorRepository } from '../../repositories/JogadorRepository';
 import { JogadorDomain } from '../../domain/jogadorDomain';
 
 @Component({
@@ -20,6 +19,10 @@ export class NpcDetalhes implements OnInit {
   processandoEditar = false;
   processandoExcluir = false;
   processandoAdicionar = false;
+
+  // ✅ Reuso do BaseRepository
+  private npcRepo = new BaseRepository<NpcDomain>('NPCs', 'NPCs');
+  private jogadorRepo = new BaseRepository<JogadorDomain>('Jogadores', 'Jogadores');
 
   constructor(
     private route: ActivatedRoute,
@@ -38,22 +41,26 @@ export class NpcDetalhes implements OnInit {
       this.carregando = true;
 
       // 1. Busca local
-      const locais = await NpcRepository.getLocalNpcs();
+      const locais = await this.npcRepo.getLocal();
       let encontrado = locais.find(n => String(n.id) === String(id)) || null;
       if (encontrado) this.npc = { ...encontrado };
 
       // 2. Sync em paralelo
-      NpcRepository.syncNpcs().then(async updated => {
+      this.npcRepo.sync().then(async updated => {
         if (updated) {
-          const atualizados = await NpcRepository.getLocalNpcs();
+          const atualizados = await this.npcRepo.getLocal();
           const atualizado = atualizados.find(n => String(n.id) === String(id));
-          if (atualizado) this.npc = { ...atualizado };
+          if (atualizado) {
+            // só atualiza campos → evita "quebra de imersão"
+            if (this.npc) Object.assign(this.npc, atualizado);
+            else this.npc = { ...atualizado };
+          }
         }
       });
 
       // 3. Se não achou local, força fetch
       if (!encontrado) {
-        const online = await NpcRepository.forceFetchNpcs();
+        const online = await this.npcRepo.forceFetch();
         encontrado = online.find(n => String(n.id) === String(id)) || null;
         if (encontrado) this.npc = { ...encontrado };
       }
@@ -87,7 +94,7 @@ export class NpcDetalhes implements OnInit {
 
     this.processandoExcluir = true;
     try {
-      await NpcRepository.deleteNpc(this.npc.id);
+      await this.npcRepo.delete(this.npc.id);
       alert('✅ NPC excluído com sucesso!');
       this.router.navigate(['/npcs']);
     } catch (err) {
@@ -105,33 +112,22 @@ export class NpcDetalhes implements OnInit {
 
     try {
       // 1. Carrega jogadores existentes
-      const jogadores = await JogadorRepository.getAllJogadores();
+      const jogadores = await this.jogadorRepo.getLocal();
 
       // 2. Pega base do nome e procura quantos já existem
       const baseName = this.npc.nome.trim();
-      const regex = new RegExp(`^(\\d+) - ${baseName}$`, 'i');
-      const existentes = jogadores.filter(j => regex.test(j.personagem));
+      const existentes = jogadores
+        .map(j => j.personagem.match(/^(\d+) - (.+)$/))
+        .filter(m => m && m[2] === baseName)
+        .map(m => parseInt(m![1], 10));
 
       // 3. Calcula próximo número
-      let proximoNumero = 1;
-      if (existentes.length > 0) {
-        const numeros = existentes
-          .map(j => {
-            const match = j.personagem.match(/^(\d+) -/);
-            return match ? parseInt(match[1], 10) : 0;
-          })
-          .filter(n => !isNaN(n));
-        proximoNumero = Math.max(...numeros) + 1;
-      }
+      const proximoNumero = existentes.length > 0 ? Math.max(...existentes) + 1 : 1;
 
-      // 4. Calcula novo ID
-      const maxId = jogadores.length > 0 ? Math.max(...jogadores.map(j => j.id || 0)) : 0;
-      const novoId = maxId + 1;
-
-      // 5. Cria registro de jogador NPC com atributos herdados
+      // 4. Cria registro de jogador NPC com atributos herdados
       const novoNpcJogador: JogadorDomain = {
-        index: novoId,
-        id: novoId,
+        index: 0, // será definido no servidor
+        id: 0,    // idem
         email: '', // NPC não tem email
         imagem: this.npc.imagem || '',
         nome_do_jogador: 'NPC',
@@ -160,7 +156,7 @@ export class NpcDetalhes implements OnInit {
         ataques: this.npc.ataques,
       };
 
-      await JogadorRepository.createJogador(novoNpcJogador);
+      await this.jogadorRepo.create(novoNpcJogador);
       alert(`✅ ${novoNpcJogador.personagem} adicionado ao campo de batalha!`);
 
     } catch (err) {
