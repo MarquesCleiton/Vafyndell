@@ -137,7 +137,7 @@ export class ItemInventario implements OnInit {
 
     this.processandoExcluir = true;
     try {
-      await this.inventarioRepo.delete(this.item.inventario.id);
+      await this.inventarioRepo.delete(this.item.inventario.index);
       alert('✅ Item removido do inventário!');
       this.router.navigate(['/inventario-jogador']);
     } catch (err) {

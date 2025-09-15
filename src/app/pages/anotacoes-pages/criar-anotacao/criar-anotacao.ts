@@ -170,7 +170,7 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
 
     try {
       this.excluindo = true;
-      await this.repo.delete(this.anotacao.id);
+      await this.repo.delete(this.anotacao.index);
       window.alert('✅ Anotação excluída com sucesso!');
       this.router.navigate(['/anotacoes']);
     } catch (err) {

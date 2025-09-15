@@ -1,3 +1,5 @@
+import { IndexedDBClient } from "../db/IndexedDBClient";
+
 export interface User {
   name: string;
   email: string;
@@ -78,6 +80,14 @@ export class AuthService {
   static logout(): void {
     localStorage.removeItem(this.STORAGE_KEY);
   }
+  static async logoutHard(): Promise<void> {
+    console.log('[AuthService] logoutHard → limpando user + banco');
+    localStorage.removeItem(this.STORAGE_KEY);
+
+    const db = await IndexedDBClient.create();
+    await db.deleteDatabase();
+  }
+
 
   static isAuthenticated(): boolean {
     const user = this.getUser();

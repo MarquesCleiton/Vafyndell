@@ -24,9 +24,9 @@ type AtributoChave = keyof Pick<
 })
 export class CadastroNpc implements OnInit, AfterViewInit {
   npc: NpcDomain = {
-    id: '', // ULID será atribuído no salvar
+    id: '',
     index: 0,
-    imagem: '',
+    imagem: '', // sempre URL final
     nome: '',
     classificacao: 'Inimigo',
     tipo: 'Comum',
@@ -44,6 +44,9 @@ export class CadastroNpc implements OnInit, AfterViewInit {
     xp: 0,
     email: '',
   };
+
+  /** base64 temporário até salvar */
+  imagemBase64Temp: string | null = null;
 
   atributosNumericos = [
     { key: 'xp' as AtributoChave, label: 'XP', icon: '⭐' },
@@ -145,11 +148,10 @@ export class CadastroNpc implements OnInit, AfterViewInit {
 
   async onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
+    if (input.files?.length) {
       const file = input.files[0];
       try {
-        // 📌 Otimiza imagem antes de salvar
-        this.npc.imagem = await ImageUtils.toOptimizedBase64(file, 0.7, 1024);
+        this.imagemBase64Temp = await ImageUtils.toOptimizedBase64(file, 0.7, 1024);
       } catch (err) {
         console.error('[CadastroNpc] Erro ao otimizar imagem:', err);
       }
@@ -157,7 +159,8 @@ export class CadastroNpc implements OnInit, AfterViewInit {
   }
 
   removerImagem() {
-    this.npc.imagem = '';
+    this.npc.imagem = '-';
+    this.imagemBase64Temp = null;
   }
 
   async salvar(form: NgForm) {
@@ -170,18 +173,24 @@ export class CadastroNpc implements OnInit, AfterViewInit {
 
       await this.repo.sync();
 
+      const payload: any = { ...this.npc };
+      if (this.imagemBase64Temp) {
+        payload.imagem = this.imagemBase64Temp; // envia base64 → Script faz upload
+      }
+
       if (this.editMode) {
-        await this.repo.update(this.npc);
+        const updated = await this.repo.update(payload);
+        this.npc = { ...updated }; // volta com URL
         window.alert('✅ NPC atualizado com sucesso!');
       } else {
-        // garante index sequencial (apenas para compatibilidade com Script)
         const locais = await this.repo.getLocal();
         const maxIndex = locais.length > 0 ? Math.max(...locais.map(n => n.index || 0)) : 0;
 
         this.npc.index = maxIndex + 1;
-        this.npc.id = IdUtils.generateULID(); // ✅ ULID no ID
+        this.npc.id = IdUtils.generateULID();
 
-        await this.repo.create(this.npc);
+        const created = await this.repo.create(payload);
+        this.npc = { ...created };
         window.alert('✅ NPC criado com sucesso!');
       }
 
@@ -191,6 +200,7 @@ export class CadastroNpc implements OnInit, AfterViewInit {
       window.alert('❌ Erro ao salvar NPC. Veja o console.');
     } finally {
       this.salvando = false;
+      this.imagemBase64Temp = null;
     }
   }
 

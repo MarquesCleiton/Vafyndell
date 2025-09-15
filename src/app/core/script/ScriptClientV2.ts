@@ -2,7 +2,7 @@ import { AuthService } from '../auth/AuthService';
 
 export class ScriptClientV2 {
   private static BASE_URL =
-    'https://script.google.com/macros/s/AKfycbxeOy5XPsD3NQ5xOMGX55uh7eBAzVfagB35ozYEENcw_xhHny4lDcqJ2i0TD-iRx1yL/exec';
+    'https://script.google.com/macros/s/AKfycbz6KlBkfWzEFEkHOVtCyMWD83aqi3oKVXdLtCY93XCUA24BBP3BO9aINqGIj5_R1LRX/exec';
 
   private static SHEET_ID = '1Pu5a8AasG813zPkMuzBOGtZtvYMTy7jQSwcO2pGKJDI';
   private static FOLDER_ID = '1xKC9ZuJxUiMRuURGq-yXZW5dm-Xs7KR8';
@@ -57,7 +57,10 @@ export class ScriptClientV2 {
   // CONTROLLER
   // ========================
   static controllerCreate<T = any>(payload: { tab: string; [k: string]: any }) {
-    return this.call<T>('controller.create', payload);
+    return this.call<T>('controller.create', {
+      ...payload,
+      folderId: this.FOLDER_ID,
+    });
   }
 
   static controllerGetAll<T = any>(payload: { tab?: string; tabs?: string[] }) {
@@ -73,7 +76,10 @@ export class ScriptClientV2 {
   }
 
   static controllerUpdateByIndex<T = any>(payload: { tab: string; index: number; [k: string]: any }) {
-    return this.call<T>('controller.updateByIndex', payload);
+    return this.call<T>('controller.updateByIndex', {
+      ...payload,
+      folderId: this.FOLDER_ID,
+    });
   }
 
   static controllerUpdateCell<T = any>(payload: { tab: string; cell: string; value: any }) {
@@ -88,11 +94,17 @@ export class ScriptClientV2 {
   // MULTIOPERAÇÕES
   // ========================
   static controllerCreateBatch<T = any>(payloads: Record<string, any[]>) {
-    return this.call<T>('controller.create', { payloads });
+    return this.call<T>('controller.create', {
+      payloads,
+      folderId: this.FOLDER_ID,
+    });
   }
 
   static controllerUpdateBatch<T = any>(payloads: Record<string, any[]>) {
-    return this.call<T>('controller.updateByIndex', { payloads });
+    return this.call<T>('controller.updateByIndex', {
+      payloads,
+      folderId: this.FOLDER_ID,
+    });
   }
 
   static controllerDeleteBatch<T = any>(payloads: Record<string, { index: number }[]>) {

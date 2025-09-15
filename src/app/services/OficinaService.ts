@@ -31,37 +31,37 @@ export class OficinaService {
     const user = AuthService.getUser();
     if (!user?.email) throw new Error('Usuário não autenticado');
 
-    // 1️⃣ Cache first
-    let [catalogo, inventario, receitas] = await Promise.all([
-      this.catalogoRepo.getLocal(),
-      this.inventarioRepo.getLocal(),
-      this.receitasRepo.getLocal(),
-    ]);
+    // 1️⃣ Tenta pegar cache local (3 tabelas de uma vez)
+    const dbCatalogo = await this.catalogoRepo.getLocal();
+    const dbInventario = (await this.inventarioRepo.getLocal()).filter(i => i.jogador === user.email);
+    const dbReceitas = await this.receitasRepo.getLocal();
 
-    // filtra só inventário do jogador
-    inventario = inventario.filter((i) => i.jogador === user.email);
-
-    if (catalogo.length && inventario.length && receitas.length) {
-      this.sincronizar(user.email).catch((err) =>
+    if (dbCatalogo.length && dbInventario.length && dbReceitas.length) {
+      // dispara sync em paralelo sem travar a UI
+      this.sincronizarMulti(user.email).catch(err =>
         console.error('[OficinaService] Erro ao sincronizar:', err)
       );
-      return this.processar(catalogo, receitas, inventario);
+      return this.processar(dbCatalogo, dbReceitas, dbInventario);
     }
 
-    // 2️⃣ fallback
-    await this.catalogoRepo.sync();
-    catalogo = await this.catalogoRepo.getLocal();
+    // 2️⃣ Fallback → força fetch em lote
+    const result = await this.catalogoRepo.getAllMulti(['Catalogo', 'Receitas', 'Inventario']);
+    const catalogo = result['Catalogo'];
+    const receitas = result['Receitas'];
+    const inventario = (result['Inventario'] as InventarioDomain[])
+      .filter(i => i.jogador === user.email);
 
-    await this.inventarioRepo.sync();
-    inventario = (await this.inventarioRepo.getLocal()).filter((i) => i.jogador === user.email);
-
-    await this.receitasRepo.sync();
-    receitas = await this.receitasRepo.getLocal();
+    // atualiza cache local de uma vez
+    await Promise.all([
+      this.catalogoRepo.bulkPutLocal(catalogo),
+      this.inventarioRepo.bulkPutLocal(inventario),
+      this.receitasRepo.bulkPutLocal(receitas),
+    ]);
 
     return this.processar(catalogo, receitas, inventario);
   }
 
-  private async sincronizar(email: string) {
+  private async sincronizarMulti(email: string) {
     const [catSync, invSync, recSync] = await Promise.all([
       this.catalogoRepo.sync(),
       this.inventarioRepo.sync(),
@@ -136,7 +136,6 @@ export class OficinaService {
       .filter((i): i is ReceitaComStatus => i !== null);
   }
 
-
   async criarItem(receita: ReceitaComStatus): Promise<void> {
     const user = AuthService.getUser();
     if (!user?.email) throw new Error('Usuário não autenticado');
@@ -162,7 +161,6 @@ export class OficinaService {
   }
 
   // === Helpers ===
-
   private async subtrairQuantidade(jogador: string, itemCatalogo: string, qtd: number) {
     const todos = (await this.inventarioRepo.getLocal()).filter((i) => i.jogador === jogador);
     const encontrado = todos.find((i) => i.item_catalogo === itemCatalogo);
@@ -170,7 +168,7 @@ export class OficinaService {
 
     encontrado.quantidade = Math.max(0, (encontrado.quantidade || 0) - qtd);
     if (encontrado.quantidade === 0) {
-      await this.inventarioRepo.delete(encontrado.id);
+      await this.inventarioRepo.delete(encontrado.index);
     } else {
       await this.inventarioRepo.update(encontrado);
     }

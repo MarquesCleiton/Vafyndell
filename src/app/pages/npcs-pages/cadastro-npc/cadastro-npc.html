@@ -4,12 +4,16 @@
 
       <!-- Upload imagem -->
       <div class="position-relative text-center mb-3">
-        <ng-container *ngIf="npc.imagem; else uploadBox">
-          <img [src]="npc.imagem" class="w-100 rounded detalhe-img shadow-sm" alt="Preview" />
+        <ng-container *ngIf="imagemBase64Temp || (npc.imagem && npc.imagem !== '-'); else uploadBox">
+          <img [src]="imagemBase64Temp || npc.imagem" class="w-100 rounded detalhe-img shadow-sm" alt="Preview" />
           <button type="button"
             class="btn btn-danger rounded-circle position-absolute d-flex align-items-center justify-content-center"
-            style="top: 10px; right: 10px; width: 40px; height: 40px;" (click)="removerImagem()">✖</button>
+            style="top: 10px; right: 10px; width: 40px; height: 40px;" (click)="removerImagem()">
+            ✖
+          </button>
         </ng-container>
+
+
         <ng-template #uploadBox>
           <label class="upload-box">
             <span class="fs-1">📷</span>
@@ -17,6 +21,7 @@
           </label>
         </ng-template>
       </div>
+
 
       <!-- Card principal -->
       <div class="card detalhe-card shadow-lg border-0">

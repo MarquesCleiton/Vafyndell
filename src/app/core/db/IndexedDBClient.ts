@@ -12,7 +12,7 @@ export class IndexedDBClient {
     'Personagem',
     'NPCs',
     'Anotacoes',
-    'metadados',
+    'Metadados',
   ];
 
   static async create(): Promise<IndexedDBClient> {
@@ -44,7 +44,8 @@ export class IndexedDBClient {
         console.log('[IndexedDBClient] Upgrade → garantindo stores...');
         IndexedDBClient.DEFAULT_STORES.forEach((store) => {
           if (!db.objectStoreNames.contains(store)) {
-            db.createObjectStore(store, { keyPath: 'id' });
+            // 🔑 chave padronizada = index
+            db.createObjectStore(store, { keyPath: 'index' });
             console.log(`[IndexedDBClient] Store criada: ${store}`);
           }
         });
@@ -53,7 +54,7 @@ export class IndexedDBClient {
   }
 
   // ============ CRUD ============
-  async put<T extends { id: any }>(storeName: string, value: T): Promise<void> {
+  async put<T extends { index: any }>(storeName: string, value: T): Promise<void> {
     return new Promise((resolve, reject) => {
       const tx = this.db!.transaction(storeName, 'readwrite');
       tx.objectStore(storeName).put(value);
@@ -62,7 +63,7 @@ export class IndexedDBClient {
     });
   }
 
-  async bulkPut<T extends { id: any }>(storeName: string, values: T[]): Promise<void> {
+  async bulkPut<T extends { index: any }>(storeName: string, values: T[]): Promise<void> {
     return new Promise((resolve, reject) => {
       const tx = this.db!.transaction(storeName, 'readwrite');
       const store = tx.objectStore(storeName);

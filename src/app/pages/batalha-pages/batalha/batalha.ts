@@ -108,7 +108,7 @@ export class Batalha implements OnInit {
 
     this.processando[j.id] = 'excluir';
     try {
-      await this.repo.delete(j.id); // 👈 usando BaseRepository
+      await this.repo.delete(j.index); // 👈 usando BaseRepository
       this.jogadores = this.jogadores.filter(x => x.id !== j.id);
       this.aplicarFiltro();
       alert('✅ NPC removido da batalha!');

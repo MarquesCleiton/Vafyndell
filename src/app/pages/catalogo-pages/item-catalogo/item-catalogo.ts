@@ -102,7 +102,7 @@ export class ItemCatalogo implements OnInit {
 
     this.processandoExcluir = true;
     try {
-      await this.repo.delete(String(this.item.id));
+      await this.repo.delete(this.item.index);
       alert('✅ Item excluído com sucesso!');
       this.router.navigate(['/catalogo']);
     } catch (err) {

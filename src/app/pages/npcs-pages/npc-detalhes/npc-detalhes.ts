@@ -94,7 +94,7 @@ export class NpcDetalhes implements OnInit {
 
     this.processandoExcluir = true;
     try {
-      await this.npcRepo.delete(this.npc.id);
+      await this.npcRepo.delete(this.npc.index);
       alert('✅ NPC excluído com sucesso!');
       this.router.navigate(['/npcs']);
     } catch (err) {

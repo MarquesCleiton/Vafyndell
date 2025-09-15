@@ -3,13 +3,8 @@ import { IndexedDBClient } from '../core/db/IndexedDBClient';
 import { ScriptClientV2 } from '../core/script/ScriptClientV2';
 import { IdUtils } from '../core/utils/IdUtils';
 
-/**
- * Repository genérico baseado em IndexedDB + ScriptClientV2
- * - Suporta Cache First
- * - Suporta múltiplas operações em uma única chamada
- */
 export class BaseRepository<T extends { id: string; index: number }> {
-  private static META_STORE = 'metadados';
+  private static META_STORE = 'Metadados';
   private static dbPromise: Promise<IndexedDBClient> | null = null;
 
   constructor(
@@ -30,7 +25,10 @@ export class BaseRepository<T extends { id: string; index: number }> {
   async create(item: Omit<T, 'id' | 'index'>): Promise<T> {
     console.log(`[BaseRepository:${this.tab}] ▶️ create →`, item);
 
-    const result = await ScriptClientV2.controllerCreate({ tab: this.tab, ...item });
+    const result = await ScriptClientV2.controllerCreate({
+      tab: this.tab,
+      ...item,
+    });
     console.log(`[BaseRepository:${this.tab}] ◀️ create result`, result);
 
     const created = (result as any)[this.tab]?.[0];
@@ -38,12 +36,15 @@ export class BaseRepository<T extends { id: string; index: number }> {
       ...(item as any),
       ...created,
       id: created?.id ? String(created.id) : IdUtils.generateULID(),
-      index: created?.index ?? 0,
+      index: created?.index ?? Date.now(),
     };
 
-    const db = await this.getDb();
-    await db.put(this.store, entity);
+    // 🔑 garante que a imagem final seja sempre URL, não base64
+    if ((created?.imagem || '').startsWith('http')) {
+      (entity as any).imagem = created.imagem;
+    }
 
+    await (await this.getDb()).put(this.store, entity);
     return entity;
   }
 
@@ -67,17 +68,20 @@ export class BaseRepository<T extends { id: string; index: number }> {
       index: updated?.index || item.index,
     };
 
-    const db = await this.getDb();
-    await db.put(this.store, entity);
+    // 🔑 garante URL final no IndexedDB
+    if ((updated?.imagem || '').startsWith('http')) {
+      (entity as any).imagem = updated.imagem;
+    }
 
+    await (await this.getDb()).put(this.store, entity);
     return entity;
   }
 
-  async delete(id: string): Promise<boolean> {
-    console.log(`[BaseRepository:${this.tab}] ▶️ delete → id=${id}`);
+  async delete(index: number): Promise<boolean> {
+    console.log(`[BaseRepository:${this.tab}] ▶️ delete → index=${index}`);
 
     const db = await this.getDb();
-    const entity = await db.get<T>(this.store, id);
+    const entity = await db.get<T>(this.store, index);
     if (!entity) return false;
 
     await ScriptClientV2.controllerDeleteByIndex({
@@ -85,9 +89,8 @@ export class BaseRepository<T extends { id: string; index: number }> {
       index: entity.index,
     });
 
-    await db.delete(this.store, id);
-
-    console.log(`[BaseRepository:${this.tab}] ◀️ delete concluído para id=${id}`);
+    await db.delete(this.store, index);
+    console.log(`[BaseRepository:${this.tab}] ◀️ delete concluído para index=${index}`);
     return true;
   }
 
@@ -136,9 +139,10 @@ export class BaseRepository<T extends { id: string; index: number }> {
     );
     if (meta) {
       await db.put(BaseRepository.META_STORE, {
-        id: this.tab,
+        index: this.tab,
+        SheetName: this.tab,
         UltimaModificacao: meta.UltimaModificacao,
-      });
+      } as any);
     }
 
     return list;
@@ -149,7 +153,7 @@ export class BaseRepository<T extends { id: string; index: number }> {
 
     const result =
       await ScriptClientV2.controllerGetAll<{
-        Metadados: { SheetName: string; UltimaModificacao: string }[];
+        Metadados: { SheetName: string; UltimaModificacao: string; index: number }[];
       }>({ tabs: ['Metadados'] });
 
     console.log(`[BaseRepository:${this.tab}] ◀️ sync result`, result);
@@ -162,7 +166,7 @@ export class BaseRepository<T extends { id: string; index: number }> {
     }
 
     const db = await this.getDb();
-    const localMeta = await db.get<{ id: string; UltimaModificacao: string }>(
+    const localMeta = await db.get<{ index: string; UltimaModificacao: string }>(
       BaseRepository.META_STORE,
       this.tab
     );
@@ -204,40 +208,22 @@ export class BaseRepository<T extends { id: string; index: number }> {
     return mapped as Record<Tabs, any[]>;
   }
 
-  async createBatch(payloads: Record<string, any[]>): Promise<Record<string, any[]>> {
-    console.log(`[BaseRepository:${this.tab}] ▶️ createBatch →`, payloads);
-    const result = await ScriptClientV2.controllerCreateBatch(payloads);
-    console.log(`[BaseRepository:${this.tab}] ◀️ createBatch result`, result);
-
-    Object.keys(result as any).forEach((tab) => {
-      (result as any)[tab] = (result as any)[tab].map((r: any) => ({
-        ...r,
-        id: String(r.id),
-        index: r.index,
-      }));
-    });
-    return result as Record<string, any[]>;
+  // =========================================================
+  // 📌 Helpers locais
+  // =========================================================
+  async putLocal(item: T): Promise<void> {
+    await (await this.getDb()).put(this.store, item);
   }
 
-  async updateBatch(payloads: Record<string, any[]>): Promise<Record<string, any[]>> {
-    console.log(`[BaseRepository:${this.tab}] ▶️ updateBatch →`, payloads);
-    const result = await ScriptClientV2.controllerUpdateBatch(payloads);
-    console.log(`[BaseRepository:${this.tab}] ◀️ updateBatch result`, result);
-
-    Object.keys(result as any).forEach((tab) => {
-      (result as any)[tab] = (result as any)[tab].map((r: any) => ({
-        ...r,
-        id: String(r.id),
-        index: r.index,
-      }));
-    });
-    return result as Record<string, any[]>;
+  async bulkPutLocal(items: T[]): Promise<void> {
+    await (await this.getDb()).bulkPut(this.store, items);
   }
 
-  async deleteBatch(payloads: Record<string, { index: number }[]>): Promise<Record<string, any[]>> {
-    console.log(`[BaseRepository:${this.tab}] ▶️ deleteBatch →`, payloads);
-    const result = await ScriptClientV2.controllerDeleteBatch(payloads);
-    console.log(`[BaseRepository:${this.tab}] ◀️ deleteBatch result`, result);
-    return result as Record<string, any[]>;
+  async clearLocal(): Promise<void> {
+    await (await this.getDb()).clear(this.store);
+  }
+
+  async deleteLocal(index: number): Promise<void> {
+    await (await this.getDb()).delete(this.store, index);
   }
 }
