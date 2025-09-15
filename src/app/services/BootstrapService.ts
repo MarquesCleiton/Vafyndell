@@ -1,42 +1,57 @@
+import { IndexedDBClient } from "../core/db/IndexedDBClient";
+import { BaseRepository } from "../repositories/BaseRepository";
 import { Injectable } from '@angular/core';
-import { BaseRepository } from '../repositories/BaseRepository';
-import { IndexedDBClient } from '../core/db/IndexedDBClient';
 
 @Injectable({ providedIn: 'root' })
 export class BootstrapService {
-    private repo = new BaseRepository<any>('bootstrap'); // tab dummy, usamos multi
+  private repo = new BaseRepository<any>('bootstrap'); // tab dummy, usamos multi
 
-    async preloadAll(onStatus?: (msg: string) => void): Promise<void> {
-        // precisa ser string[] mutável, não readonly
-        const tabs: string[] = [
-            'Catalogo',
-            'Inventario',
-            'Receitas',
-            'Personagem',
-            'NPCs',
-            'Anotacoes',
-            'Metadados',
-        ];
+  async preloadAll(onStatus?: (msg: string) => void): Promise<void> {
+    const tabs: string[] = [
+      'Catalogo',
+      'Inventario',
+      'Receitas',
+      'Personagem',
+      'NPCs',
+      'Anotacoes',
+      'Metadados',
+    ];
 
-        onStatus?.('🔮 Invocando grimórios...');
-        const result = await this.repo.getAllMulti(tabs);
+    // 🔄 loop de frases enquanto carrega do servidor
+    const frasesCarregando = [
+      '🔮 Invocando grimórios...',
+      '🌌 Consultando os astros...',
+      '📜 Decifrando runas antigas...',
+      '⚡ Canalizando energia arcana...',
+    ];
+    let i = 0;
+    const intervalId = setInterval(() => {
+      onStatus?.(frasesCarregando[i % frasesCarregando.length]);
+      i++;
+    }, 1300); // troca a cada 800ms
 
-        const db = await IndexedDBClient.create();
+    // 🔽 essa parte demora
+    const result = await this.repo.getAllMulti(tabs);
 
-        for (const tab of tabs) {
-            const frases = [
-                `📖 Estudando os pergaminhos de ${tab}...`,
-                `⚒️ Forjando dados para ${tab}...`,
-                `🧪 Misturando poções em ${tab}...`,
-                `🐉 Invocando criaturas de ${tab}...`,
-            ];
-            const random = frases[Math.floor(Math.random() * frases.length)];
-            onStatus?.(random);
+    // ✅ parar loop quando terminar
+    clearInterval(intervalId);
 
-            await db.clear(tab);
-            await db.bulkPut(tab, result[tab] || []);
-        }
+    // Agora frases específicas por aba
+    const db = await IndexedDBClient.create();
+    for (const tab of tabs) {
+      const frases = [
+        `📖 Estudando os pergaminhos de ${tab}...`,
+        `⚒️ Forjando dados para ${tab}...`,
+        `🧪 Misturando poções em ${tab}...`,
+        `🐉 Invocando criaturas de ${tab}...`,
+      ];
+      const random = frases[Math.floor(Math.random() * frases.length)];
+      onStatus?.(random);
 
-        onStatus?.('✨ Mundo preparado!');
+      await db.clear(tab);
+      await db.bulkPut(tab, result[tab] || []);
     }
+
+    onStatus?.('✨ Mundo preparado!');
+  }
 }
