@@ -55,7 +55,6 @@ export class CadastroJogador {
     efeitos_temporarios: '',
     registo_de_jogo: '',
 
-    // extras
     classificacao: '',
     tipo: '',
     descricao: '',
@@ -77,7 +76,6 @@ export class CadastroJogador {
 
   salvando = false;
 
-  // 🔗 repositório genérico
   private repo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
 
   // 🔢 Atributos calculados
@@ -105,14 +103,12 @@ export class CadastroJogador {
     this.setValor(campo, this.getValor(campo) + delta);
   }
 
-  // Upload imagem
   // Upload imagem otimizada
   async onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
       try {
-        // 📌 Mantendo padrão (qualidade 0.72, largura máx. 1024px)
         this.jogador.imagem = await ImageUtils.toOptimizedBase64(file, 0.72, 1024);
       } catch (err) {
         console.error('[CadastroJogador] Erro ao otimizar imagem:', err);
@@ -135,16 +131,12 @@ export class CadastroJogador {
       if (!user?.email) throw new Error('Usuário não autenticado');
       this.jogador.email = user.email;
 
-      // 🔄 sincroniza antes
       await this.repo.sync();
 
-      // gera ULID
       this.jogador.id = IdUtils.generateULID();
 
-      // calcula próximo index incremental
       const locais = await this.repo.getLocal();
-      const maxIndex =
-        locais.length > 0 ? Math.max(...locais.map(j => j.index || 0)) : 0;
+      const maxIndex = locais.length > 0 ? Math.max(...locais.map(j => j.index || 0)) : 0;
       this.jogador.index = maxIndex + 1;
 
       await this.repo.create(this.jogador);
@@ -159,5 +151,5 @@ export class CadastroJogador {
     }
   }
 
-  constructor(private router: Router) { }
+  constructor(private router: Router) {}
 }

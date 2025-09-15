@@ -3,14 +3,15 @@
     <form #form="ngForm" (ngSubmit)="salvar(form)">
 
       <!-- Upload imagem -->
+      <!-- Upload imagem -->
       <div class="position-relative text-center mb-3">
-        <ng-container *ngIf="anotacao.imagem; else uploadBox">
-          <img [src]="anotacao.imagem" class="w-100 rounded detalhe-img shadow-sm" alt="Preview" />
+        <ng-container *ngIf="(imagemBase64Temp || (anotacao.imagem && anotacao.imagem !== '-')); else uploadBox">
+          <img [src]="imagemBase64Temp || anotacao.imagem" class="w-100 rounded detalhe-img shadow-sm" alt="Preview" />
           <button type="button"
-                  class="btn btn-danger rounded-circle position-absolute d-flex align-items-center justify-content-center"
-                  style="top: 10px; right: 10px; width: 40px; height: 40px;"
-                  (click)="removerImagem()">✖</button>
+            class="btn btn-danger rounded-circle position-absolute d-flex align-items-center justify-content-center"
+            style="top: 10px; right: 10px; width: 40px; height: 40px;" (click)="removerImagem()">✖</button>
         </ng-container>
+
         <ng-template #uploadBox>
           <label class="upload-box">
             <span class="fs-1">📷</span>
@@ -18,6 +19,7 @@
           </label>
         </ng-template>
       </div>
+
 
       <!-- Card principal -->
       <div class="card detalhe-card shadow-lg border-0">
@@ -29,48 +31,33 @@
           <!-- Título -->
           <div class="mb-3">
             <label class="form-label text-light">📌 Título *</label>
-            <input type="text"
-                   class="form-control input-dark"
-                   [(ngModel)]="anotacao.titulo"
-                   name="titulo"
-                   required />
+            <input type="text" class="form-control input-dark" [(ngModel)]="anotacao.titulo" name="titulo" required />
           </div>
 
           <!-- Descrição -->
           <div class="mb-3">
             <label class="form-label text-light">📖 Descrição *</label>
-            <textarea class="form-control input-dark auto-expand"
-                      rows="3"
-                      [(ngModel)]="anotacao.descricao"
-                      name="descricao"
-                      required></textarea>
+            <textarea class="form-control input-dark auto-expand" rows="3" [(ngModel)]="anotacao.descricao"
+              name="descricao" required></textarea>
           </div>
 
           <!-- Tags -->
           <div class="mb-3">
             <label class="form-label text-light">🏷️ Tags</label>
-            <input type="text"
-                   class="form-control input-dark text-light"
-                   [(ngModel)]="anotacao.tags"
-                   name="tags"
-                   placeholder="ex: missão, npc, combate..." />
+            <input type="text" class="form-control input-dark text-light" [(ngModel)]="anotacao.tags" name="tags"
+              placeholder="ex: missão, npc, combate..." />
           </div>
 
           <!-- Botões -->
           <div class="d-flex gap-2 mt-4">
             <!-- Cancelar -->
-            <button type="button"
-                    class="btn btn-outline-light flex-fill"
-                    (click)="cancelar()">
+            <button type="button" class="btn btn-outline-light flex-fill" (click)="cancelar()">
               ⬅ Cancelar
             </button>
 
             <!-- Excluir (apenas modo edição) -->
-            <button *ngIf="editMode"
-                    type="button"
-                    class="btn btn-outline-danger flex-fill"
-                    [disabled]="excluindo"
-                    (click)="excluir()">
+            <button *ngIf="editMode" type="button" class="btn btn-outline-danger flex-fill" [disabled]="excluindo"
+              (click)="excluir()">
               <ng-container *ngIf="!excluindo">🗑 Excluir</ng-container>
               <ng-container *ngIf="excluindo">
                 <span class="spinner-border spinner-border-sm me-2"></span> Excluindo...
@@ -78,9 +65,7 @@
             </button>
 
             <!-- Salvar -->
-            <button type="submit"
-                    class="btn btn-save flex-fill"
-                    [disabled]="form.invalid || salvando">
+            <button type="submit" class="btn btn-save flex-fill" [disabled]="form.invalid || salvando">
               <ng-container *ngIf="!salvando">{{ editMode ? '💾 Atualizar' : '✅ Salvar' }}</ng-container>
               <ng-container *ngIf="salvando">
                 <span class="spinner-border spinner-border-sm me-2"></span> Salvando...

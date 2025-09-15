@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, ElementRef, OnInit } from '@angular/core';
+import { Component, AfterViewInit, ElementRef, OnInit, NgZone } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -17,7 +17,7 @@ import { AuthService } from '../../../core/auth/AuthService';
 })
 export class CadastroItemCatalogo implements OnInit, AfterViewInit {
   item: CatalogoDomain = {
-    id: '',        // agora string ULID
+    id: '',
     index: 0,
     nome: '',
     unidade_medida: '',
@@ -28,10 +28,11 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
     efeito: '',
     colateral: '',
     descricao: '',
-    imagem: '',
+    imagem: '-', // 🔑 padronizado
     email: '',
   };
 
+  imagemBase64Temp: string | null = null; // 🔑 preview temporária
   salvando = false;
   editMode = false;
 
@@ -55,7 +56,8 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
   constructor(
     private router: Router,
     private el: ElementRef,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private zone: NgZone
   ) {}
 
   async ngOnInit() {
@@ -73,7 +75,6 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
         // 2️⃣ Em paralelo, sincroniza
         this.repo.sync().then(async updated => {
           if (updated) {
-            console.log('[CadastroItemCatalogo] Sync trouxe alterações. Recarregando item...');
             const itensAtualizados = await this.repo.getLocal();
             const atualizado = itensAtualizados.find(i => String(i.id) === id);
             if (atualizado) this.item = { ...atualizado };
@@ -93,24 +94,35 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
+    this.scheduleAutoExpand();
+  }
+
+  private scheduleAutoExpand() {
+    this.zone.runOutsideAngular(() => {
+      setTimeout(() => this.applyAutoExpand(), 0);
+    });
+  }
+
+  private applyAutoExpand() {
     const textareas = this.el.nativeElement.querySelectorAll('textarea.auto-expand');
     textareas.forEach((ta: HTMLTextAreaElement) => {
+      const maxHeight = 200;
       const resize = () => {
         ta.style.height = 'auto';
-        ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
+        ta.style.height = Math.min(ta.scrollHeight, maxHeight) + 'px';
       };
-      ta.addEventListener('input', resize);
       resize();
+      ta.addEventListener('input', resize);
     });
   }
 
   // Upload imagem com otimização
   async onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
+    if (input.files?.length) {
       const file = input.files[0];
       try {
-        this.item.imagem = await ImageUtils.toOptimizedBase64(file, 0.72, 800);
+        this.imagemBase64Temp = await ImageUtils.toOptimizedBase64(file, 0.72, 800);
       } catch (err) {
         console.error('[CadastroItemCatalogo] Erro ao otimizar imagem:', err);
       }
@@ -118,7 +130,8 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
   }
 
   removerImagem() {
-    this.item.imagem = '';
+    this.item.imagem = '-'; // 🔑 padronizado
+    this.imagemBase64Temp = null;
   }
 
   // Salvar
@@ -132,22 +145,27 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
       if (!user?.email) throw new Error('Usuário não autenticado');
       this.item.email = user.email;
 
+      const payload: any = { ...this.item };
+      if (this.imagemBase64Temp) {
+        payload.imagem = this.imagemBase64Temp; // envia base64 → Script faz upload
+      }
+
       if (this.editMode) {
-        await this.repo.update(this.item);
+        const updated = await this.repo.update(payload);
+        this.item = { ...updated };
         window.alert('✅ Item atualizado com sucesso!');
       } else {
-        // 1️⃣ Usa local para calcular próximo índice
-        const todosLocais = await this.repo.getLocal();
-        const maxIndex = todosLocais.length > 0 ? Math.max(...todosLocais.map(i => i.index || 0)) : 0;
+        const locais = await this.repo.getLocal();
+        const maxIndex = locais.length > 0 ? Math.max(...locais.map(i => i.index || 0)) : 0;
 
-        this.item.id = IdUtils.generateULID(); // ULID único
+        this.item.id = IdUtils.generateULID();
         this.item.index = maxIndex + 1;
 
-        await this.repo.create(this.item);
+        const created = await this.repo.create(payload);
+        this.item = { ...created };
         window.alert('✅ Item criado com sucesso!');
       }
 
-      // 🔑 Volta para origem
       const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/catalogo';
       this.router.navigateByUrl(returnUrl);
 
@@ -156,6 +174,7 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
       window.alert('❌ Erro ao salvar item. Veja o console.');
     } finally {
       this.salvando = false;
+      this.imagemBase64Temp = null;
     }
   }
 }

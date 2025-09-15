@@ -17,16 +17,19 @@ import { IdUtils } from '../../../core/utils/IdUtils';
 })
 export class CriarAnotacao implements OnInit, AfterViewInit {
   anotacao: AnotacaoDomain = {
-    id: '', // agora string ULID
+    id: '',
     index: 0,
     jogador: '',
     autor: '',
     titulo: '',
     descricao: '',
-    imagem: '',
+    imagem: '', // sempre URL final ou '-'
     data: '',
     tags: '',
   };
+
+  /** base64 temporário até salvar */
+  imagemBase64Temp: string | null = null;
 
   salvando = false;
   excluindo = false;
@@ -54,7 +57,7 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
           this.scheduleAutoExpand();
         }
 
-        // 2. Em paralelo, dispara sync
+        // 2. Sync em paralelo
         this.repo.sync().then(async (updated) => {
           if (updated) {
             const atualizadas = await this.repo.getLocal();
@@ -66,7 +69,7 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
           }
         });
 
-        // 3. Se não tinha local, força buscar online
+        // 3. Se não tinha local → força online
         if (!existente) {
           const online = await this.repo.forceFetch();
           const achada = online.find((a) => String(a.id) === id);
@@ -85,7 +88,6 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
     this.scheduleAutoExpand();
   }
 
-  /** 🔑 agenda o auto expand depois da renderização */
   private scheduleAutoExpand() {
     this.zone.runOutsideAngular(() => {
       setTimeout(() => this.applyAutoExpand(), 0);
@@ -107,11 +109,10 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
 
   async onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
+    if (input.files?.length) {
       const file = input.files[0];
       try {
-        // 📌 Otimiza antes de salvar
-        this.anotacao.imagem = await ImageUtils.toOptimizedBase64(file, 0.7, 1024);
+        this.imagemBase64Temp = await ImageUtils.toOptimizedBase64(file, 0.7, 1024);
       } catch (err) {
         console.error('[CriarAnotacao] Erro ao otimizar imagem:', err);
       }
@@ -119,7 +120,8 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
   }
 
   removerImagem() {
-    this.anotacao.imagem = '';
+    this.anotacao.imagem = '-'; // 🔑 padronizado
+    this.imagemBase64Temp = null;
   }
 
   async salvar(form: NgForm) {
@@ -134,19 +136,25 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
       this.anotacao.jogador = user.email;
       this.anotacao.data = new Date().toISOString();
 
+      // Prepara payload
+      const payload: any = { ...this.anotacao };
+      if (this.imagemBase64Temp) {
+        payload.imagem = this.imagemBase64Temp; // envia base64 → Script cuida
+      }
+
       if (this.editMode) {
-        await this.repo.update(this.anotacao);
+        const updated = await this.repo.update(payload);
+        this.anotacao = { ...updated };
         window.alert('✅ Anotação atualizada!');
       } else {
-        // 🚀 ULID como ID único
         this.anotacao.id = IdUtils.generateULID();
 
-        // 🔄 mantém index sequencial (apenas para controle visual/local)
         const locais = await this.repo.getLocal();
         const maxIndex = locais.length > 0 ? Math.max(...locais.map((a) => a.index || 0)) : 0;
         this.anotacao.index = maxIndex + 1;
 
-        await this.repo.create(this.anotacao);
+        const created = await this.repo.create(payload);
+        this.anotacao = { ...created };
         window.alert('✅ Anotação criada!');
       }
 
@@ -156,6 +164,7 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
       window.alert('❌ Erro ao salvar anotação.');
     } finally {
       this.salvando = false;
+      this.imagemBase64Temp = null;
     }
   }
 

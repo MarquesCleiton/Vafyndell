@@ -4,8 +4,8 @@
 
       <!-- Upload imagem -->
       <div class="position-relative text-center mb-3">
-        <ng-container *ngIf="item.imagem; else uploadBox">
-          <img [src]="item.imagem" class="w-100 rounded detalhe-img shadow-sm" alt="Preview" />
+        <ng-container *ngIf="imagemBase64Temp || (item.imagem && item.imagem !== '-'); else uploadBox">
+          <img [src]="imagemBase64Temp || item.imagem" class="w-100 rounded detalhe-img shadow-sm" alt="Preview" />
           <button type="button"
             class="btn btn-danger rounded-circle position-absolute d-flex align-items-center justify-content-center"
             style="top: 10px; right: 10px; width: 40px; height: 40px;" (click)="removerImagem()">✖</button>
@@ -16,6 +16,7 @@
             <input type="file" class="d-none" (change)="onFileChange($event)" accept="image/*" />
           </label>
         </ng-template>
+
       </div>
 
       <!-- Card principal -->
@@ -90,6 +91,7 @@
             <textarea class="form-control input-dark auto-expand" [(ngModel)]="item.colateral"
               name="colateral"></textarea>
           </div>
+
           <!-- Botão salvar -->
           <div class="text-end mt-4">
             <button type="submit" class="btn btn-save px-4" [disabled]="form.invalid || salvando">
@@ -100,10 +102,7 @@
             </button>
           </div>
         </div>
-
       </div>
-
-
     </form>
   </div>
 </div>

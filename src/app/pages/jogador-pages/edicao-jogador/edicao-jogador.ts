@@ -5,6 +5,7 @@ import { FormsModule, NgForm } from '@angular/forms';
 import { JogadorDomain } from '../../../domain/jogadorDomain';
 import { BaseRepository } from '../../../repositories/BaseRepository';
 import { AuthService } from '../../../core/auth/AuthService';
+import { ImageUtils } from '../../../core/utils/ImageUtils';
 
 type AtributoChave = keyof Pick<
   JogadorDomain,
@@ -58,16 +59,16 @@ export class EdicaoJogador implements OnInit {
     this.setValor(campo, this.getValor(campo) + delta);
   }
 
-  // Upload imagem
-  onFileChange(event: Event) {
+  // Upload imagem otimizada
+  async onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0 && this.jogador) {
       const file = input.files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (this.jogador) this.jogador.imagem = reader.result as string;
-      };
-      reader.readAsDataURL(file);
+      try {
+        this.jogador.imagem = await ImageUtils.toOptimizedBase64(file, 0.72, 1024);
+      } catch (err) {
+        console.error('[EdicaoJogador] Erro ao otimizar imagem:', err);
+      }
     }
   }
   removerImagem() {
@@ -84,7 +85,8 @@ export class EdicaoJogador implements OnInit {
       if (!user?.email) throw new Error('Usuário não autenticado');
       this.jogador.email = user.email;
 
-      await this.repo.update(this.jogador);
+      const updated = await this.repo.update(this.jogador);
+      this.jogador = { ...updated };
 
       window.alert('✅ Jogador atualizado com sucesso!');
       this.router.navigate(['/jogador']);
@@ -101,13 +103,9 @@ export class EdicaoJogador implements OnInit {
       const user = AuthService.getUser();
       if (!user?.email) throw new Error('Usuário não autenticado');
 
-      // 1️⃣ Pega local primeiro
       const local = (await this.repo.getLocal()).find(j => j.email === user.email);
-      if (local) {
-        this.jogador = local;
-      }
+      if (local) this.jogador = local;
 
-      // 2️⃣ Sincroniza em paralelo
       this.repo.sync().then(async updated => {
         if (updated) {
           const atualizado = (await this.repo.getLocal()).find(j => j.email === user.email);
@@ -115,7 +113,6 @@ export class EdicaoJogador implements OnInit {
         }
       });
 
-      // 3️⃣ Se não havia local → força fetch
       if (!local) {
         const online = await this.repo.forceFetch();
         const encontrado = online.find(j => j.email === user.email);
