@@ -7,7 +7,7 @@ export class ImageUtils {
    */
   static async toOptimizedBase64(
     file: File,
-    quality: number = 0.7,
+    quality: number = 0.72,
     maxWidth?: number
   ): Promise<string> {
     return new Promise((resolve, reject) => {

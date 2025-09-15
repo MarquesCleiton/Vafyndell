@@ -110,7 +110,7 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
       try {
-        this.item.imagem = await ImageUtils.toOptimizedBase64(file, 0.7, 1024);
+        this.item.imagem = await ImageUtils.toOptimizedBase64(file, 0.72, 800);
       } catch (err) {
         console.error('[CadastroItemCatalogo] Erro ao otimizar imagem:', err);
       }

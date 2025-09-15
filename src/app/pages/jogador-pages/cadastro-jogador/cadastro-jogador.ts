@@ -7,6 +7,7 @@ import { JogadorDomain } from '../../../domain/jogadorDomain';
 import { AuthService } from '../../../core/auth/AuthService';
 import { IdUtils } from '../../../core/utils/IdUtils';
 import { BaseRepository } from '../../../repositories/BaseRepository';
+import { ImageUtils } from '../../../core/utils/ImageUtils';
 
 type AtributoChave = keyof Pick<
   JogadorDomain,
@@ -105,17 +106,20 @@ export class CadastroJogador {
   }
 
   // Upload imagem
-  onFileChange(event: Event) {
+  // Upload imagem otimizada
+  async onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.jogador.imagem = reader.result as string;
-      };
-      reader.readAsDataURL(file);
+      try {
+        // 📌 Mantendo padrão (qualidade 0.72, largura máx. 1024px)
+        this.jogador.imagem = await ImageUtils.toOptimizedBase64(file, 0.72, 1024);
+      } catch (err) {
+        console.error('[CadastroJogador] Erro ao otimizar imagem:', err);
+      }
     }
   }
+
   removerImagem() {
     this.jogador.imagem = '';
   }
@@ -155,5 +159,5 @@ export class CadastroJogador {
     }
   }
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 }
