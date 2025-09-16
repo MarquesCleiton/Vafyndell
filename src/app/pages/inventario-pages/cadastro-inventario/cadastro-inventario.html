@@ -20,34 +20,18 @@
             <div class="mb-3">
               <label class="form-label text-light fw-bold">🏷️ Item *</label>
               <mat-form-field appearance="outline" class="w-100 input-dark">
-                <input type="text"
-                       matInput
-                       placeholder="Selecione ou pesquise..."
-                       [(ngModel)]="selecionado"
-                       name="selecionado"
-                       [matAutocomplete]="auto"
-                       (input)="filtrarItens()"
-                       [readonly]="editando" />
+                <input type="text" matInput placeholder="Selecione ou pesquise..." [(ngModel)]="filtro" name="filtro"
+                  [matAutocomplete]="auto" (input)="filtrarItens()" [readonly]="editando" />
 
-                <mat-autocomplete
-                  #auto="matAutocomplete"
-                  [displayWith]="displayFn"
-                  (optionSelected)="selecionarItem($event.option.value)">
-
-                  <mat-option *ngIf="!editando"
-                              (click)="novoItem()"
-                              class="text-success bg-dark">
+                <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selecionarItem($event.option.value)">
+                  <mat-option *ngIf="!editando" (click)="novoItem()" class="text-success bg-dark">
                     <mat-icon class="me-2">add_circle</mat-icon> Novo
                   </mat-option>
 
-                  <mat-option *ngFor="let c of catalogoFiltrado"
-                              [value]="c"
-                              class="bg-dark text-light">
+                  <mat-option *ngFor="let c of catalogoFiltrado" [value]="c" class="bg-dark text-light">
                     <div class="d-flex align-items-center">
-                      <img *ngIf="c.imagem"
-                           [src]="c.imagem"
-                           class="me-2 rounded"
-                           style="width: 28px; height: 28px; object-fit: cover;">
+                      <img *ngIf="c.imagem" [src]="c.imagem" class="me-2 rounded"
+                        style="width: 28px; height: 28px; object-fit: cover;">
                       <span>{{ c.nome }}</span>
                     </div>
                   </mat-option>
@@ -58,10 +42,8 @@
             <!-- Preview -->
             <div *ngIf="selecionado" class="preview-card mb-3">
               <div class="d-flex align-items-center">
-                <img *ngIf="selecionado.imagem"
-                     [src]="selecionado.imagem"
-                     class="me-3 rounded"
-                     style="width: 50px; height: 50px; object-fit: cover;">
+                <img *ngIf="selecionado.imagem" [src]="selecionado.imagem" class="me-3 rounded"
+                  style="width: 50px; height: 50px; object-fit: cover;">
                 <div>
                   <h6 class="fw-bold text-light mb-1">{{ selecionado.nome }}</h6>
                   <small class="text-light">
@@ -76,12 +58,8 @@
               <label class="form-label text-light fw-bold mb-0 me-3">🔢 Quantidade *</label>
               <div class="quantidade-box">
                 <button type="button" class="btn btn-sm btn-outline-light" (click)="decrementar()">−</button>
-                <input type="number"
-                       class="quantidade-input"
-                       [(ngModel)]="quantidade"
-                       name="quantidade"
-                       min="1"
-                       required />
+                <input type="number" class="quantidade-input" [(ngModel)]="quantidade" name="quantidade" min="1"
+                  required />
                 <button type="button" class="btn btn-sm btn-outline-light" (click)="incrementar()">+</button>
               </div>
             </div>
@@ -99,14 +77,12 @@
       ⬅️
     </button>
     <!-- Salvar -->
-    <button type="submit"
-            form="formInventario"
-            class="fab fab-primary"
-            [disabled]="form.invalid || salvando">
+    <button type="submit" form="formInventario" class="fab fab-primary" [disabled]="form.invalid || salvando">
       <ng-container *ngIf="!salvando">💾</ng-container>
       <ng-container *ngIf="salvando">
         <span class="spinner-border spinner-border-sm"></span>
       </ng-container>
     </button>
+
   </div>
 </div>

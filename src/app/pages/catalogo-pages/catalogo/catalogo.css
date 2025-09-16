@@ -1,139 +1,130 @@
-/* ===============================
-   Variáveis globais
-================================ */
-:root {
-  --header-height: 56px;
-  --bottom-nav-height: 56px; 
-  --search-height: 56px;
-}
-
-/* 📂 Cabeçalho da categoria sticky */
-.categoria-header {
-  position: sticky;
-  top: var(--header-height);
-  z-index: 10;
-  background-color: #2c2c2c;
-  padding: 6px 12px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  border-radius: 6px;
-}
-
-/* 🔎 Barra de pesquisa fixa no rodapé (acima da bottom-nav) */
-.search-bar-bottom {
-  position: fixed;
-  bottom: var(--bottom-nav-height);
-  left: 0;
-  right: 0;
-  z-index: 1100;
-  background: #212529;
-  min-height: var(--search-height);
+/* Wrapper responsivo */
+.catalogo-wrapper {
   display: flex;
-  align-items: center;
+  justify-content: center;
 }
 
-/* 🔄 Conteúdo respeita espaço da search bar + bottom-nav */
-.flex-grow-1 {
-  padding-bottom: calc(var(--search-height) + var(--bottom-nav-height) + 1rem);
+.catalogo-container {
+  width: 100%;
+  max-width: 900px; /* largura padrão */
 }
 
-/* ===== FAB ===== */
-.fab {
-  position: fixed;
-  bottom: calc(var(--bottom-nav-height) + var(--search-height) + 20px);
-  right: 20px;
-  width: 56px;
-  height: 56px;
+/* Barra de pesquisa */
+.search-bar {
+  background: #1e1e1e;
+  color: #fff;
+  border: 1px solid #444;
+}
+.search-bar:focus {
+  outline: none;
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.25);
+}
+
+/* Categoria */
+.btn-categoria {
+  background: #2a2a2a;
+  color: #f8f9fa; /* 🔥 texto bem claro */
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  text-align: left;
+}
+.btn-categoria:hover {
+  background: #343a40;
+  color: #fff;
+}
+
+/* Cards do catálogo */
+.catalogo-card {
+  background: #1e1e1e;
+  border-radius: 10px;
+  transition: transform 0.15s ease;
+  color: #f1f1f1; /* 🔥 texto interno sempre claro */
+}
+.catalogo-card:hover {
+  transform: scale(1.02);
+  background: #252525;
+}
+
+/* Imagem / ícone */
+.item-thumb {
+  width: 55px;
+  height: 55px;
+  border-radius: 8px;
+  background: #2a2a2a;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  z-index: 1200;
-  background: #0d6efd;
+  overflow: hidden;
+}
+.item-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.item-thumb span {
+  color: #bbb; /* ícone placeholder */
+}
+
+/* Texto */
+.catalogo-card h6 {
+  color: #fff; /* 🔥 nome do item bem visível */
+}
+.catalogo-card small {
+  color: #ddd; /* 🔥 detalhes mais claros */
+}
+.catalogo-card p {
+  color: #e0e0e0; /* 🔥 corpo do texto mais legível */
+  white-space: pre-line; /* aceita quebra de linha */
+}
+
+/* Raridade (mantém cores próprias) */
+.raridade {
+  font-weight: bold;
+}
+
+/* FAB */
+.fab-stack {
+  position: fixed;
+  bottom: 70px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 1000;
+}
+.fab {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
   border: none;
-  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  transition: transform 0.2s ease;
 }
 .fab:hover {
-  transform: scale(1.1);
+  transform: scale(1.08);
+}
+.fab-primary {
+  background: #0d6efd;
+  color: #fff;
+}
+.fab-primary:hover {
   background: #0b5ed7;
 }
 
-
-
-
-
-
-
-/* ===== Ícone toggle minimalista ===== */
-.toggle-icon {
-  font-size: 1rem;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-.toggle-icon:hover {
-  transform: scale(1.15);
-}
-
-/* ===== Cards minimalistas ===== */
-.catalogo-card {
-  background: #1e1e1e;
-  border: 1px solid #333;
-  border-radius: 14px;
-  transition: all 0.2s ease-in-out;
-}
-.catalogo-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
-}
-
-/* ===== Texto principal ===== */
-.efeito-text {
-  color: #e6e6e6 !important; /* branco suave */
-}
-
-.descricao-text {
-  color: #cfcfcf !important; /* cinza claro */
-}
-
-/* ===== Sobrescreve Bootstrap para melhor contraste ===== */
-.text-light { 
-  color: #f0f0f0 !important; 
-}
-
-.text-muted {
-  color: #b8b8b8 !important; 
-}
-
-/* ===== Raridade com cores suaves ===== */
-.raridade.comum { color: #999; }
-.raridade.incomum { color: #6fbf73; }   /* verde suave */
-.raridade.raro { color: #4a90e2; }      /* azul discreto */
-.raridade.épico { color: #9b7ecb; }     /* roxo pastel */
-.raridade.lendário { color: #d4af37; }  /* dourado apagado */
-
-/* ===== Colateral - vermelho mais suave ===== */
-.colateral {
-  color: #c97a7a !important;
-}
-
-/* ===== Botão flutuante (FAB) ===== */
-.fab {
-  position: fixed;
-  bottom: 80px;   /* acima da navbar */
-  right: 20px;
-  width: 56px;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  z-index: 100;
-  background: #0d6efd; /* azul padrão bootstrap */
-  border: none;
-  transition: all 0.2s ease-in-out;
-}
-.fab:hover {
-  transform: scale(1.1);
-  background: #0b5ed7; /* azul escuro no hover */
+/* Desktop: alinhado ao card */
+@media (min-width: 992px) {
+  .catalogo-container {
+    padding: 0 2rem;
+  }
+  .fab-stack {
+    right: 50%;
+    transform: translateX(450px);
+  }
 }

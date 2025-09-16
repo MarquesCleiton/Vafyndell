@@ -1,89 +1,91 @@
-<div class="d-flex flex-column min-vh-100 bg-dark text-light">
+<div class="catalogo-wrapper d-flex flex-column min-vh-100 bg-dark text-light">
 
   <!-- Barra de pesquisa -->
   <div class="p-3 bg-black border-bottom position-sticky top-0" style="z-index: 10;">
     <input type="text"
-           class="form-control bg-dark text-light border-light rounded-pill px-3"
+           class="form-control search-bar rounded-pill px-3"
            placeholder="🔍 Pesquisar no catálogo..."
            [(ngModel)]="filtro"
            (input)="aplicarFiltro()" />
   </div>
 
-  <div class="flex-grow-1 p-3">
-    <h4 class="fw-bold mb-3">📚 Catálogo</h4>
+  <!-- Conteúdo -->
+  <div class="flex-grow-1 p-3 d-flex justify-content-center">
+    <div class="catalogo-container w-100">
 
-    <!-- Loading -->
-    <div *ngIf="carregando" class="text-center py-5">
-      <div class="spinner-border text-light" role="status"></div>
-      <p class="mt-2">Carregando catálogo...</p>
-    </div>
+      <h4 class="fw-bold mb-3">📚 Catálogo</h4>
 
-    <!-- Vazio -->
-    <div *ngIf="!carregando && categoriasFiltradas.length === 0"
-         class="text-center text-muted py-5">
-      Nenhum item encontrado.
-    </div>
+      <!-- Loading -->
+      <div *ngIf="carregando" class="text-center py-5">
+        <div class="spinner-border text-light" role="status"></div>
+        <p class="mt-2">Carregando catálogo...</p>
+      </div>
 
-    <!-- Categorias -->
-    <div *ngIf="!carregando">
-      <div *ngFor="let cat of categoriasFiltradas" class="mb-3">
+      <!-- Vazio -->
+      <div *ngIf="!carregando && categoriasFiltradas.length === 0"
+           class="text-center text-muted py-5">
+        Nenhum item encontrado.
+      </div>
 
-        <!-- Cabeçalho da categoria -->
-        <button class="btn btn-outline-light w-100 text-start d-flex justify-content-between align-items-center"
-                (click)="toggleCategoria(cat)">
-          <span class="fw-bold">{{ cat.nome || 'Outros' }}</span>
-          <span>{{ cat.expandido ? '−' : '+' }}</span>
-        </button>
+      <!-- Categorias -->
+      <div *ngIf="!carregando">
+        <div *ngFor="let cat of categoriasFiltradas" class="mb-3">
 
-        <!-- Itens da categoria -->
-        <div *ngIf="cat.expandido" class="mt-2">
-          <div class="row row-cols-1 g-2">
-            <div class="col" *ngFor="let item of cat.itens">
-              <div class="card catalogo-card shadow-sm h-100 p-3"
-                   (click)="abrirItem(item)"
-                   style="cursor: pointer;">
+          <!-- Cabeçalho da categoria -->
+          <button class="btn btn-categoria w-100 d-flex justify-content-between align-items-center"
+                  (click)="toggleCategoria(cat)">
+            <span>{{ cat.nome || 'Outros' }}</span>
+            <span>{{ cat.expandido ? '−' : '+' }}</span>
+          </button>
 
-                <!-- Cabeçalho -->
-                <div class="d-flex align-items-center mb-2">
-                  <div class="rounded me-3 d-flex align-items-center justify-content-center bg-dark"
-                       style="width: 55px; height: 55px; overflow: hidden;">
-                    <img *ngIf="item.imagem"
-                         [src]="item.imagem"
-                         alt="{{ item.nome || 'Item' }}"
-                         style="width: 100%; height: 100%; object-fit: cover;" />
-                    <span *ngIf="!item.imagem" class="text-muted">📦</span>
+          <!-- Itens da categoria -->
+          <div *ngIf="cat.expandido" class="mt-2">
+            <div class="row row-cols-1 g-2">
+              <div class="col" *ngFor="let item of cat.itens">
+                <div class="card catalogo-card shadow-sm h-100 p-3"
+                     (click)="abrirItem(item)"
+                     style="cursor: pointer;">
+
+                  <!-- Cabeçalho -->
+                  <div class="d-flex align-items-center mb-2">
+                    <div class="item-thumb me-3">
+                      <img *ngIf="item.imagem && item.imagem !== '-'"
+                           [src]="item.imagem"
+                           alt="{{ item.nome || 'Item' }}" />
+                      <span *ngIf="!item.imagem || item.imagem === '-'" class="text-muted fs-4">📦</span>
+                    </div>
+
+                    <div>
+                      <h6 class="fw-bold text-white mb-1">{{ item.nome || 'Sem nome' }}</h6>
+                      <small class="raridade {{ getRaridadeClass(item.raridade) }}">
+                        {{ item.raridade || 'Comum' }}
+                      </small>
+                    </div>
                   </div>
 
-                  <div>
-                    <h6 class="fw-bold text-white mb-1">{{ item.nome || 'Sem nome' }}</h6>
-                    <small class="raridade {{ getRaridadeClass(item.raridade) }}">
-                      {{ item.raridade || 'Comum' }}
-                    </small>
-                  </div>
+                  <!-- Detalhes extras -->
+                  <p *ngIf="item.efeito" class="small mt-2 text-info">
+                    ✨ {{ item.efeito }}
+                  </p>
+                  <p *ngIf="item.colateral" class="small text-danger">
+                    ⚠️ {{ item.colateral }}
+                  </p>
+                  <p *ngIf="item.descricao" class="small descricao-text fst-italic">
+                    📝 {{ item.descricao }}
+                  </p>
                 </div>
-
-                <!-- Detalhes extras -->
-                <p *ngIf="item.efeito" class="small mt-2 text-info">
-                  ✨ {{ item.efeito }}
-                </p>
-                <p *ngIf="item.colateral" class="small text-danger">
-                  ⚠️ {{ item.colateral }}
-                </p>
-                <p *ngIf="item.descricao" class="small descricao-text fst-italic">
-                  📝 {{ item.descricao }}
-                </p>
               </div>
             </div>
           </div>
-        </div>
 
+        </div>
       </div>
+
     </div>
   </div>
 
-  <!-- Botão flutuante -->
-  <button class="fab btn btn-primary rounded-circle shadow-lg"
-          (click)="novoItem()">
-    <span class="fs-4">＋</span>
-  </button>
+  <!-- FAB -->
+  <div class="fab-stack">
+    <button class="fab fab-primary" (click)="novoItem()">＋</button>
+  </div>
 </div>

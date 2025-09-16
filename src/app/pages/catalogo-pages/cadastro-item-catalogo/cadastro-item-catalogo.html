@@ -7,9 +7,6 @@
 
           <!-- Cabeçalho -->
           <div class="card-body p-3 border-bottom d-flex align-items-center gap-2">
-            <button type="button" class="btn btn-outline-light btn-sm" (click)="cancelar()">
-              ⬅ Voltar
-            </button>
             <h4 class="fw-bold mb-0 text-light">
               📦 {{ editMode ? 'Editar Item do Catálogo' : 'Cadastro de Item do Catálogo' }}
             </h4>
@@ -108,14 +105,14 @@
 
   <!-- FABs -->
   <div class="fab-stack">
-    <!-- Salvar -->
-    <button type="submit" form="formCatalogo" class="fab fab-primary" [disabled]="form.invalid || salvando">
+
+        <!-- Salvar -->
+    <button type="submit" form="formCatalogo" class="fab fab-success" [disabled]="form?.invalid || salvando">
       <ng-container *ngIf="!salvando">💾</ng-container>
       <ng-container *ngIf="salvando">
         <span class="spinner-border spinner-border-sm"></span>
       </ng-container>
     </button>
-
     <!-- Cancelar -->
     <button type="button" class="fab fab-warning" (click)="cancelar()">
       ⬅️
