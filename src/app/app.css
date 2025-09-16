@@ -4,9 +4,11 @@
 
 /* Espaço para topbar e bottom-nav */
 .page-content {
-  padding: 1rem;
   margin-top: 56px;   /* altura do mat-toolbar */
-  margin-bottom: 56px; /* altura da navbar */
+  margin-bottom: 56px; /* altura da navbar inferior (mobile) */
+  position: relative;
+  min-height: calc(100vh - 112px);
+  overflow: auto;
 }
 
 /* Topbar fixa */
@@ -20,22 +22,20 @@ mat-toolbar {
 
 /* ===== SIDENAV DARK ===== */
 .sidenav {
-  width: 250px;
+  width: 240px;
   background-color: #1e1e1e !important;
 }
 
 mat-sidenav .mdc-list-item__primary-text {
   color: #f8f9fa !important;
 }
-
 mat-sidenav .mat-icon {
   color: #f8f9fa !important;
 }
-
 mat-sidenav .mat-mdc-list-item:hover {
   background-color: #333 !important;
 }
-.page-content
+
 /* ===== NAVBAR INFERIOR ===== */
 .bottom-nav {
   background: #1e1e1e;
@@ -69,27 +69,26 @@ mat-sidenav .mat-mdc-list-item:hover {
 
 /* Ativo */
 .bottom-nav .nav-item.active {
-  color: #0d6efd; /* azul destaque */
+  color: #0d6efd;
   font-weight: 600;
 }
 
 /* ===== FAB (Botão flutuante) ===== */
 .fab-edit {
   position: fixed;
-  bottom: 80px;   /* acima da navbar */
+  bottom: 80px;
   right: 20px;
   z-index: 1100;
 }
 
-/* garante que as rotas animem sem quebrar layout */
-.page-content {
-  padding: 0;                /* 🔥 sem padding */
-  margin-top: 56px;          /* altura do mat-toolbar */
-  margin-bottom: 56px;       /* altura da navbar inferior */
-  position: relative;
-  overflow: auto;
-  min-height: calc(100vh - 112px); /* altura menos header e footer */
+/* ===== RESPONSIVIDADE ===== */
+@media (min-width: 992px) {
+  .bottom-nav {
+    display: none !important;
+  }
+
+  .page-content {
+    margin-bottom: 0; /* sem espaço extra no desktop */
+    min-height: calc(100vh - 56px); /* só considera topbar */
+  }
 }
-
-
-

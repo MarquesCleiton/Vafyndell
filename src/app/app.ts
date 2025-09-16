@@ -1,4 +1,4 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { Router, NavigationEnd, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { trigger, transition, style, animate, query } from '@angular/animations';
@@ -25,7 +25,7 @@ import { CommonModule } from '@angular/common';
     MatListModule
   ],
   templateUrl: './app.html',
-  styleUrl: './app.css',
+  styleUrls: ['./app.css'],
   animations: [
     trigger('routeAnimations', [
       transition('* <=> *', [
@@ -50,8 +50,8 @@ export class App {
   protected readonly showFab = signal(false);
   private readonly activeRoute = signal('');
   protected readonly isLogged = signal(false);
+  protected isMobile = window.innerWidth < 992;
 
-  // 👇 getter para usar no HTML
   get currentRoute(): string {
     return this.activeRoute();
   }
@@ -63,10 +63,12 @@ export class App {
   private titles: Record<string, string> = {
     '/jogador': 'Jogador',
     '/edicao-jogador': 'Skills',
-    '/inventario': 'Inventário',
+    '/inventario-jogador': 'Inventário',
     '/oficina': 'Oficina',
     '/batalha': 'Batalha',
-    '/notas': 'Notas'
+    '/anotacoes': 'Notas',
+    '/catalogo': 'Catálogo',
+    '/npcs': 'Feras & Vilões'
   };
 
   constructor(private router: Router) {
@@ -74,13 +76,17 @@ export class App {
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
         const url = (event as NavigationEnd).urlAfterRedirects;
-
         this.activeRoute.set(url);
         this.title.set(this.titles[url] ?? 'Vafyndell');
         this.showFab.set(url === '/jogador');
       });
 
     this.isLogged.set(AuthService.isAuthenticated());
+
+    // 🔎 Detecta redimensionamento para alternar entre mobile e desktop
+    window.addEventListener('resize', () => {
+      this.isMobile = window.innerWidth < 992;
+    });
   }
 
   onRefresh() {

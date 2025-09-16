@@ -1,9 +1,15 @@
 <mat-sidenav-container class="app-container bg-dark text-light" *ngIf="!isLoginPage(); else loginOutlet">
-  <!-- Menu lateral -->
-  <mat-sidenav #sidenav mode="over" class="sidenav bg-dark text-light">
+  <!-- Menu lateral (desktop) -->
+  <mat-sidenav #sidenav [mode]="isMobile ? 'over' : 'side'" [opened]="!isMobile" class="sidenav bg-dark text-light">
     <mat-nav-list>
-      <a mat-list-item (click)="navigateTo('/catalogo'); sidenav.close()">📚Catálogo</a>
-      <a mat-list-item (click)="navigateTo('/npcs'); sidenav.close()">👹 Feras & Vilões</a>
+      <a mat-list-item (click)="navigateTo('/jogador'); isMobile && sidenav.close()">🧑 Jogador</a>
+      <a mat-list-item (click)="navigateTo('/skills-jogador'); isMobile && sidenav.close()">🧠 Skills</a>
+      <a mat-list-item (click)="navigateTo('/inventario-jogador'); isMobile && sidenav.close()">📦 Inventário</a>
+      <a mat-list-item (click)="navigateTo('/oficina'); isMobile && sidenav.close()">⚒️ Oficina</a>
+      <a mat-list-item (click)="navigateTo('/batalha'); isMobile && sidenav.close()">⚔️ Batalha</a>
+      <a mat-list-item (click)="navigateTo('/anotacoes'); isMobile && sidenav.close()">📝 Notas</a>
+      <a mat-list-item (click)="navigateTo('/catalogo'); isMobile && sidenav.close()">📚 Catálogo</a>
+      <a mat-list-item (click)="navigateTo('/npcs'); isMobile && sidenav.close()">👹 Feras & Vilões</a>
     </mat-nav-list>
   </mat-sidenav>
 
@@ -11,7 +17,7 @@
   <mat-sidenav-content>
     <!-- Topbar fixa -->
     <mat-toolbar class="bg-dark text-light fixed-top d-flex align-items-center">
-      <button mat-icon-button (click)="sidenav.toggle()" class="text-light">
+      <button mat-icon-button (click)="sidenav.toggle()" class="text-light d-lg-none">
         <mat-icon>menu</mat-icon>
       </button>
       <span class="ms-2">{{ title() }}</span>
@@ -26,8 +32,9 @@
       <router-outlet></router-outlet>
     </div>
 
-    <!-- Navbar inferior -->
-    <nav class="bottom-nav bg-dark border-top border-secondary d-flex justify-content-around py-2 fixed-bottom">
+    <!-- Navbar inferior (só mobile) -->
+    <nav *ngIf="isMobile"
+      class="bottom-nav bg-dark border-top border-secondary d-flex justify-content-around py-2 fixed-bottom">
       <button mat-button (click)="navigateTo('/jogador')" class="nav-item d-flex flex-column align-items-center">
         <mat-icon>person</mat-icon>
         <small>Jogador</small>
@@ -37,7 +44,7 @@
         <small>Skills</small>
       </button>
       <button mat-button (click)="navigateTo('/inventario-jogador')"
-              class="nav-item d-flex flex-column align-items-center">
+        class="nav-item d-flex flex-column align-items-center">
         <mat-icon>inventory</mat-icon>
         <small>Inventário</small>
       </button>
