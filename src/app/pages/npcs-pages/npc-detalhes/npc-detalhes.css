@@ -1,0 +1,136 @@
+/* ======================
+   WRAPPER & CONTAINER
+   ====================== */
+.npc-detalhe-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+.npc-detalhe-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ======================
+   CARD
+   ====================== */
+.detalhe-card {
+  background: #1e1e1e;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.detalhe-img {
+  height: 220px; /* altura fixa */
+  object-fit: cover;
+  width: 100%;
+}
+.fallback-icone {
+  font-size: 3rem; /* ícone grande */
+}
+
+/* ======================
+   LISTA BÁSICA
+   ====================== */
+.info-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.95rem;
+}
+.info-list li {
+  margin-bottom: 4px;
+  color: #f1f1f1;
+}
+.info-list span {
+  font-weight: 600;
+  color: #f8f9fa; /* padronizei com os outros */
+}
+
+/* ======================
+   GRID DE ATRIBUTOS
+   ====================== */
+.atributos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px 12px;
+  font-size: 0.9rem;
+  color: #f1f1f1;
+}
+.atributo-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  background: #2a2a2a;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+.atributo-item span {
+  font-weight: 500;
+  color: #ccc;
+}
+.atributo-item b {
+  color: #fff;
+}
+
+/* ======================
+   TEXTOS EXTRAS
+   ====================== */
+.descricao-text,
+.ataques-text {
+  white-space: pre-line;
+  background: #2a2a2a;
+  border-radius: 6px;
+  padding: 10px 12px;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+.descricao-text {
+  color: #f1f1f1;
+}
+.ataques-text {
+  color: #f8d775;
+}
+
+/* ======================
+   FAB STACK
+   ====================== */
+.fab-stack {
+  position: fixed;
+  bottom: 70px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 1000;
+}
+.fab {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease;
+}
+.fab:hover {
+  transform: scale(1.08);
+}
+.fab-primary { background: #0d6efd; color: #fff; }
+.fab-primary:hover { background: #0b5ed7; }
+.fab-warning { background: #ffc107; color: #000; }
+.fab-warning:hover { background: #e0a800; }
+.fab-danger { background: #ff4d6d; color: #fff; }
+.fab-danger:hover { background: #e63e5b; }
+
+/* ======================
+   DESKTOP AJUSTES
+   ====================== */
+@media (min-width: 992px) {
+  .npc-detalhe-container { padding: 0 2rem; }
+  .detalhe-card { border-radius: 16px; }
+  .fab-stack { right: calc(50% - 450px + 20px); }
+}

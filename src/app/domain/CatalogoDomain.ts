@@ -2,7 +2,7 @@ import { ReceitaDomain } from "./ReceitaDomain";
 
 export interface CatalogoDomain {
   index: number;                // índice incremental na planilha
-  id: number;                   // id único (pode ser igual ao index)
+  id: string;                   
   nome: string;                 // nome do item
   quantidade_por_item?: number;  // quanto é gerado em uma fabricação (default = 1)
   unidade_medida: string;       // g, kg, ml, l, cm, m, unidade...

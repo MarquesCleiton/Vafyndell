@@ -1,0 +1,122 @@
+/* Wrapper responsivo */
+.anotacao-detalhe-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.anotacao-detalhe-container {
+  width: 100%;
+  max-width: 900px; /* largura máxima no desktop */
+}
+
+/* Card */
+.detalhe-card {
+  background: #1e1e1e;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.detalhe-img {
+  max-height: 280px;
+  object-fit: cover;
+  width: 100%;
+}
+
+/* Upload box */
+.upload-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #666;
+  border-radius: 8px;
+  padding: 20px;
+  cursor: pointer;
+  color: #aaa;
+}
+.upload-box:hover {
+  border-color: #fff;
+  color: #fff;
+}
+
+/* Input escuro */
+.input-dark {
+  background: #2a2a2a;
+  color: #f1f1f1;
+  border: 1px solid #444;
+}
+.input-dark:focus {
+  background: #2a2a2a;
+  color: #fff;
+  border-color: #0d6efd;
+  box-shadow: none;
+}
+
+/* Auto expand */
+textarea.auto-expand {
+  overflow-y: hidden;
+  resize: none;
+  min-height: 60px;
+  max-height: 200px;
+}
+
+/* FAB stack */
+.fab-stack {
+  position: fixed;
+  bottom: 70px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 1000;
+}
+
+/* FAB base */
+.fab {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease;
+}
+.fab:hover {
+  transform: scale(1.08);
+}
+
+/* Variações */
+.fab-primary {
+  background: #0d6efd;
+  color: #fff;
+}
+.fab-primary:hover { background: #0b5ed7; }
+
+.fab-warning {
+  background: #ffc107;
+  color: #000;
+}
+.fab-warning:hover { background: #e0a800; }
+
+.fab-danger {
+  background: #ff4d6d;
+  color: #fff;
+}
+.fab-danger:hover { background: #e63e5b; }
+
+/* Desktop ajuste */
+@media (min-width: 992px) {
+  .anotacao-detalhe-container {
+    padding: 0 2rem;
+  }
+
+  .detalhe-card {
+    border-radius: 16px;
+  }
+
+  .fab-stack {
+    right: calc(50% - 450px + 20px);
+  }
+}

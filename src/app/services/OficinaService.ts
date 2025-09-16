@@ -1,11 +1,10 @@
 import { Injectable } from '@angular/core';
-import { CatalogoRepository } from '../repositories/CatalogoRepository';
-import { ReceitasRepository } from '../repositories/ReceitasRepository';
-import { InventarioRepository } from '../repositories/InventarioRepository';
+import { BaseRepository } from '../repositories/BaseRepository';
 import { CatalogoDomain } from '../domain/CatalogoDomain';
 import { ReceitaDomain } from '../domain/ReceitaDomain';
 import { InventarioDomain } from '../domain/InventarioDomain';
 import { AuthService } from '../core/auth/AuthService';
+import { IdUtils } from '../core/utils/IdUtils';
 
 export interface IngredienteDetalhado extends ReceitaDomain {
   quantidadeInventario: number;
@@ -20,6 +19,10 @@ export type ReceitaComStatus = CatalogoDomain & {
 
 @Injectable({ providedIn: 'root' })
 export class OficinaService {
+  private catalogoRepo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
+  private inventarioRepo = new BaseRepository<InventarioDomain>('Inventario', 'Inventario');
+  private receitasRepo = new BaseRepository<ReceitaDomain>('Receitas', 'Receitas');
+
   /**
    * Retorna todos os itens fabricáveis do catálogo,
    * já marcando se o jogador pode ou não fabricar com base no inventário.
@@ -28,44 +31,41 @@ export class OficinaService {
     const user = AuthService.getUser();
     if (!user?.email) throw new Error('Usuário não autenticado');
 
-    // 1️⃣ Cache first
-    let [catalogo, inventario, receitas] = await Promise.all([
-      CatalogoRepository.getLocalItens(),
-      InventarioRepository.getLocalInventarioByJogador(user.email),
-      ReceitasRepository.getLocalReceitas(),
-    ]);
+    // 1️⃣ Tenta pegar cache local (3 tabelas de uma vez)
+    const dbCatalogo = await this.catalogoRepo.getLocal();
+    const dbInventario = (await this.inventarioRepo.getLocal()).filter(i => i.jogador === user.email);
+    const dbReceitas = await this.receitasRepo.getLocal();
 
-    // 2️⃣ Libera UI rápido
-    if (catalogo.length && inventario.length && receitas.length) {
-      this.sincronizar(user.email).catch(err =>
+    if (dbCatalogo.length && dbInventario.length && dbReceitas.length) {
+      // dispara sync em paralelo sem travar a UI
+      this.sincronizarMulti(user.email).catch(err =>
         console.error('[OficinaService] Erro ao sincronizar:', err)
       );
-      return this.processar(catalogo, receitas, inventario);
+      return this.processar(dbCatalogo, dbReceitas, dbInventario);
     }
 
-    // 3️⃣ Fallback: sincroniza na ordem correta
-    console.log('[OficinaService] Cache incompleto → carregando dados síncronos...');
+    // 2️⃣ Fallback → força fetch em lote
+    const result = await this.catalogoRepo.getAllMulti(['Catalogo', 'Receitas', 'Inventario']);
+    const catalogo = result['Catalogo'];
+    const receitas = result['Receitas'];
+    const inventario = (result['Inventario'] as InventarioDomain[])
+      .filter(i => i.jogador === user.email);
 
-    await CatalogoRepository.syncItens();
-    catalogo = await CatalogoRepository.getLocalItens();
-
-    await InventarioRepository.syncInventario();
-    inventario = await InventarioRepository.getLocalInventarioByJogador(user.email);
-
-    await ReceitasRepository.syncReceitas();
-    receitas = await ReceitasRepository.getLocalReceitas();
+    // atualiza cache local de uma vez
+    await Promise.all([
+      this.catalogoRepo.bulkPutLocal(catalogo),
+      this.inventarioRepo.bulkPutLocal(inventario),
+      this.receitasRepo.bulkPutLocal(receitas),
+    ]);
 
     return this.processar(catalogo, receitas, inventario);
   }
 
-  /**
-   * 🔄 Dispara sincronizações em paralelo
-   */
-  private async sincronizar(email: string) {
+  private async sincronizarMulti(email: string) {
     const [catSync, invSync, recSync] = await Promise.all([
-      CatalogoRepository.syncItens(),
-      InventarioRepository.syncInventario(),
-      ReceitasRepository.syncReceitas(),
+      this.catalogoRepo.sync(),
+      this.inventarioRepo.sync(),
+      this.receitasRepo.sync(),
     ]);
 
     if (catSync || invSync || recSync) {
@@ -75,34 +75,41 @@ export class OficinaService {
     }
   }
 
-  /**
-   * Processa e monta a lista de fabricáveis
-   */
   private processar(
     catalogo: CatalogoDomain[],
     receitas: ReceitaDomain[],
-    inventario: InventarioDomain[],
+    inventario: InventarioDomain[]
   ): ReceitaComStatus[] {
     // 🔑 Mapeia inventário
-    const estoque = new Map<number, number>();
-    inventario.forEach(i => {
-      const atual = estoque.get(i.item_catalogo) || 0;
-      estoque.set(i.item_catalogo, atual + i.quantidade);
+    const estoque = new Map<string, number>();
+    inventario.forEach((i) => {
+      const key = String(i.item_catalogo);
+      const atual = estoque.get(key) || 0;
+      estoque.set(key, atual + (i.quantidade || 0));
     });
+    console.log('[OficinaService] Estoque calculado:', Array.from(estoque.entries()));
 
     // 🔑 Itens fabricáveis (devem ter pelo menos 1 ingrediente)
-    const fabricaveis = catalogo.filter(c => {
-      const ingredientes = receitas.filter(r => r.fabricavel === c.id);
-      return ingredientes.length > 0;
-    });
+    const fabricaveis = catalogo.filter((c) =>
+      receitas.some((r) => String(r.fabricavel) === String(c.id))
+    );
+    console.log('[OficinaService] Fabricáveis encontrados:', fabricaveis.length);
 
     return fabricaveis
-      .map(item => {
+      .map((item) => {
         const ingredientes: IngredienteDetalhado[] = receitas
-          .filter(r => r.fabricavel === item.id)
-          .map(ing => {
-            const qtdInventario = estoque.get(ing.catalogo) || 0;
-            const ref = catalogo.find(c => c.id === ing.catalogo);
+          .filter((r) => String(r.fabricavel) === String(item.id))
+          .map((ing) => {
+            const qtdInventario = estoque.get(String(ing.catalogo)) || 0;
+            const ref = catalogo.find((c) => String(c.id) === String(ing.catalogo));
+
+            if (!ref) {
+              console.warn(
+                '[OficinaService] ❗ Ingrediente não encontrado no catálogo:',
+                ing.catalogo
+              );
+            }
+
             return {
               ...ing,
               quantidadeInventario: qtdInventario,
@@ -112,12 +119,12 @@ export class OficinaService {
           });
 
         // Verifica se pode fabricar (todos ingredientes suficientes)
-        const podeFabricar = ingredientes.every(ing =>
-          ing.quantidadeInventario >= ing.quantidade
+        const podeFabricar = ingredientes.every(
+          (ing) => ing.quantidadeInventario >= ing.quantidade
         );
 
         // Se não possui nenhum ingrediente, descarta
-        const possuiAlgum = ingredientes.some(ing => ing.quantidadeInventario > 0);
+        const possuiAlgum = ingredientes.some((ing) => ing.quantidadeInventario > 0);
         if (!possuiAlgum) return null;
 
         return {
@@ -129,35 +136,59 @@ export class OficinaService {
       .filter((i): i is ReceitaComStatus => i !== null);
   }
 
-  /**
-   * Cria o item (remove ingredientes do inventário e adiciona o produto final)
-   */
   async criarItem(receita: ReceitaComStatus): Promise<void> {
     const user = AuthService.getUser();
     if (!user?.email) throw new Error('Usuário não autenticado');
 
-    // Remove ingredientes
+    // remove ingredientes
     for (const ing of receita.ingredientes) {
-      await InventarioRepository.subtrairQuantidade(user.email, ing.catalogo, ing.quantidade);
+      await this.subtrairQuantidade(user.email, ing.catalogo, ing.quantidade);
     }
 
-    // Adiciona o item fabricado (+1 se já existe, cria se não existe)
-    await InventarioRepository.adicionarOuIncrementar(user.email, receita.id, 1);
-
+    // adiciona produto final
+    await this.adicionarOuIncrementar(user.email, receita.id, 1);
     console.log(`[OficinaService] Item criado: ${receita.nome}`);
   }
 
-  /**
-   * Força falha (remove ingredientes mas não cria o item)
-   */
   async forcarFalha(receita: ReceitaComStatus): Promise<void> {
     const user = AuthService.getUser();
     if (!user?.email) throw new Error('Usuário não autenticado');
 
     for (const ing of receita.ingredientes) {
-      await InventarioRepository.subtrairQuantidade(user.email, ing.catalogo, ing.quantidade);
+      await this.subtrairQuantidade(user.email, ing.catalogo, ing.quantidade);
     }
+    console.log(`[OficinaService] Falha forçada: ${receita.nome}`);
+  }
 
-    console.log(`[OficinaService] Falha forçada ao fabricar: ${receita.nome}`);
+  // === Helpers ===
+  private async subtrairQuantidade(jogador: string, itemCatalogo: string, qtd: number) {
+    const todos = (await this.inventarioRepo.getLocal()).filter((i) => i.jogador === jogador);
+    const encontrado = todos.find((i) => i.item_catalogo === itemCatalogo);
+    if (!encontrado) return;
+
+    encontrado.quantidade = Math.max(0, (encontrado.quantidade || 0) - qtd);
+    if (encontrado.quantidade === 0) {
+      await this.inventarioRepo.delete(encontrado.index);
+    } else {
+      await this.inventarioRepo.update(encontrado);
+    }
+  }
+
+  private async adicionarOuIncrementar(jogador: string, itemCatalogo: string, qtd: number) {
+    const todos = (await this.inventarioRepo.getLocal()).filter((i) => i.jogador === jogador);
+    const existente = todos.find((i) => i.item_catalogo === itemCatalogo);
+
+    if (existente) {
+      existente.quantidade += qtd;
+      await this.inventarioRepo.update(existente);
+    } else {
+      await this.inventarioRepo.create({
+        id: IdUtils.generateULID(),
+        index: todos.length + 1,
+        jogador,
+        item_catalogo: itemCatalogo,
+        quantidade: qtd,
+      } as InventarioDomain);
+    }
   }
 }

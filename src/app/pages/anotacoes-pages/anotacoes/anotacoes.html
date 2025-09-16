@@ -1,0 +1,85 @@
+<div class="anotacoes-wrapper d-flex flex-column min-vh-100 bg-dark text-light">
+
+  <!-- Barra de pesquisa -->
+  <div class="p-3 bg-black border-bottom position-sticky top-0" style="z-index: 10;">
+    <input type="text"
+           class="form-control search-bar rounded-pill px-3"
+           placeholder="🔍 Pesquisar anotações..."
+           [(ngModel)]="filtro"
+           (input)="aplicarFiltro()" />
+  </div>
+
+  <!-- Conteúdo -->
+  <div class="flex-grow-1 p-3 d-flex justify-content-center">
+    <div class="anotacoes-container w-100">
+
+      <h4 class="fw-bold mb-3">📝 Minhas Anotações</h4>
+
+      <!-- Loading -->
+      <div *ngIf="carregando" class="text-center py-5">
+        <div class="spinner-border text-light" role="status"></div>
+        <p class="mt-2">Carregando anotações...</p>
+      </div>
+
+      <!-- Vazio -->
+      <div *ngIf="!carregando && secoesFiltradas.length === 0"
+           class="text-center text-muted py-5">
+        Nenhuma anotação encontrada.
+      </div>
+
+      <!-- Seções por data -->
+      <div *ngIf="!carregando">
+        <div *ngFor="let secao of secoesFiltradas" class="mb-3">
+
+          <!-- Cabeçalho -->
+          <button class="btn btn-categoria w-100 text-start d-flex justify-content-between align-items-center"
+                  (click)="toggleSecao(secao)">
+            <span class="fw-bold">📅 {{ formatarData(secao.data) }}</span>
+            <span>{{ secao.expandido ? '−' : '+' }}</span>
+          </button>
+
+          <!-- Itens -->
+          <div *ngIf="secao.expandido" class="mt-2">
+            <div class="row row-cols-1 g-2">
+              <div class="col" *ngFor="let anot of secao.itens">
+                <div class="card anotacao-card shadow-sm h-100 p-3"
+                     (click)="abrirAnotacao(anot)" style="cursor: pointer;">
+
+                  <!-- Cabeçalho -->
+                  <div class="d-flex align-items-center mb-2">
+                    <div class="item-thumb me-3">
+                      <img *ngIf="anot.imagem && anot.imagem !== '-'"
+                           [src]="anot.imagem"
+                           alt="{{ anot.titulo || 'Anotação' }}" />
+                      <span *ngIf="!anot.imagem || anot.imagem === '-'">📝</span>
+                    </div>
+
+                    <div>
+                      <h6 class="fw-bold text-white mb-1">{{ anot.titulo || 'Sem título' }}</h6>
+                      <small class="text-light">
+                        ✍ {{ anot.autor }}
+                        <span *ngIf="anot.tags"> | #{{ anot.tags }}</span>
+                      </small>
+                    </div>
+                  </div>
+
+                  <!-- Descrição -->
+                  <p *ngIf="anot.descricao" class="small descricao-text fst-italic">
+                    {{ anot.descricao }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FAB -->
+  <div class="fab-stack">
+    <button class="fab fab-primary" (click)="novaAnotacao()">＋</button>
+  </div>
+</div>

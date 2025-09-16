@@ -2,94 +2,89 @@
   height: 100vh;
 }
 
-/* Espaço para topbar e bottom-nav */
-.page-content {
-  padding: 1rem;
-  margin-top: 56px;   /* altura do mat-toolbar */
-  margin-bottom: 56px; /* altura da navbar */
+/* ===== SIDENAV ===== */
+.sidenav {
+  width: 260px;
+  background-color: #1e1e1e !important;
+  color: #f8f9fa !important;
+  border-right: 1px solid #333;
+}
+.sidenav-header {
+  display: flex;
+  align-items: center;
+}
+.app-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+}
+.app-title {
+  font-size: 1.2rem;
+  color: #fff;
+}
+mat-sidenav a.mat-list-item {
+  color: #ccc !important;
+  font-weight: 500;
+  border-radius: 6px;
+  margin: 2px 8px;
+  transition: background 0.2s, color 0.2s;
+}
+mat-sidenav a.mat-list-item:hover {
+  background-color: #2a2a2a !important;
+  color: #fff !important;
 }
 
-/* Topbar fixa */
+/* ===== TOPBAR ===== */
 mat-toolbar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1001;
+  border-bottom: 1px solid #333;
 }
 
-/* ===== SIDENAV DARK ===== */
-.sidenav {
-  width: 250px;
-  background-color: #1e1e1e !important;
+/* ===== PAGE ===== */
+.page-content {
+  padding: 1rem;
+  margin-top: 56px;
+  margin-bottom: 56px; /* espaço para bottom-nav */
+  overflow: auto;
+  min-height: calc(100vh - 112px);
 }
 
-mat-sidenav .mdc-list-item__primary-text {
-  color: #f8f9fa !important;
-}
-
-mat-sidenav .mat-icon {
-  color: #f8f9fa !important;
-}
-
-mat-sidenav .mat-mdc-list-item:hover {
-  background-color: #333 !important;
-}
-.page-content
-/* ===== NAVBAR INFERIOR ===== */
+/* ===== NAVBAR INFERIOR (MOBILE) ===== */
 .bottom-nav {
   background: #1e1e1e;
   border-top: 1px solid #333;
   z-index: 1000;
 }
-
 .bottom-nav .nav-item {
   background: transparent;
   border: none;
   color: #aaa;
-  text-decoration: none;
   font-size: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 4px 6px;
   transition: color 0.2s ease, transform 0.2s ease;
 }
-
 .bottom-nav .nav-item .mat-icon {
   font-size: 20px;
   margin-bottom: 2px;
 }
-
-/* Hover */
 .bottom-nav .nav-item:hover {
   color: #fff;
   transform: translateY(-2px);
 }
-
-/* Ativo */
 .bottom-nav .nav-item.active {
-  color: #0d6efd; /* azul destaque */
+  color: #0d6efd;
   font-weight: 600;
 }
 
-/* ===== FAB (Botão flutuante) ===== */
-.fab-edit {
-  position: fixed;
-  bottom: 80px;   /* acima da navbar */
-  right: 20px;
-  z-index: 1100;
+/* ===== RESPONSIVO ===== */
+@media (min-width: 992px) {
+  .bottom-nav {
+    display: none !important; /* 🔑 oculta no desktop */
+  }
 }
-
-/* garante que as rotas animem sem quebrar layout */
-.page-content {
-  padding: 0;                /* 🔥 sem padding */
-  margin-top: 56px;          /* altura do mat-toolbar */
-  margin-bottom: 56px;       /* altura da navbar inferior */
-  position: relative;
-  overflow: auto;
-  min-height: calc(100vh - 112px); /* altura menos header e footer */
-}
-
-
-

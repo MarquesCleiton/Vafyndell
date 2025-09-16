@@ -1,72 +1,139 @@
-/* ===== Layout geral ===== */
-body, .bg-dark {
-  background: radial-gradient(circle at top left, #141414, #0a0a0a);
-  font-family: 'Roboto', sans-serif;
-  color: #eee;
+/* ======================
+   WRAPPER & CONTAINER
+   ====================== */
+.oficina-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-/* ===== Barra de pesquisa ===== */
-.top-bar {
-  background: #111;
-  border-bottom: 1px solid #333;
-}
-.search-input {
-  border: 1px solid #222 !important;
-  background: #161616 !important;
-  color: #fff !important;
-}
-.search-input::placeholder {
-  color: #aaa !important;
-}
-
-/* ===== Categoria ===== */
-.categoria-btn {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 10px;
-  color: #eee;
-  font-weight: 600;
-  padding: 6px 10px;
+.oficina-container {
   width: 100%;
+  max-width: 900px; /* 🔑 largura máxima padronizada */
+  margin: 0 auto;   /* 🔑 centraliza no meio */
+}
+
+/* ======================
+   TOAST
+   ====================== */
+.toast-feedback {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.4);
+}
+
+/* ======================
+   SEARCH BAR
+   ====================== */
+.search-input {
+  background: #1e1e1e !important;
+  border: 1px solid #444 !important;
+  color: #f8f9fa !important;
+}
+.search-input:focus {
+  border-color: #0d6efd !important;
+  box-shadow: 0 0 0 0.2rem rgba(13,110,253,.25) !important;
+  outline: none !important;
+}
+
+/* ======================
+   TABS (mesmo estilo do Catálogo)
+   ====================== */
+.nav-tabs {
+  display: flex;
+  flex-wrap: nowrap;          /* não quebra linha */
+  overflow-x: auto;           /* permite rolar horizontal */
+  -webkit-overflow-scrolling: touch; /* rolagem suave no mobile */
+  border-bottom: 1px solid #444;
+  scrollbar-width: none;      /* oculta barra no Firefox */
+}
+.nav-tabs::-webkit-scrollbar {
+  display: none;              /* oculta barra no Chrome/Safari */
+}
+.nav-tabs .nav-item {
+  flex: 1 0 auto;             /* não deixa encolher demais */
+  text-align: center;
+}
+.nav-tabs .nav-link {
+  color: #aaa;
+  background: transparent;
+  border: none;
+  font-weight: 600;
+  padding: 0.5rem 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;                   /* espaço entre emoji e texto */
+  white-space: nowrap;
+}
+.nav-tabs .nav-link.active {
+  color: #fff;
+  background: #2a2a2a;
+  border-radius: 8px 8px 0 0;
+}
+
+/* ======================
+   TÍTULO
+   ====================== */
+.title {
+  color: #f8f9fa;
+}
+
+/* ======================
+   BOTÃO DE CATEGORIA
+   ====================== */
+.categoria-btn {
+  width: 100%;
+  background: #2a2a2a;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-weight: 600;
+  color: #f8f9fa;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  transition: background 0.2s ease;
+}
+.categoria-btn:hover {
+  background: #343a40;
+  color: #fff;
 }
 
-/* ===== Card ===== */
+/* ======================
+   RECEITA CARD
+   ====================== */
 .receita-card {
-  background: #1c1c1c;
-  border: 1px solid #2c2c2c;
-  border-radius: 12px;
+  background: #1e1e1e;
+  border-radius: 10px;
   padding: 14px;
   position: relative;
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.4);
+  transition: transform 0.15s ease;
+  color: #f1f1f1;
 }
 .receita-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  transform: scale(1.02);
+  background: #252525;
 }
 
-/* ===== Disponibilidade ===== */
+/* Indicador de status */
 .status-indicador {
   position: absolute;
-  top: 6px;
-  right: 10px;
-  font-size: 0.7rem;
+  top: 8px;
+  right: 12px;
+  font-size: 0.8rem;
   font-weight: 600;
 }
-.status-ok {
-  color: #6fbf73;
-}
-.status-off {
-  color: #ff6f6f;
-}
+.status-ok { color: #28a745; }
+.status-off { color: #dc3545; }
 
-/* ===== Imagem principal ===== */
+/* Thumb da receita */
 .thumb {
-  width: 50px;
-  height: 50px;
+  width: 55px;
+  height: 55px;
   border-radius: 8px;
-  background: #0f0f0f;
-  border: 1px solid #333;
+  background: #2a2a2a;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -79,36 +146,33 @@ body, .bg-dark {
   object-fit: cover;
 }
 
-/* ===== Ingredientes ===== */
+/* ======================
+   INGREDIENTES
+   ====================== */
 .ingredientes-grid {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 .ingrediente-pill {
+  background: #2a2a2a;
+  border-radius: 8px;
+  padding: 6px 10px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 6px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  background: #1a1a1a;
-  border: 1px solid #333;
+  gap: 8px;
 }
 .ingrediente-pill.ok {
-  border-color: #355d3c;
-  color: #6fbf73;
+  border: 1px solid #28a745;
 }
 .ingrediente-pill.fail {
-  border-color: #5d3535;
-  color: #ff6f6f;
+  border: 1px solid #dc3545;
 }
 .ingrediente-thumb {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  border: 1px solid #444;
-  background: #0f0f0f;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #1e1e1e;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -120,87 +184,61 @@ body, .bg-dark {
   object-fit: cover;
 }
 
-/* ===== Botões quadrados ===== */
-.acoes {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  display: flex;
-  gap: 6px;
-}
-.btn-square {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  border: none;
-  transition: 0.2s;
-}
-.btn-square.success {
-  background: #2e7d32;
-  color: #fff;
-}
-.btn-square.success:hover:enabled {
-  background: #388e3c;
-}
-.btn-square.danger {
-  background: #b71c1c;
-  color: #fff;
-}
-.btn-square.danger:hover:enabled {
-  background: #d32f2f;
-}
-.btn-square:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* ===== Toast ===== */
-.toast-feedback {
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-}
-
-
-/* ===== Botões no rodapé ===== */
+/* ======================
+   AÇÕES
+   ====================== */
 .acoes-bottom {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 10px;
+  margin-top: 12px;
 }
-
 .btn-square {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9rem;
+  font-size: 1.2rem;
   border: none;
-  transition: 0.2s;
+  transition: transform 0.2s ease;
+}
+.btn-square:hover {
+  transform: scale(1.08);
 }
 .btn-square.success {
-  background: #2e7d32;
+  background: #198754;
   color: #fff;
 }
-.btn-square.success:hover:enabled {
-  background: #388e3c;
-}
+.btn-square.success:hover { background: #157347; }
 .btn-square.danger {
-  background: #b71c1c;
+  background: #dc3545;
   color: #fff;
 }
-.btn-square.danger:hover:enabled {
-  background: #d32f2f;
+.btn-square.danger:hover { background: #bb2d3b; }
+
+/* ======================
+   RARIDADE
+   ====================== */
+.raridade {
+  font-weight: bold;
+  font-size: 0.85rem;
 }
-.btn-square:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.raridade.comum { color: #ccc; }
+.raridade.incomum { color: #00bcd4; }
+.raridade.raro { color: #673ab7; }
+.raridade.epico { color: #9c27b0; }
+.raridade.lendario { color: gold; }
+
+/* ======================
+   DESKTOP AJUSTE
+   ====================== */
+@media (min-width: 992px) {
+  .oficina-container {
+    padding: 0 2rem;
+  }
+  .receita-card {
+    border-radius: 16px;
+  }
 }

@@ -1,0 +1,85 @@
+<div class="item-detalhe-wrapper d-flex flex-column min-vh-100 bg-dark text-light pb-5 mb-5">
+  <!-- Loading inicial -->
+  <div *ngIf="carregando" class="text-center py-5">
+    <div class="spinner-border text-light" role="status"></div>
+    <p class="mt-2">Carregando item...</p>
+  </div>
+
+  <!-- Conteúdo -->
+  <div class="flex-grow-1 p-3 d-flex justify-content-center" *ngIf="!carregando && item">
+    <div class="item-detalhe-container w-100">
+      <div class="card detalhe-card shadow-lg border-0">
+
+        <!-- Cabeçalho -->
+        <div class="card-body p-3 border-bottom d-flex align-items-center gap-2">
+          <h4 class="fw-bold mb-0 text-capitalize text-light">
+            📦 {{ item.nome || 'Sem nome' }}
+          </h4>
+        </div>
+
+        <!-- Imagem ou fallback -->
+        <div class="position-relative">
+          <ng-container *ngIf="item.imagem && item.imagem !== '-'; else noImagem">
+            <img [src]="item.imagem" class="card-img-top detalhe-img" alt="{{ item.nome || 'Item' }}" />
+          </ng-container>
+          <ng-template #noImagem>
+            <div
+              class="d-flex align-items-center justify-content-center bg-secondary text-dark detalhe-img fallback-icone">
+              📦
+            </div>
+          </ng-template>
+
+        </div>
+
+        <!-- Informações -->
+        <div class="card-body">
+          <p class="text-light mb-1"><b>📂 Categoria:</b> {{ item.categoria }}</p>
+          <p class="text-light mb-1"><b>🌱 Origem:</b> {{ item.origem }}</p>
+          <p class="text-light mb-1">
+            <b>💎 Raridade:</b>
+            <span class="raridade {{ getRaridadeClass(item.raridade) }}">
+              {{ item.raridade || 'Comum' }}
+            </span>
+          </p>
+          <p class="text-light mb-3"><b>⚖️ Peso:</b> {{ item.peso }} {{ item.unidade_medida }}</p>
+
+          <hr class="border-secondary" />
+
+          <p *ngIf="item.efeito" class="mb-1 text-info">
+            ✨ <b>Efeito:</b> {{ item.efeito }}
+          </p>
+          <p *ngIf="item.colateral" class="mb-1 text-danger">
+            ⚠️ <b>Colateral:</b> {{ item.colateral }}
+          </p>
+          <p *ngIf="item.descricao" class="fst-italic text-light descricao-text">
+            📝 <b>Descrição:</b> {{ item.descricao }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FABs -->
+  <div class="fab-stack">
+    <!-- Editar -->
+    <button class="fab fab-warning" [disabled]="processandoEditar" (click)="editarItem()">
+      <ng-container *ngIf="!processandoEditar">✏️</ng-container>
+      <ng-container *ngIf="processandoEditar">
+        <span class="spinner-border spinner-border-sm"></span>
+      </ng-container>
+    </button>
+
+    <!-- Excluir -->
+    <button class="fab fab-danger" [disabled]="processandoExcluir" (click)="excluirItem()">
+      <ng-container *ngIf="!processandoExcluir">🗑️</ng-container>
+      <ng-container *ngIf="processandoExcluir">
+        <span class="spinner-border spinner-border-sm"></span>
+      </ng-container>
+    </button>
+
+    <!-- Cancelar -->
+    <button class="fab fab-primary" (click)="cancelar()">
+      ⬅️
+    </button>
+  </div>
+</div>

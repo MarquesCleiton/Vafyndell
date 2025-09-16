@@ -1,0 +1,101 @@
+<div class="inventario-cadastro-wrapper d-flex flex-column min-vh-100 bg-dark text-light pb-5 mb-5">
+  <div class="flex-grow-1 p-3 d-flex justify-content-center">
+    <div class="inventario-cadastro-container w-100">
+
+      <form #form="ngForm" (ngSubmit)="salvar(form)" id="formInventario">
+        <div class="card detalhe-card shadow-lg border-0">
+
+          <!-- Cabeçalho -->
+          <div class="card-body p-3 border-bottom d-flex align-items-center gap-2">
+            <h4 class="fw-bold mb-0 text-light">
+              🎒 {{ editando ? 'Editar Item do Inventário' : 'Adicionar ao Inventário' }}
+            </h4>
+          </div>
+
+          <div class="card-body">
+            <!-- Item com autocomplete -->
+            <div class="mb-3">
+              <label class="form-label text-light fw-bold">🏷️ Item *</label>
+              <mat-form-field appearance="fill" class="w-100 input-dark compact-select dropdown-field">
+                <input type="text"
+                       matInput
+                       placeholder="Selecione ou pesquise..."
+                       [(ngModel)]="filtro"
+                       name="filtro"
+                       [matAutocomplete]="auto"
+                       (input)="filtrarItens()"
+                       [readonly]="editando" />
+
+                <!-- 🔽 Seta indicativa -->
+                <button mat-icon-button matSuffix disabled class="dropdown-arrow">
+                  <mat-icon>arrow_drop_down</mat-icon>
+                </button>
+
+                <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selecionarItem($event.option.value)">
+                  <mat-option *ngIf="!editando" (click)="novoItem()" class="text-success bg-dark">
+                    <mat-icon class="me-2">add_circle</mat-icon> Novo
+                  </mat-option>
+
+                  <mat-option *ngFor="let c of catalogoFiltrado" [value]="c" class="bg-dark text-light">
+                    <div class="d-flex align-items-center">
+                      <ng-container *ngIf="c.imagem && c.imagem !== '-'; else noItemIcon">
+                        <img [src]="c.imagem" class="me-2 rounded"
+                             style="width: 24px; height: 24px; object-fit: cover;">
+                      </ng-container>
+                      <ng-template #noItemIcon>
+                        <span class="me-2">📦</span>
+                      </ng-template>
+                      <span>{{ c.nome }}</span>
+                    </div>
+                  </mat-option>
+                </mat-autocomplete>
+              </mat-form-field>
+            </div>
+
+            <!-- Preview -->
+            <div *ngIf="selecionado" class="preview-card mb-3">
+              <div class="d-flex align-items-center">
+                <ng-container *ngIf="selecionado.imagem && selecionado.imagem !== '-'; else noPreviewIcon">
+                  <img [src]="selecionado.imagem" class="me-3 rounded preview-img">
+                </ng-container>
+                <ng-template #noPreviewIcon>
+                  <span class="me-3">📦</span>
+                </ng-template>
+                <div>
+                  <h6 class="fw-bold text-light mb-1">{{ selecionado.nome }}</h6>
+                  <small class="text-light">
+                    {{ selecionado.categoria }} | {{ selecionado.raridade }}
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quantidade -->
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <label class="form-label text-light fw-bold mb-0 me-3">🔢 Quantidade *</label>
+              <div class="quantidade-box">
+                <button type="button" class="btn btn-sm btn-outline-light" (click)="decrementar()">−</button>
+                <input type="number" class="quantidade-input" [(ngModel)]="quantidade" name="quantidade" min="1" required />
+                <button type="button" class="btn btn-sm btn-outline-light" (click)="incrementar()">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- FABs -->
+  <div class="fab-stack">
+    <!-- Cancelar -->
+    <button type="button" class="fab fab-warning" (click)="cancelar()">⬅️</button>
+    <!-- Salvar -->
+    <button type="submit" form="formInventario" class="fab fab-primary" [disabled]="form.invalid || salvando">
+      <ng-container *ngIf="!salvando">💾</ng-container>
+      <ng-container *ngIf="salvando">
+        <span class="spinner-border spinner-border-sm"></span>
+      </ng-container>
+    </button>
+  </div>
+</div>

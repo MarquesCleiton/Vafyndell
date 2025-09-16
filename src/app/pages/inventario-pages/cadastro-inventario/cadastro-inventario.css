@@ -1,0 +1,154 @@
+/* ======================
+   WRAPPER & CONTAINER
+   ====================== */
+.inventario-cadastro-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+.inventario-cadastro-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ======================
+   CARD
+   ====================== */
+.detalhe-card {
+  background: #1e1e1e;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* ======================
+   INPUTS / MATERIAL
+   ====================== */
+.input-dark {
+  background: #1e1e1e !important;
+  border-radius: 6px;
+  color: #f8f9fa !important;
+}
+.input-dark input {
+  color: #f8f9fa !important;
+}
+
+/* Compactar selects */
+.compact-select .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+.compact-select .mat-mdc-form-field-flex {
+  padding: 0.25rem 0.5rem;
+}
+.compact-select .mat-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* 🔽 Forçar seta em autocomplete */
+.dropdown-field .mat-mdc-form-field-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.dropdown-arrow {
+  pointer-events: none; /* não clica */
+  color: #bbb !important;
+  margin-left: auto;
+}
+.dropdown-arrow mat-icon {
+  font-size: 1.4rem;
+}
+
+/* ======================
+   PREVIEW
+   ====================== */
+.preview-card {
+  background: rgba(108, 117, 125, 0.2);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+.preview-img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  border: 1px solid #6c757d;
+}
+
+/* ======================
+   QUANTIDADE
+   ====================== */
+.quantidade-box {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.quantidade-input {
+  width: 60px;
+  text-align: center;
+  font-weight: bold;
+  border: 1px solid #6c757d;
+  border-radius: 0.4rem;
+  background: #212529;
+  color: #f8f9fa;
+  padding: 0.2rem;
+  font-size: 0.85rem;
+}
+
+/* ======================
+   FAB STACK
+   ====================== */
+.fab-stack {
+  position: fixed;
+  bottom: 70px;
+  right: 20px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 15px;
+  z-index: 1000;
+}
+.fab {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease;
+}
+.fab:hover {
+  transform: scale(1.08);
+}
+.fab-primary {
+  background: #0d6efd;
+  color: #fff;
+}
+.fab-primary:hover {
+  background: #0b5ed7;
+}
+.fab-warning {
+  background: #ffc107;
+  color: #000;
+}
+.fab-warning:hover {
+  background: #e0a800;
+}
+
+/* ======================
+   DESKTOP AJUSTE
+   ====================== */
+@media (min-width: 992px) {
+  .inventario-cadastro-container {
+    padding: 0 2rem;
+  }
+  .detalhe-card {
+    border-radius: 16px;
+  }
+  .fab-stack {
+    right: calc(50% - 450px + 20px);
+  }
+}

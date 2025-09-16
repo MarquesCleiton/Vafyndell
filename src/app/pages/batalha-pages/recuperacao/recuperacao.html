@@ -1,0 +1,88 @@
+<div class="recuperacao-wrapper d-flex flex-column min-vh-100 bg-dark text-light">
+  <div class="flex-grow-1 p-3 d-flex justify-content-center">
+    <div class="recuperacao-container w-100">
+      <form #form="ngForm" (ngSubmit)="registrarRecuperacao(form)">
+
+        <!-- Card principal -->
+        <div class="card detalhe-card shadow-lg border-0">
+          <div class="card-body">
+
+            <!-- Preview -->
+            <div *ngIf="jogador" class="preview-card mb-3">
+              <div class="d-flex align-items-center justify-content-center">
+
+                <!-- Imagem com fallback -->
+                <ng-container *ngIf="jogador.imagem && jogador.imagem !== '-'; else noImg">
+                  <img [src]="jogador.imagem" class="me-3 rounded"
+                       style="width: 60px; height: 60px; object-fit: cover;">
+                </ng-container>
+                <ng-template #noImg>
+                  <div class="me-3 d-flex align-items-center justify-content-center bg-secondary rounded"
+                       style="width: 60px; height: 60px; font-size: 1.5rem;">
+                    👤
+                  </div>
+                </ng-template>
+
+                <!-- Dados -->
+                <div>
+                  <h5 class="fw-bold text-light mb-1">{{ jogador.personagem }}</h5>
+
+                  <!-- Status alinhado -->
+                  <div class="status-line mt-2">
+                    <span class="vida">
+                      ❤️ {{ JogadorUtils.getVidaAtual(jogador) }}/{{ JogadorUtils.getVidaBase(jogador) }}
+                    </span>
+                    <span class="dano">💥 {{ jogador.dano_tomado || 0 }}</span>
+                    <span class="armadura">🛡️ {{ jogador.classe_de_armadura || 0 }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Vida -->
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <label class="form-label text-light fw-bold mb-0 me-3">💊 Recuperar Vida</label>
+              <div class="quantidade-box">
+                <button type="button" class="btn btn-sm btn-outline-light" (click)="decrementarVida()">−</button>
+                <input type="number" class="quantidade-input"
+                       [(ngModel)]="recuperar" name="recuperar" min="0" required />
+                <button type="button" class="btn btn-sm btn-outline-light" (click)="incrementarVida()">+</button>
+              </div>
+            </div>
+
+            <!-- Armadura -->
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <label class="form-label text-light fw-bold mb-0 me-3">🛡️ Recuperar Armadura</label>
+              <div class="quantidade-box">
+                <button type="button" class="btn btn-sm btn-outline-light" (click)="decrementarArmadura()">−</button>
+                <input type="number" class="quantidade-input"
+                       [(ngModel)]="armadura" name="armadura" min="0" />
+                <button type="button" class="btn btn-sm btn-outline-light" (click)="incrementarArmadura()">+</button>
+              </div>
+            </div>
+
+            <!-- Descrição -->
+            <div class="mb-3">
+              <label class="form-label text-light fw-bold">📝 Descrição</label>
+              <textarea class="form-control bg-dark text-light border-light" rows="2"
+                        [(ngModel)]="descricao" name="descricao"
+                        placeholder="Ex: Recuperação lenta, magia de cura..."></textarea>
+            </div>
+
+            <!-- Botões -->
+            <div class="d-flex justify-content-between mt-4">
+              <button type="button" class="btn btn-outline-light px-4" (click)="cancelar()">⬅ Cancelar</button>
+              <button type="submit" class="btn btn-save px-4" [disabled]="form.invalid || salvando">
+                <ng-container *ngIf="!salvando">💊 Recuperar</ng-container>
+                <ng-container *ngIf="salvando">
+                  <span class="spinner-border spinner-border-sm me-2"></span> Salvando...
+                </ng-container>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

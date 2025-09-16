@@ -1,0 +1,108 @@
+/* ======================
+   WRAPPER & CONTAINER
+   ====================== */
+.recuperacao-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.recuperacao-container {
+  width: 100%;
+  max-width: 900px; /* 🔑 largura máxima padronizada */
+  margin: 0 auto;   /* 🔑 centraliza */
+}
+
+/* Card */
+.detalhe-card {
+  background: #1e1e1e;
+  border-radius: 12px;
+}
+
+/* Status */
+.status-line {
+  display: flex;
+  gap: 12px;
+  font-size: 0.9rem;
+}
+.status-line .vida { color: #dc3545; }
+.status-line .dano { color: #ffc107; }
+.status-line .armadura { color: #0dcaf0; }
+
+
+.detalhe-card {
+  background: #1e1e1e;
+  border-radius: 0.75rem;
+}
+
+/* Preview */
+.preview-card {
+  background: rgba(108, 117, 125, 0.2);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+}
+
+.preview-card img {
+  border-radius: 0.5rem;
+  border: 1px solid #6c757d;
+}
+
+/* Status alinhado */
+.status-line {
+  display: flex;
+  justify-content: center; /* centraliza horizontalmente */
+  gap: 20px;               /* espaçamento uniforme */
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.status-line .vida {
+  color: #ff4d6d;
+}
+
+.status-line .dano {
+  color: #ffc107;
+}
+
+.status-line .armadura {
+  color: #4da6ff;
+}
+
+/* Input de quantidade */
+.quantidade-box {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.quantidade-input {
+  width: 70px;
+  text-align: center;
+  font-weight: bold;
+  border: 1px solid #6c757d;
+  border-radius: 0.4rem;
+  background: #212529;
+  color: #f8f9fa;
+  padding: 0.25rem;
+}
+
+/* Botões */
+.btn-save {
+  background: #198754;
+  color: #fff;
+  font-weight: 600;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-save:hover {
+  background: #157347;
+  transform: scale(1.03);
+}
+
+.btn-outline-light {
+  border-color: #adb5bd;
+}
+
+.btn-outline-light:hover {
+  background: #adb5bd;
+  color: #212529;
+}

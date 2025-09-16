@@ -1,7 +1,7 @@
 export interface InventarioDomain {
-  id: number;
+  id: string;
   jogador: string;
-  item_catalogo: number;
+  item_catalogo: string;
   quantidade: number;
-  index?: number; // ← opcional, vem do Sheet
+  index: number; // ← opcional, vem do Sheet
 }

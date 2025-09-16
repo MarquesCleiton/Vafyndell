@@ -1,0 +1,103 @@
+<div class="inventario-wrapper d-flex flex-column min-vh-100 bg-dark text-light">
+
+  <!-- Barra de pesquisa -->
+  <div class="p-3 bg-black border-bottom position-sticky top-0 z-10">
+    <input type="text" class="form-control search-bar" placeholder="🔍 Pesquisar no inventário..."
+           [(ngModel)]="filtro" (input)="aplicarFiltro()" />
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs bg-dark px-3" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" [class.active]="abaAtiva === 'recursos'" (click)="selecionarAba('recursos')">🌿 Recursos</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" [class.active]="abaAtiva === 'equipamentos'" (click)="selecionarAba('equipamentos')">⚔️ Equipamentos</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" [class.active]="abaAtiva === 'pocoes'" (click)="selecionarAba('pocoes')">🧪 Poções</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" [class.active]="abaAtiva === 'outros'" (click)="selecionarAba('outros')">📦 Outros</button>
+    </li>
+  </ul>
+
+  <!-- Conteúdo -->
+  <div class="flex-grow-1 p-3 d-flex justify-content-center">
+    <div class="inventario-container w-100">
+
+      <h4 class="fw-bold mb-3">🎒 Inventário</h4>
+
+      <!-- Resumo -->
+      <div *ngIf="!carregando && categoriasFiltradas.length > 0" class="card resumo-card mb-4 p-3 shadow-sm">
+        <p class="mb-1 text-light">
+          ⚖️ Peso total: <b>{{ resumo.pesoTotal | number:'1.0-2' }} kg</b>
+        </p>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="carregando" class="text-center py-5">
+        <div class="spinner-border text-light" role="status"></div>
+        <p class="mt-2">Carregando inventário...</p>
+      </div>
+
+      <!-- Vazio -->
+      <div *ngIf="!carregando && categoriasFiltradas.length === 0" class="text-center text-secondary py-5">
+        Nenhum item encontrado.
+      </div>
+
+      <!-- Categorias -->
+      <div *ngIf="!carregando">
+        <ng-container *ngFor="let cat of categoriasFiltradas">
+          <div class="mb-3" *ngIf="pertenceAba(cat.nome)">
+
+            <!-- Cabeçalho da categoria -->
+            <button class="btn btn-categoria w-100 d-flex justify-content-between align-items-center"
+                    (click)="toggleCategoria(cat)">
+              <span>{{ cat.nome }}</span>
+              <span>{{ cat.expandido ? '−' : '+' }}</span>
+            </button>
+
+            <!-- Itens -->
+            <div *ngIf="cat.expandido" class="mt-2">
+              <div class="row row-cols-1 g-3">
+                <div class="col" *ngFor="let inv of cat.itens">
+                  <div class="card inventario-card h-100 p-3 shadow-sm" (click)="abrirItem(inv.id)">
+
+                    <div class="d-flex align-items-center mb-2">
+                      <div class="item-thumb me-3">
+                        <img *ngIf="inv.itemDetalhe?.imagem && inv.itemDetalhe?.imagem !== '-'"
+                             [src]="inv.itemDetalhe?.imagem" alt="{{ inv.itemDetalhe?.nome }}" />
+                        <span *ngIf="!inv.itemDetalhe?.imagem || inv.itemDetalhe?.imagem === '-'">📦</span>
+                      </div>
+
+                      <div>
+                        <h6 class="fw-bold mb-1 text-light">
+                          {{ inv.itemDetalhe?.nome || 'Item desconhecido' }}
+                        </h6>
+                        <small class="item-meta">
+                          {{ inv.quantidade }} {{ inv.itemDetalhe?.unidade_medida || '' }}
+                          | ⚖️ {{ inv.itemDetalhe?.peso || 0 }} kg
+                        </small>
+                      </div>
+                    </div>
+
+                    <p *ngIf="inv.itemDetalhe?.efeito" class="small mt-2 text-info">✨ {{ inv.itemDetalhe?.efeito }}</p>
+                    <p *ngIf="inv.itemDetalhe?.colateral" class="small text-danger">⚠️ {{ inv.itemDetalhe?.colateral }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </ng-container>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FAB -->
+  <div class="fab-stack">
+    <button class="fab fab-primary" (click)="novoItemInventario()">＋</button>
+  </div>
+</div>

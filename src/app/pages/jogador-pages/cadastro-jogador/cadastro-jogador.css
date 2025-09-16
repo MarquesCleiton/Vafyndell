@@ -1,0 +1,179 @@
+/* Card */
+.detalhe-card {
+  background: #1e1e1e;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.detalhe-img {
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* Upload */
+.upload-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #444;
+  border-radius: 12px;
+  width: 100%;
+  height: 140px;
+  background: #1e1e1e;
+  color: #6c757d;
+  cursor: pointer;
+  transition: border 0.2s ease, color 0.2s ease;
+}
+.upload-box:hover {
+  border-color: #0d6efd;
+  color: #0d6efd;
+}
+
+/* Inputs */
+.input-dark {
+  background: #1e1e1e;
+  border: 1px solid #444;
+  color: #f8f9fa;
+}
+.input-dark:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13,110,253,.25);
+  outline: none;
+}
+
+/* ======================
+   ATRIBUTOS NUMÉRICOS
+   ====================== */
+.atributos-grid-edit {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+@media (min-width: 768px) {
+  .atributos-grid-edit {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (min-width: 992px) {
+  .atributos-grid-edit {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.atributo-item-edit {
+  background: #2a2a2a;
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.atributo-label {
+  font-weight: 600;
+  color: #f8f9fa;
+  margin-bottom: 6px;
+  text-align: center;
+}
+.atributo-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* Input elegante para atributos numéricos */
+.atributo-input {
+  width: 60px;
+  text-align: center;
+  font-weight: bold;
+  color: #fff;
+  background: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+.atributo-input:focus {
+  border-color: #0d6efd;
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(13,110,253,.25);
+}
+
+/* Botões dos atributos */
+.atributo-controls .btn {
+  padding: 2px 8px;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+/* ======================
+   ATRIBUTOS CALCULADOS
+   ====================== */
+.atributos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+@media (min-width: 768px) {
+  .atributos-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (min-width: 992px) {
+  .atributos-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.atributo-item {
+  display: flex;
+  flex-direction: column;
+  background: #2a2a2a;
+  border-radius: 6px;
+  padding: 6px 10px;
+  text-align: center;
+}
+.atributo-item span {
+  font-weight: 600;
+  color: #f8f9fa;
+}
+.atributo-item b {
+  color: #fff;
+}
+.atributo-item small {
+  font-size: 0.75rem;
+  color: #aaa;
+}
+
+/* ======================
+   FAB (Botões flutuantes)
+   ====================== */
+.fab-stack {
+  position: fixed;
+  bottom: 70px;
+  right: 20px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 15px;
+  z-index: 1000;
+}
+.fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, background 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+.fab:hover {
+  transform: scale(1.08);
+}
+.fab-warning {
+  background: #ffc107;
+  color: #000;
+}
+.fab-warning:hover {
+  background: #e0a800;
+}

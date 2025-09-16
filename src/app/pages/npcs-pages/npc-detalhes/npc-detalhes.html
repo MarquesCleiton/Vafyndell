@@ -1,0 +1,107 @@
+<div class="npc-detalhe-wrapper d-flex flex-column min-vh-100 bg-dark text-light pb-5 mb-5">
+  <div class="flex-grow-1 p-3 d-flex justify-content-center">
+    <div class="npc-detalhe-container w-100">
+
+      <!-- Loading -->
+      <div *ngIf="carregando" class="text-center py-5">
+        <div class="spinner-border text-light" role="status"></div>
+        <p class="mt-2">Carregando NPC...</p>
+      </div>
+
+      <!-- Conteúdo -->
+      <div *ngIf="!carregando && npc" class="card detalhe-card shadow-lg border-0">
+
+        <!-- Cabeçalho -->
+        <div class="card-body p-3 border-bottom d-flex align-items-center gap-2">
+          <h5 class="fw-bold mb-0 text-light">{{ npc.nome }}</h5>
+        </div>
+
+        <!-- Imagem ou fallback -->
+        <div class="position-relative">
+          <ng-container *ngIf="npc.imagem && npc.imagem !== '-'; else noImagem">
+            <img [src]="npc.imagem" class="card-img-top detalhe-img" alt="{{ npc.nome }}" />
+          </ng-container>
+          <ng-template #noImagem>
+            <div
+              class="d-flex align-items-center justify-content-center bg-secondary text-dark detalhe-img fallback-icone">
+              👹
+            </div>
+          </ng-template>
+        </div>
+
+        <div class="card-body p-3">
+          <!-- Info básica -->
+          <ul class="info-list mb-3">
+            <li>🏷️ <span>Classificação:</span> {{ npc.classificacao }}</li>
+            <li>🎭 <span>Tipo:</span> {{ npc.tipo }}</li>
+            <li>⚖️ <span>Alinhamento:</span> {{ npc.alinhamento || 'Não definido' }}</li>
+          </ul>
+
+          <!-- Atributos -->
+          <h6 class="fw-bold mt-3 text-light">📊 Atributos</h6>
+          <div class="atributos-grid compact mb-3">
+            <div class="atributo-item">❤️ <span>Vida</span> <b>{{ npc.pontos_de_vida }}</b></div>
+            <div class="atributo-item">🛡️ <span>Armadura</span> <b>{{ npc.classe_armadura }}</b></div>
+            <div class="atributo-item">⭐ <span>XP</span> <b>{{ npc.xp }}</b></div>
+            <div class="atributo-item">💪 <span>Força</span> <b>{{ npc.forca }}</b></div>
+            <div class="atributo-item">🪨 <span>Constituição</span> <b>{{ npc.constituicao }}</b></div>
+            <div class="atributo-item">🤸‍♂️ <span>Destreza</span> <b>{{ npc.destreza }}</b></div>
+            <div class="atributo-item">📖 <span>Sabedoria</span> <b>{{ npc.sabedoria }}</b></div>
+            <div class="atributo-item">🧠 <span>Inteligência</span> <b>{{ npc.inteligencia }}</b></div>
+            <div class="atributo-item">⚡ <span>Energia</span> <b>{{ npc.energia }}</b></div>
+          </div>
+
+          <!-- Descrição -->
+          <div *ngIf="npc.descricao" class="mt-3">
+            <h6 class="fw-bold text-light">📝 Descrição</h6>
+            <p class="descricao-text">{{ npc.descricao }}</p>
+          </div>
+
+          <!-- Ataques -->
+          <div *ngIf="npc.ataques" class="mt-3">
+            <h6 class="fw-bold text-light">⚔️ Ataques</h6>
+            <p class="ataques-text">{{ npc.ataques }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Se não encontrou -->
+      <div *ngIf="!carregando && !npc" class="text-center text-secondary py-5">
+        NPC não encontrado.
+      </div>
+    </div>
+  </div>
+
+  <!-- FABs -->
+  <div class="fab-stack">
+
+    <!-- Adicionar ao campo -->
+    <button class="fab fab-primary" (click)="adicionarAoCampo()" [disabled]="processandoAdicionar">
+      <ng-container *ngIf="!processandoAdicionar">⚔️</ng-container>
+      <ng-container *ngIf="processandoAdicionar">
+        <div class="spinner-border text-light" role="status" style="width: 2rem; height: 2rem;"></div>
+      </ng-container>
+    </button>
+
+    <!-- Editar -->
+    <button class="fab fab-warning" (click)="editarNpc()" [disabled]="processandoEditar">
+      <ng-container *ngIf="!processandoEditar">✏️</ng-container>
+      <ng-container *ngIf="processandoEditar">
+        <span class="spinner-border spinner-border-sm"></span>
+      </ng-container>
+    </button>
+
+    <!-- Excluir -->
+    <button class="fab fab-danger" (click)="excluirNpc()" [disabled]="processandoExcluir">
+      <ng-container *ngIf="!processandoExcluir">🗑️</ng-container>
+      <ng-container *ngIf="processandoExcluir">
+        <span class="spinner-border spinner-border-sm"></span>
+      </ng-container>
+    </button>
+
+    <!-- Cancelar -->
+    <button class="fab fab-primary" (click)="cancelar()">
+      ⬅️
+    </button>
+  </div>
+</div>

@@ -1,0 +1,104 @@
+<div class="npc-wrapper d-flex flex-column min-vh-100 bg-dark text-light">
+
+  <!-- Barra de pesquisa -->
+  <div class="p-3 bg-black border-bottom position-sticky top-0" style="z-index: 10;">
+    <input type="text"
+           class="form-control search-bar rounded-pill px-3"
+           placeholder="🔍 Pesquisar NPCs..."
+           [(ngModel)]="filtro"
+           (input)="aplicarFiltro()" />
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs bg-dark px-3" role="tablist">
+    <li class="nav-item">
+      <button class="nav-link" [class.active]="abaAtiva === 'bestiais'" (click)="selecionarAba('bestiais')">🐾 Bestiais</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" [class.active]="abaAtiva === 'inimigos'" (click)="selecionarAba('inimigos')">⚔️ Inimigos</button>
+    </li>
+  </ul>
+
+  <!-- Conteúdo -->
+  <div class="flex-grow-1 p-3 d-flex justify-content-center">
+    <div class="npc-container w-100">
+
+      <h4 class="fw-bold mb-3">👹 Feras & Vilões</h4>
+
+      <!-- Loading -->
+      <div *ngIf="carregando" class="text-center py-5">
+        <div class="spinner-border text-light" role="status"></div>
+        <p class="mt-2">Carregando NPCs...</p>
+      </div>
+
+      <!-- Vazio -->
+      <div *ngIf="!carregando && categoriasFiltradas.length === 0"
+           class="text-center text-muted py-5">
+        Nenhum NPC encontrado.
+      </div>
+
+      <!-- Categorias (tipos) -->
+      <div *ngIf="!carregando">
+        <ng-container *ngFor="let cat of categoriasFiltradas">
+          <div class="mb-3">
+
+            <!-- Cabeçalho da categoria -->
+            <button class="btn btn-categoria w-100 d-flex justify-content-between align-items-center"
+                    (click)="toggleCategoria(cat)">
+              <span class="fw-bold">{{ cat.nome }}</span>
+              <span>{{ cat.expandido ? '−' : '+' }}</span>
+            </button>
+
+            <!-- Lista de NPCs -->
+            <div *ngIf="cat.expandido" class="mt-2">
+              <div class="row row-cols-1 g-2">
+                <div class="col" *ngFor="let npc of cat.itens">
+                  <div class="card npc-card shadow-sm p-3"
+                       (click)="abrirItem(npc)"
+                       style="cursor: pointer;">
+
+                    <!-- Cabeçalho do NPC -->
+                    <div class="d-flex align-items-center mb-2">
+                      <div class="item-thumb me-3">
+                        <img *ngIf="npc.imagem && npc.imagem !== '-'"
+                             [src]="npc.imagem"
+                             alt="{{ npc.nome }}" />
+                        <span *ngIf="!npc.imagem || npc.imagem === '-'">👹</span>
+                      </div>
+
+                      <div>
+                        <h6 class="fw-bold text-white mb-1">{{ npc.nome }}</h6>
+                        <small class="text-secondary">
+                          {{ npc.tipo || '—' }} | {{ npc.alinhamento || 'Sem alinhamento' }}
+                        </small>
+                      </div>
+                    </div>
+
+                    <!-- Status -->
+                    <p class="small mb-1 text-info">
+                      ❤️ <b>{{ npc.pontos_de_vida }}</b>
+                      | 🛡️ <b>{{ npc.classe_armadura }}</b>
+                      | ⭐ <b>{{ npc.xp }}</b>
+                    </p>
+
+                    <!-- Descrição -->
+                    <p *ngIf="npc.descricao" class="text-white small descricao-text fst-italic">
+                      {{ npc.descricao }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </ng-container>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Botão flutuante -->
+  <div class="fab-stack">
+    <button class="fab fab-primary" (click)="novoNpc()">＋</button>
+  </div>
+</div>

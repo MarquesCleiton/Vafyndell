@@ -1,41 +1,86 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/AuthService';
+import { IndexedDBClient } from '../../core/db/IndexedDBClient';
+import { CommonModule } from '@angular/common';
+import { BootstrapService } from '../../services/BootstrapService';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   templateUrl: './login.html',
   styleUrl: './login.css',
+  imports: [CommonModule],
 })
 export class Login implements OnInit {
-  constructor(private router: Router) {}
+  carregando = false;
+  mensagem = '';
+
+  constructor(
+    private router: Router,
+    private bootstrap: BootstrapService
+  ) { }
 
   async ngOnInit() {
-    // Se já tem sessão ativa, redireciona
+    const user = AuthService.getUser();
+
+    // 🚨 Caso 1: User existe mas token expirado → reset total
+    if (user && !AuthService.isAuthenticated()) {
+      console.warn('[Login] Token expirado → limpando credenciais e banco');
+      await AuthService.logoutHard();
+      return;
+    }
+
+    // 🚨 Caso 2: Não tem user mas ainda existe banco local → reset banco
+    if (!user) {
+      const db = await IndexedDBClient.create();
+      await db.deleteDatabase();
+      console.warn('[Login] Nenhum usuário → banco local limpo');
+    }
+
+    // ✅ Caso 3: User válido → agora não redireciona de cara,
+    // mas dispara o preload das tabelas antes
     if (AuthService.isAuthenticated()) {
-      this.router.navigate(['/jogador']);
+      this.inicializarApp();
     }
   }
 
   async login() {
-    // Se já autenticado, vai direto
     if (AuthService.isAuthenticated()) {
-      this.router.navigate(['/jogador']);
+      await this.inicializarApp();
       return;
     }
 
     try {
+      this.carregando = true;
+      this.mensagem = 'Invocando grimórios...';
+
       const user = await AuthService.signInWithGoogle();
       if (user) {
-        console.log('Login OK:', user);
-        this.router.navigate(['/jogador']);
+        console.log('[Login] Login OK:', user);
+        await this.inicializarApp();
       } else {
         alert('Falha no login, tente novamente.');
       }
     } catch (err) {
-      console.error('Erro no login:', err);
+      console.error('[Login] Erro no login:', err);
       alert('Erro no login. Verifique sua conexão e tente novamente.');
+    }
+  }
+
+  private async inicializarApp() {
+    this.carregando = true;
+    this.mensagem = 'Carregando tomos antigos...';
+
+    try {
+      await this.bootstrap.preloadAll((msg) => this.mensagem = msg);
+      console.log('[Login] Preload concluído!');
+      this.router.navigate(['/jogador']);
+    } catch (err) {
+      console.error('[Login] Erro no preload:', err);
+      alert('Erro ao carregar os dados iniciais. Tente novamente.');
+    } finally {
+      this.carregando = false;
     }
   }
 }
