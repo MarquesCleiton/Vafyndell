@@ -1,65 +1,86 @@
-/* ======================
-   WRAPPER & CONTAINER
-   ====================== */
+/* Wrapper responsivo */
 .anotacoes-wrapper {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
 }
 
 .anotacoes-container {
   width: 100%;
-  max-width: 900px;   /* 🔑 largura máxima padronizada */
-  margin: 0 auto;     /* 🔑 centraliza o conteúdo */
+  max-width: 900px;
 }
 
-/* ======================
-   BARRA DE PESQUISA
-   ====================== */
-.search-input {
-  background: #1e1e1e !important;
-  border: 1px solid #444 !important;
-  color: #f8f9fa !important;
+/* Barra de pesquisa */
+.search-bar {
+  background: #1e1e1e;
+  color: #fff;
+  border: 1px solid #444;
 }
-.search-input:focus {
-  border-color: #0d6efd !important;
-  box-shadow: 0 0 0 0.2rem rgba(13,110,253,.25) !important;
-  outline: none !important;
+.search-bar:focus {
+  outline: none;
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.25);
 }
 
-/* ======================
-   CARD
-   ====================== */
+/* Cabeçalho de seção */
+.btn-categoria {
+  background: #2a2a2a;
+  color: #f8f9fa;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  text-align: left;
+}
+.btn-categoria:hover {
+  background: #343a40;
+  color: #fff;
+}
+
+/* Card de anotação */
 .anotacao-card {
   background: #1e1e1e;
-  border: 1px solid #333;
-  border-radius: 14px;
-  transition: all 0.2s ease-in-out;
-  word-break: break-word;   /* força quebra de palavras longas */
-  white-space: normal;      /* permite múltiplas linhas */
+  border-radius: 10px;
+  transition: transform 0.15s ease;
+  color: #f1f1f1;
 }
 .anotacao-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+  transform: scale(1.02);
+  background: #252525;
 }
 
-/* ======================
-   TEXTO
-   ====================== */
-.descricao-text {
-  color: #cfcfcf !important;
-  white-space: pre-line; /* mantém \n como quebra */
-  word-break: break-word;
-  overflow-wrap: anywhere;
+/* Imagem / Ícone */
+.item-thumb {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  background: #2a2a2a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.item-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.item-thumb span {
+  font-size: 1.4rem;
+  color: #bbb;
 }
 
-.text-secondary {
-  color: #bfbfbf !important;
-  white-space: normal;
+/* Texto */
+.anotacao-card h6 {
+  color: #fff;
+}
+.anotacao-card small {
+  color: #ddd;
+}
+.anotacao-card p {
+  color: #e0e0e0;
+  white-space: pre-line; /* 🔑 aceita quebra de linha */
 }
 
-/* ======================
-   FAB STACK
-   ====================== */
+/* FAB */
 .fab-stack {
   position: fixed;
   bottom: 70px;
@@ -69,8 +90,6 @@
   gap: 15px;
   z-index: 1000;
 }
-
-/* FAB base */
 .fab {
   width: 60px;
   height: 60px;
@@ -80,14 +99,13 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
-  transition: transform 0.2s ease;
   border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
 }
 .fab:hover {
-  transform: scale(1.1);
+  transform: scale(1.08);
 }
-
-/* FAB variações */
 .fab-primary {
   background: #0d6efd;
   color: #fff;
@@ -96,15 +114,13 @@
   background: #0b5ed7;
 }
 
-/* ======================
-   DESKTOP AJUSTE
-   ====================== */
+/* Desktop: alinhado ao card */
 @media (min-width: 992px) {
   .anotacoes-container {
     padding: 0 2rem;
   }
-
   .fab-stack {
-    right: calc(50% - 450px + 20px); /* ancora ao card central */
+    right: 50%;
+    transform: translateX(450px);
   }
 }

@@ -3,7 +3,7 @@
   <!-- Barra de pesquisa -->
   <div class="p-3 bg-black border-bottom position-sticky top-0" style="z-index: 10;">
     <input type="text"
-           class="form-control search-input rounded-pill px-3"
+           class="form-control search-bar rounded-pill px-3"
            placeholder="🔍 Pesquisar anotações..."
            [(ngModel)]="filtro"
            (input)="aplicarFiltro()" />
@@ -32,7 +32,7 @@
         <div *ngFor="let secao of secoesFiltradas" class="mb-3">
 
           <!-- Cabeçalho -->
-          <button class="btn btn-outline-light w-100 text-start d-flex justify-content-between align-items-center"
+          <button class="btn btn-categoria w-100 text-start d-flex justify-content-between align-items-center"
                   (click)="toggleSecao(secao)">
             <span class="fw-bold">📅 {{ formatarData(secao.data) }}</span>
             <span>{{ secao.expandido ? '−' : '+' }}</span>
@@ -47,19 +47,16 @@
 
                   <!-- Cabeçalho -->
                   <div class="d-flex align-items-center mb-2">
-                    <div class="rounded me-3 d-flex align-items-center justify-content-center bg-dark"
-                         style="width: 50px; height: 50px; overflow: hidden;">
+                    <div class="item-thumb me-3">
                       <img *ngIf="anot.imagem && anot.imagem !== '-'"
                            [src]="anot.imagem"
-                           alt="{{ anot.titulo || 'Anotação' }}"
-                           style="width: 100%; height: 100%; object-fit: cover;" />
-                      <span *ngIf="!anot.imagem || anot.imagem === '-'"
-                            class="text-muted">📝</span>
+                           alt="{{ anot.titulo || 'Anotação' }}" />
+                      <span *ngIf="!anot.imagem || anot.imagem === '-'">📝</span>
                     </div>
 
                     <div>
                       <h6 class="fw-bold text-white mb-1">{{ anot.titulo || 'Sem título' }}</h6>
-                      <small class="text-secondary">
+                      <small class="text-light">
                         ✍ {{ anot.autor }}
                         <span *ngIf="anot.tags"> | #{{ anot.tags }}</span>
                       </small>
@@ -83,8 +80,6 @@
 
   <!-- FAB -->
   <div class="fab-stack">
-    <button class="fab fab-primary" (click)="novaAnotacao()">
-      ＋
-    </button>
+    <button class="fab fab-primary" (click)="novaAnotacao()">＋</button>
   </div>
 </div>
