@@ -11,21 +11,24 @@
         <!-- Card principal -->
         <div class="card detalhe-card shadow-lg border-0">
 
-          <!-- Imagem -->
-          <ng-container *ngIf="jogador.imagem && jogador.imagem !== '-'">
-            <img [src]="jogador.imagem"
-                 class="card-img-top detalhe-img"
-                 alt="Imagem do jogador" />
-          </ng-container>
-          <div *ngIf="!jogador.imagem || jogador.imagem === '-'"
-               class="bg-secondary d-flex align-items-center justify-content-center detalhe-img rounded">
-            <span class="text-light">👤 Sem imagem</span>
+          <!-- Imagem ou fallback -->
+          <div class="position-relative">
+            <ng-container *ngIf="jogador.imagem && jogador.imagem !== '-'; else noImagem">
+              <img [src]="jogador.imagem"
+                   class="card-img-top detalhe-img"
+                   alt="Imagem do jogador" />
+            </ng-container>
+            <ng-template #noImagem>
+              <div class="d-flex align-items-center justify-content-center bg-secondary text-dark detalhe-img fallback-icone">
+                👤
+              </div>
+            </ng-template>
           </div>
 
           <!-- Conteúdo -->
           <div class="card-body pb-5">
             <h4 class="fw-bold mb-1 text-light">🧙 {{ jogador.personagem }}</h4>
-            <p class="text-secondary mb-3">⚖️ {{ jogador.alinhamento }}</p>
+            <p class="text-secondary mb-3">⚖️ {{ jogador.alinhamento || 'Sem alinhamento' }}</p>
 
             <!-- Infos básicas -->
             <ul class="info-list mb-3">

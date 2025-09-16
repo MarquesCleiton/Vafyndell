@@ -1,28 +1,36 @@
-/* Wrapper responsivo */
+/* ======================
+   WRAPPER & CONTAINER
+   ====================== */
 .item-detalhe-wrapper {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
 }
 
 .item-detalhe-container {
   width: 100%;
-  max-width: 900px; /* largura máxima no desktop */
+  max-width: 900px; /* 🔑 largura máxima padronizada */
+  margin: 0 auto;   /* 🔑 centraliza o card */
 }
 
-/* Card */
+/* ======================
+   CARD
+   ====================== */
 .detalhe-card {
   background: #1e1e1e;
   border-radius: 12px;
   overflow: hidden;
 }
 
+/* Área de imagem sempre consistente */
 .detalhe-img {
-  max-height: 280px;
+  height: 220px; /* 🔑 altura fixa padronizada */
   object-fit: cover;
   width: 100%;
 }
 
-/* Raridade */
+/* ======================
+   RARIDADE
+   ====================== */
 .raridade {
   font-weight: bold;
   padding: 2px 8px;
@@ -31,10 +39,25 @@
 .raridade.comum { color: #ccc; }
 .raridade.incomum { color: #00bcd4; }
 .raridade.raro { color: #673ab7; }
-/* .raridade['muito-raro'] { color: #ff5722; } */
 .raridade.lendario { color: gold; }
 
-/* FAB stack */
+/* ======================
+   TEXTO EXTRA
+   ====================== */
+.descricao-text {
+  white-space: pre-line;   /* 👈 respeita quebras de linha */
+  color: #ddd;
+  font-size: 0.95rem;
+  background: #2a2a2a;
+  border-radius: 6px;
+  padding: 8px 10px;
+  line-height: 1.4;
+  margin-top: 8px;
+}
+
+/* ======================
+   FAB STACK
+   ====================== */
 .fab-stack {
   position: fixed;
   bottom: 70px;
@@ -80,7 +103,9 @@
 }
 .fab-danger:hover { background: #e63e5b; }
 
-/* Desktop ajuste */
+/* ======================
+   DESKTOP AJUSTE
+   ====================== */
 @media (min-width: 992px) {
   .item-detalhe-container {
     padding: 0 2rem;
@@ -94,3 +119,9 @@
     right: calc(50% - 450px + 20px); /* ancora ao card central */
   }
 }
+
+/* fallback para quando não há imagem */
+.fallback-icone {
+  font-size: 3rem; /* deixa o ícone grande e centralizado */
+}
+

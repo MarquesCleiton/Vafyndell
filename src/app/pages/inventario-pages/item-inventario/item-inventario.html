@@ -20,13 +20,18 @@
           </h4>
         </div>
 
-        <!-- Imagem -->
-        <ng-container *ngIf="item.catalogo?.imagem && item.catalogo?.imagem !== '-'">
-          <img [src]="item.catalogo?.imagem" class="card-img-top detalhe-img" alt="{{ item.catalogo?.nome }}" />
-        </ng-container>
-        <div *ngIf="!item.catalogo?.imagem || item.catalogo?.imagem === '-'"
-          class="bg-secondary d-flex align-items-center justify-content-center detalhe-img rounded">
-          <span class="text-light">📦 Sem imagem</span>
+        <!-- Imagem ou fallback -->
+        <div class="position-relative">
+          <ng-container *ngIf="item.catalogo?.imagem && item.catalogo?.imagem !== '-'; else noImagem">
+            <img [src]="item.catalogo?.imagem"
+                 class="card-img-top detalhe-img"
+                 alt="{{ item.catalogo?.nome }}" />
+          </ng-container>
+          <ng-template #noImagem>
+            <div class="d-flex align-items-center justify-content-center bg-secondary text-dark detalhe-img fallback-icone">
+              📦
+            </div>
+          </ng-template>
         </div>
 
         <!-- Informações -->
@@ -34,10 +39,12 @@
           <p class="text-light mb-1"><b>📂 Categoria:</b> {{ item.catalogo?.categoria || '—' }}</p>
           <p class="text-light mb-1"><b>🌱 Origem:</b> {{ item.catalogo?.origem || '—' }}</p>
           <p class="text-light mb-1"><b>💎 Raridade:</b> {{ item.catalogo?.raridade || '—' }}</p>
-          <p class="text-light mb-1"><b>🔢 Quantidade:</b>
+          <p class="text-light mb-1">
+            <b>🔢 Quantidade:</b>
             {{ item.inventario.quantidade }} {{ item.catalogo?.unidade_medida || '' }}
           </p>
-          <p class="text-light mb-3"><b>⚖️ Peso total:</b>
+          <p class="text-light mb-3">
+            <b>⚖️ Peso total:</b>
             {{ (item.inventario.quantidade || 0) * (item.catalogo?.peso || 0) }} kg
           </p>
 
@@ -49,7 +56,7 @@
           <p *ngIf="item.catalogo?.colateral" class="mb-1 text-danger">
             ⚠️ <b>Colateral:</b> {{ item.catalogo?.colateral }}
           </p>
-          <p *ngIf="item.catalogo?.descricao" class="fst-italic text-light">
+          <p *ngIf="item.catalogo?.descricao" class="fst-italic text-light descricao-text">
             📝 <b>Descrição:</b> {{ item.catalogo?.descricao }}
           </p>
         </div>
@@ -57,13 +64,10 @@
     </div>
   </div>
 
-  <!-- FABs: Cancelar, Editar, Excluir -->
+  <!-- FABs -->
   <div class="fab-stack">
-
     <!-- Cancelar -->
-    <button class="fab fab-primary" (click)="cancelar()">
-      ⬅️
-    </button>
+    <button class="fab fab-primary" (click)="cancelar()">⬅️</button>
 
     <!-- Excluir -->
     <button class="fab fab-danger" [disabled]="processandoExcluir" (click)="excluirItem()">
@@ -81,5 +85,4 @@
       </ng-container>
     </button>
   </div>
-
 </div>

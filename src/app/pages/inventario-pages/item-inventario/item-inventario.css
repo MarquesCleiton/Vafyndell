@@ -1,15 +1,20 @@
-/* Wrapper responsivo */
+/* ======================
+   WRAPPER & CONTAINER
+   ====================== */
 .inventario-detalhe-wrapper {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
 }
 
 .inventario-detalhe-container {
   width: 100%;
-  max-width: 900px; /* largura máxima no desktop */
+  max-width: 900px;
+  margin: 0 auto;
 }
 
-/* Card */
+/* ======================
+   CARD
+   ====================== */
 .detalhe-card {
   background: #1e1e1e;
   border-radius: 12px;
@@ -17,18 +22,38 @@
 }
 
 .detalhe-img {
-  max-height: 280px;
+  height: 220px; /* altura fixa p/ padronizar com personagem/item */
   object-fit: cover;
   width: 100%;
 }
 
-/* FAB stack */
+.fallback-icone {
+  font-size: 3rem; /* ícone grande e centralizado */
+}
+
+/* ======================
+   TEXTO EXTRA
+   ====================== */
+.descricao-text {
+  white-space: pre-line;
+  color: #ddd;
+  font-size: 0.95rem;
+  background: #2a2a2a;
+  border-radius: 6px;
+  padding: 8px 10px;
+  line-height: 1.4;
+  margin-top: 8px;
+}
+
+/* ======================
+   FAB STACK
+   ====================== */
 .fab-stack {
   position: fixed;
   bottom: 70px;
   right: 20px;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse; /* último no HTML fica em cima */
   gap: 15px;
   z-index: 1000;
 }
@@ -45,18 +70,6 @@
   box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s ease;
 }
-
-.fab-stack {
-  position: fixed;
-  bottom: 70px;
-  right: 20px;
-  display: flex;
-  flex-direction: column-reverse; /* garante que o último no HTML fica em cima */
-  gap: 15px;
-  z-index: 1000;
-}
-
-
 .fab:hover {
   transform: scale(1.08);
 }
@@ -80,7 +93,9 @@
 }
 .fab-danger:hover { background: #e63e5b; }
 
-/* Desktop ajuste */
+/* ======================
+   DESKTOP AJUSTE
+   ====================== */
 @media (min-width: 992px) {
   .inventario-detalhe-container {
     padding: 0 2rem;
@@ -91,7 +106,6 @@
   }
 
   .fab-stack {
-    right: calc(50% - 450px + 20px); /* ancora ao card central */
+    right: calc(50% - 450px + 20px);
   }
 }
-  

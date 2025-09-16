@@ -12,19 +12,24 @@
 
         <!-- Cabeçalho -->
         <div class="card-body p-3 border-bottom d-flex align-items-center gap-2">
-          <button class="btn btn-outline-light btn-sm" (click)="cancelar()">⬅ Voltar</button>
           <h4 class="fw-bold mb-0 text-capitalize text-light">
             📦 {{ item.nome || 'Sem nome' }}
           </h4>
         </div>
 
-        <!-- Imagem -->
-        <ng-container *ngIf="item.imagem && item.imagem !== '-'">
-          <img [src]="item.imagem"
-               class="card-img-top detalhe-img"
-               alt="{{ item.nome || 'Item' }}"
-               style="object-fit: cover;" />
-        </ng-container>
+        <!-- Imagem ou fallback -->
+        <div class="position-relative">
+          <ng-container *ngIf="item.imagem && item.imagem !== '-'; else noImagem">
+            <img [src]="item.imagem" class="card-img-top detalhe-img" alt="{{ item.nome || 'Item' }}" />
+          </ng-container>
+          <ng-template #noImagem>
+            <div
+              class="d-flex align-items-center justify-content-center bg-secondary text-dark detalhe-img fallback-icone">
+              📦
+            </div>
+          </ng-template>
+
+        </div>
 
         <!-- Informações -->
         <div class="card-body">
@@ -46,7 +51,7 @@
           <p *ngIf="item.colateral" class="mb-1 text-danger">
             ⚠️ <b>Colateral:</b> {{ item.colateral }}
           </p>
-          <p *ngIf="item.descricao" class="fst-italic text-light">
+          <p *ngIf="item.descricao" class="fst-italic text-light descricao-text">
             📝 <b>Descrição:</b> {{ item.descricao }}
           </p>
         </div>
@@ -57,9 +62,7 @@
   <!-- FABs -->
   <div class="fab-stack">
     <!-- Editar -->
-    <button class="fab fab-warning"
-            [disabled]="processandoEditar"
-            (click)="editarItem()">
+    <button class="fab fab-warning" [disabled]="processandoEditar" (click)="editarItem()">
       <ng-container *ngIf="!processandoEditar">✏️</ng-container>
       <ng-container *ngIf="processandoEditar">
         <span class="spinner-border spinner-border-sm"></span>
@@ -67,9 +70,7 @@
     </button>
 
     <!-- Excluir -->
-    <button class="fab fab-danger"
-            [disabled]="processandoExcluir"
-            (click)="excluirItem()">
+    <button class="fab fab-danger" [disabled]="processandoExcluir" (click)="excluirItem()">
       <ng-container *ngIf="!processandoExcluir">🗑️</ng-container>
       <ng-container *ngIf="processandoExcluir">
         <span class="spinner-border spinner-border-sm"></span>

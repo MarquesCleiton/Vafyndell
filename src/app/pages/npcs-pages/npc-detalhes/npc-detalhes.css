@@ -1,46 +1,54 @@
-/* Wrapper responsivo */
+/* ======================
+   WRAPPER & CONTAINER
+   ====================== */
 .npc-detalhe-wrapper {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
 }
-
 .npc-detalhe-container {
   width: 100%;
-  max-width: 900px; /* largura máxima no desktop */
+  max-width: 900px;
+  margin: 0 auto;
 }
 
-/* Card detalhes */
+/* ======================
+   CARD
+   ====================== */
 .detalhe-card {
   background: #1e1e1e;
   border-radius: 12px;
   overflow: hidden;
 }
-
 .detalhe-img {
-  max-height: 280px;
+  height: 220px; /* altura fixa */
   object-fit: cover;
   width: 100%;
 }
+.fallback-icone {
+  font-size: 3rem; /* ícone grande */
+}
 
-/* Lista básica */
+/* ======================
+   LISTA BÁSICA
+   ====================== */
 .info-list {
   list-style: none;
   padding: 0;
   margin: 0;
   font-size: 0.95rem;
 }
-
 .info-list li {
   margin-bottom: 4px;
   color: #f1f1f1;
 }
-
 .info-list span {
   font-weight: 600;
-  color: #ffc107;
+  color: #f8f9fa; /* padronizei com os outros */
 }
 
-/* Grid de atributos */
+/* ======================
+   GRID DE ATRIBUTOS
+   ====================== */
 .atributos-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -48,7 +56,6 @@
   font-size: 0.9rem;
   color: #f1f1f1;
 }
-
 .atributo-item {
   display: flex;
   align-items: center;
@@ -59,58 +66,45 @@
   border-radius: 6px;
   padding: 6px 10px;
 }
-
 .atributo-item span {
   font-weight: 500;
   color: #ccc;
-  margin-right: 2px;
 }
-
 .atributo-item b {
   color: #fff;
 }
 
-/* Texto */
+/* ======================
+   TEXTOS EXTRAS
+   ====================== */
 .descricao-text,
 .ataques-text {
-  white-space: pre-line; /* respeita \n */
+  white-space: pre-line;
   background: #2a2a2a;
   border-radius: 6px;
   padding: 10px 12px;
   line-height: 1.5;
   font-size: 0.95rem;
 }
-
 .descricao-text {
   color: #f1f1f1;
 }
-
 .ataques-text {
   color: #f8d775;
 }
 
-/* Títulos das seções */
-.card-body h6 {
-  color: #f1f1f1;
-  margin-bottom: 6px;
-}
-
-/* ============================= */
-/* FABs (Floating Action Buttons) */
-/* ============================= */
-
-/* Container que ancora os FABs ao card central */
+/* ======================
+   FAB STACK
+   ====================== */
 .fab-stack {
   position: fixed;
   bottom: 70px;
   right: 20px;
   display: flex;
-  flex-direction: column; /* mantém ordem do HTML */
+  flex-direction: column;
   gap: 15px;
   z-index: 1000;
 }
-
-/* FAB base */
 .fab {
   width: 60px;
   height: 60px;
@@ -122,51 +116,21 @@
   box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s ease;
 }
-
 .fab:hover {
   transform: scale(1.08);
 }
+.fab-primary { background: #0d6efd; color: #fff; }
+.fab-primary:hover { background: #0b5ed7; }
+.fab-warning { background: #ffc107; color: #000; }
+.fab-warning:hover { background: #e0a800; }
+.fab-danger { background: #ff4d6d; color: #fff; }
+.fab-danger:hover { background: #e63e5b; }
 
-/* Variações */
-.fab-primary {
-  background: #0d6efd;
-  color: #fff;
-}
-.fab-primary:hover {
-  background: #0b5ed7;
-}
-
-.fab-warning {
-  background: #ffc107;
-  color: #000;
-}
-.fab-warning:hover {
-  background: #e0a800;
-}
-
-.fab-danger {
-  background: #ff4d6d;
-  color: #fff;
-}
-.fab-danger:hover {
-  background: #e63e5b;
-}
-
-/* ============================= */
-/* Desktop ajustes               */
-/* ============================= */
+/* ======================
+   DESKTOP AJUSTES
+   ====================== */
 @media (min-width: 992px) {
-  .npc-detalhe-container {
-    padding: 0 2rem;
-  }
-
-  .detalhe-card {
-    border-radius: 16px;
-  }
-
-  /* ancora os FABs ao lado do card central */
-  .fab-stack {
-    right: calc(50% - 450px + 20px);
-    /* 50% da tela - metade do card (max 900px) + margem */
-  }
+  .npc-detalhe-container { padding: 0 2rem; }
+  .detalhe-card { border-radius: 16px; }
+  .fab-stack { right: calc(50% - 450px + 20px); }
 }

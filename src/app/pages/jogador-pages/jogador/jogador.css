@@ -1,27 +1,36 @@
-/* Wrapper & Container */
+/* ======================
+   WRAPPER & CONTAINER
+   ====================== */
 .jogador-detalhe-wrapper {
   display: flex;
   flex-direction: column;
 }
 .jogador-detalhe-container {
   width: 100%;
-  max-width: 900px; /* largura máxima padronizada */
+  max-width: 900px;
   margin: 0 auto;
 }
 
-/* Card */
+/* ======================
+   CARD
+   ====================== */
 .detalhe-card {
   background: #1e1e1e;
   border-radius: 12px;
   overflow: hidden;
 }
 .detalhe-img {
-  max-height: 220px;
+  height: 220px; /* altura fixa padronizada */
   object-fit: cover;
   width: 100%;
 }
+.fallback-icone {
+  font-size: 3rem; /* ícone grande */
+}
 
-/* Lista infos */
+/* ======================
+   LISTA INFOS
+   ====================== */
 .info-list {
   list-style: none;
   padding: 0;
@@ -37,10 +46,12 @@
   color: #f8f9fa;
 }
 
-/* Atributos */
+/* ======================
+   ATRIBUTOS
+   ====================== */
 .atributos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* 🔑 ajustado */
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px 14px;
   font-size: 0.9rem;
   color: #f1f1f1;
@@ -69,7 +80,9 @@
   color: #f8f9fa;
 }
 
-/* FAB */
+/* ======================
+   FAB
+   ====================== */
 .fab {
   width: 60px;
   height: 60px;
@@ -80,7 +93,7 @@
   justify-content: center;
   position: fixed;
   bottom: 70px;
-  right: 20px; /* padrão mobile */
+  right: 20px;
   background: #0d6efd;
   color: #fff;
   box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
@@ -91,10 +104,9 @@
   transform: scale(1.08);
 }
 
-/* Em telas largas, ancora o FAB ao container */
+/* ancora o FAB ao container em telas largas */
 @media (min-width: 992px) {
   .fab {
-    right: calc(50% - 450px + 20px); /* 450px = metade do max-width (900px) */
+    right: calc(50% - 450px + 20px);
   }
 }
-

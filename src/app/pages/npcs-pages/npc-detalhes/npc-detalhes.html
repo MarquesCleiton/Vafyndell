@@ -12,20 +12,21 @@
       <div *ngIf="!carregando && npc" class="card detalhe-card shadow-lg border-0">
 
         <!-- Cabeçalho com Voltar -->
-        <div class="card-body p-3 border-bottom d-flex align-items-center justify-content-between">
-          <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-outline-light btn-sm" (click)="cancelar()">⬅ Voltar</button>
-            <h5 class="fw-bold mb-0 text-light">{{ npc.nome }}</h5>
-          </div>
+        <div class="card-body p-3 border-bottom d-flex align-items-center gap-2">
+          <button class="btn btn-outline-light btn-sm" (click)="cancelar()">⬅ Voltar</button>
+          <h5 class="fw-bold mb-0 text-light">{{ npc.nome }}</h5>
         </div>
 
-        <!-- Imagem -->
-        <ng-container *ngIf="npc.imagem && npc.imagem !== '-'">
-          <img [src]="npc.imagem" class="card-img-top detalhe-img" alt="{{ npc.nome }}" />
-        </ng-container>
-        <div *ngIf="!npc.imagem || npc.imagem === '-'"
-          class="bg-secondary d-flex align-items-center justify-content-center" style="height: 200px; width: 100%;">
-          <span class="text-light">👹 Sem imagem</span>
+        <!-- Imagem ou fallback -->
+        <div class="position-relative">
+          <ng-container *ngIf="npc.imagem && npc.imagem !== '-'; else noImagem">
+            <img [src]="npc.imagem" class="card-img-top detalhe-img" alt="{{ npc.nome }}" />
+          </ng-container>
+          <ng-template #noImagem>
+            <div class="d-flex align-items-center justify-content-center bg-secondary text-dark detalhe-img fallback-icone">
+              👹
+            </div>
+          </ng-template>
         </div>
 
         <div class="card-body p-3">
@@ -38,7 +39,7 @@
           </ul>
 
           <!-- Atributos -->
-          <h6 class="fw-bold mt-3">📊 Atributos</h6>
+          <h6 class="fw-bold mt-3 text-light">📊 Atributos</h6>
           <div class="atributos-grid compact mb-3">
             <div class="atributo-item">❤️ <span>Vida</span> <b>{{ npc.pontos_de_vida }}</b></div>
             <div class="atributo-item">🛡️ <span>Armadura</span> <b>{{ npc.classe_armadura }}</b></div>
@@ -53,13 +54,13 @@
 
           <!-- Descrição -->
           <div *ngIf="npc.descricao" class="mt-3">
-            <h6 class="fw-bold">📝 Descrição</h6>
+            <h6 class="fw-bold text-light">📝 Descrição</h6>
             <p class="descricao-text">{{ npc.descricao }}</p>
           </div>
 
           <!-- Ataques -->
           <div *ngIf="npc.ataques" class="mt-3">
-            <h6 class="fw-bold">⚔️ Ataques</h6>
+            <h6 class="fw-bold text-light">⚔️ Ataques</h6>
             <p class="ataques-text">{{ npc.ataques }}</p>
           </div>
         </div>
@@ -72,8 +73,7 @@
     </div>
   </div>
 
-  <!-- FABs: ordem = Ação, Editar, Excluir -->
-  <!-- FABs container -->
+  <!-- FABs -->
   <div class="fab-stack">
     <button class="fab fab-primary" (click)="adicionarAoCampo()" [disabled]="processandoAdicionar">
       <ng-container *ngIf="!processandoAdicionar">⚔️</ng-container>
@@ -96,5 +96,4 @@
       </ng-container>
     </button>
   </div>
-
 </div>
