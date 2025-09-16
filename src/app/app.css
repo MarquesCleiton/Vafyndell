@@ -46,7 +46,6 @@ mat-toolbar {
 
 /* ===== PAGE ===== */
 .page-content {
-  padding: 1rem;
   margin-top: 56px;
   margin-bottom: 56px; /* espaço para bottom-nav */
   overflow: auto;
