@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { JogadorDomain } from '../../../domain/jogadorDomain';
 import { BaseRepository } from '../../../repositories/BaseRepository';
@@ -46,7 +46,10 @@ export class EdicaoJogador implements OnInit {
   get fatorCura() { return this.jogador ? Math.floor(this.jogador.energia / 3) : 0; }
   get deslocamento() { return this.jogador ? Math.floor(this.jogador.destreza / 3) : 0; }
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private location: Location // 👈 injetado
+  ) { }
 
   // Ajustar valores
   getValor(campo: AtributoChave): number {
@@ -130,6 +133,6 @@ export class EdicaoJogador implements OnInit {
   }
 
   cancelar() {
-    this.router.navigate(['/jogador']);
+    this.location.back(); // 👈 padronizado
   }
 }

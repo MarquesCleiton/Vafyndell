@@ -2,7 +2,8 @@
   <div class="flex-grow-1 p-3 d-flex justify-content-center">
     <div class="jogador-edit-container w-100">
 
-      <form *ngIf="jogador" #form="ngForm" (ngSubmit)="salvar(form)">
+      <!-- 👇 id adicionado -->
+      <form *ngIf="jogador" #form="ngForm" id="formJogador" (ngSubmit)="salvar(form)">
 
         <!-- Upload imagem -->
         <div class="position-relative text-center mb-3">
@@ -104,20 +105,26 @@
                 <small>(Destreza / 3)</small>
               </div>
             </div>
-
-            <!-- Botões -->
-            <div class="d-flex justify-content-between mt-4">
-              <button type="button" class="btn btn-outline-light px-4" (click)="cancelar()">⬅ Cancelar</button>
-              <button type="submit" class="btn btn-save px-4" [disabled]="form.invalid || salvando">
-                <ng-container *ngIf="!salvando">💾 Atualizar</ng-container>
-                <ng-container *ngIf="salvando">
-                  <span class="spinner-border spinner-border-sm me-2"></span> Salvando...
-                </ng-container>
-              </button>
-            </div>
           </div>
         </div>
       </form>
     </div>
+  </div>
+
+  <!-- FABs -->
+  <div class="fab-stack">
+    <!-- Cancelar -->
+    <button class="fab fab-primary" (click)="cancelar()">
+      ⬅️
+    </button>
+    
+    <!-- Salvar -->
+    <!-- 👇 agora usa id="formJogador" -->
+    <button type="submit" form="formJogador" class="fab fab-warning" [disabled]="salvando">
+      <ng-container *ngIf="!salvando">💾</ng-container>
+      <ng-container *ngIf="salvando">
+        <span class="spinner-border spinner-border-sm"></span>
+      </ng-container>
+    </button>
   </div>
 </div>

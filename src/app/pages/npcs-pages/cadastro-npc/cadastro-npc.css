@@ -32,7 +32,6 @@
 
 .upload-box:hover {
   border-color: #dc3545;
-  /* destaque em vermelho, remetendo ao tema vilão */
   color: #dc3545;
 }
 
@@ -136,30 +135,51 @@ textarea.auto-expand:focus {
 }
 
 /* ======================
-   BOTÃO SALVAR
+   FAB (Botões flutuantes)
    ====================== */
-.btn-save {
-  background: linear-gradient(135deg, #28a745, #218838);
-  border: none;
-  color: #fff;
-  font-weight: 600;
-  display: inline-flex;
-  /* 👈 evita ocupar largura total */
+.fab-stack {
+  position: fixed;
+  bottom: 70px;
+  right: 20px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 15px;
+  z-index: 1000;
+}
+
+.fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  transition: all 0.2s ease-in-out;
+  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, background 0.2s ease;
+  border: none;
+  cursor: pointer;
 }
 
-.btn-save:hover:not(:disabled) {
-  background: linear-gradient(135deg, #34d058, #28a745);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+.fab:hover {
+  transform: scale(1.08);
 }
 
-.btn-save:disabled {
-  background: #444 !important;
-  color: #bbb !important;
-  cursor: not-allowed;
-  box-shadow: none;
+/* Variações */
+.fab-primary {
+  background: #0d6efd;
+  color: #fff;
 }
+.fab-primary:hover { background: #0b5ed7; }
+
+.fab-warning {
+  background: #ffc107;
+  color: #000;
+}
+.fab-warning:hover { background: #e0a800; }
+
+.fab-danger {
+  background: #ff4d6d;
+  color: #fff;
+}
+.fab-danger:hover { background: #e63e5b; }

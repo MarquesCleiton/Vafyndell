@@ -11,9 +11,8 @@
       <!-- Conteúdo -->
       <div *ngIf="!carregando && npc" class="card detalhe-card shadow-lg border-0">
 
-        <!-- Cabeçalho com Voltar -->
+        <!-- Cabeçalho -->
         <div class="card-body p-3 border-bottom d-flex align-items-center gap-2">
-          <button class="btn btn-outline-light btn-sm" (click)="cancelar()">⬅ Voltar</button>
           <h5 class="fw-bold mb-0 text-light">{{ npc.nome }}</h5>
         </div>
 
@@ -23,14 +22,14 @@
             <img [src]="npc.imagem" class="card-img-top detalhe-img" alt="{{ npc.nome }}" />
           </ng-container>
           <ng-template #noImagem>
-            <div class="d-flex align-items-center justify-content-center bg-secondary text-dark detalhe-img fallback-icone">
+            <div
+              class="d-flex align-items-center justify-content-center bg-secondary text-dark detalhe-img fallback-icone">
               👹
             </div>
           </ng-template>
         </div>
 
         <div class="card-body p-3">
-
           <!-- Info básica -->
           <ul class="info-list mb-3">
             <li>🏷️ <span>Classificação:</span> {{ npc.classificacao }}</li>
@@ -75,6 +74,8 @@
 
   <!-- FABs -->
   <div class="fab-stack">
+
+    <!-- Adicionar ao campo -->
     <button class="fab fab-primary" (click)="adicionarAoCampo()" [disabled]="processandoAdicionar">
       <ng-container *ngIf="!processandoAdicionar">⚔️</ng-container>
       <ng-container *ngIf="processandoAdicionar">
@@ -82,6 +83,7 @@
       </ng-container>
     </button>
 
+    <!-- Editar -->
     <button class="fab fab-warning" (click)="editarNpc()" [disabled]="processandoEditar">
       <ng-container *ngIf="!processandoEditar">✏️</ng-container>
       <ng-container *ngIf="processandoEditar">
@@ -89,11 +91,17 @@
       </ng-container>
     </button>
 
+    <!-- Excluir -->
     <button class="fab fab-danger" (click)="excluirNpc()" [disabled]="processandoExcluir">
       <ng-container *ngIf="!processandoExcluir">🗑️</ng-container>
       <ng-container *ngIf="processandoExcluir">
         <span class="spinner-border spinner-border-sm"></span>
       </ng-container>
+    </button>
+
+    <!-- Cancelar -->
+    <button class="fab fab-primary" (click)="cancelar()">
+      ⬅️
     </button>
   </div>
 </div>

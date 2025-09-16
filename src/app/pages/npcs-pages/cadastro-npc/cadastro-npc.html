@@ -1,6 +1,7 @@
-<div class="d-flex flex-column min-vh-100 bg-dark text-light">
+<div class="npc-cadastro-wrapper d-flex flex-column min-vh-100 bg-dark text-light">
   <div class="flex-grow-1 pb-5">
-    <form #form="ngForm" (ngSubmit)="salvar(form)">
+    <!-- 👇 id adicionado -->
+    <form #form="ngForm" id="formNpc" (ngSubmit)="salvar(form)">
 
       <!-- Upload imagem -->
       <div class="position-relative text-center mb-3">
@@ -8,11 +9,9 @@
           <img [src]="imagemBase64Temp || npc.imagem" class="w-100 rounded detalhe-img shadow-sm" alt="Preview" />
           <button type="button"
             class="btn btn-danger rounded-circle position-absolute d-flex align-items-center justify-content-center"
-            style="top: 10px; right: 10px; width: 40px; height: 40px;" (click)="removerImagem()">
-            ✖
-          </button>
+            style="top: 10px; right: 10px; width: 40px; height: 40px;"
+            (click)="removerImagem()">✖</button>
         </ng-container>
-
 
         <ng-template #uploadBox>
           <label class="upload-box">
@@ -21,7 +20,6 @@
           </label>
         </ng-template>
       </div>
-
 
       <!-- Card principal -->
       <div class="card detalhe-card shadow-lg border-0">
@@ -71,17 +69,17 @@
           <h6 class="fw-bold mt-4 text-light">📊 Atributos Numéricos</h6>
           <div class="atributos-grid-edit mb-3">
             <div class="atributo-item-edit" *ngFor="let attr of atributosNumericos">
-              <!-- Título -->
               <div class="atributo-label text-center">
                 {{ attr.icon }} {{ attr.label }}
               </div>
-              <!-- Input + Controles -->
               <div class="atributo-controls">
                 <button type="button" class="btn btn-sm btn-outline-light"
                   (click)="ajustarValor(attr.key, -1)">−</button>
 
-                <input type="number" class="atributo-input" [ngModel]="getValor(attr.key)"
-                  (ngModelChange)="setValor(attr.key, $event)" name="{{attr.key}}" min="0" />
+                <input type="number" class="atributo-input"
+                  [ngModel]="getValor(attr.key)"
+                  (ngModelChange)="setValor(attr.key, $event)"
+                  name="{{attr.key}}" min="0" />
 
                 <button type="button" class="btn btn-sm btn-outline-light"
                   (click)="ajustarValor(attr.key, 1)">+</button>
@@ -92,28 +90,34 @@
           <!-- Descrição -->
           <div class="mb-3">
             <label class="form-label text-light">📝 Descrição</label>
-            <textarea class="form-control input-dark auto-expand" rows="3" [(ngModel)]="npc.descricao"
-              name="descricao"></textarea>
+            <textarea class="form-control input-dark auto-expand" rows="3"
+              [(ngModel)]="npc.descricao" name="descricao"></textarea>
           </div>
 
           <!-- Ataques -->
           <div class="mb-3 mt-4">
             <label class="form-label text-light">⚔️ Ataques</label>
-            <textarea class="form-control input-dark auto-expand" rows="3" [(ngModel)]="npc.ataques"
-              name="ataques"></textarea>
+            <textarea class="form-control input-dark auto-expand" rows="3"
+              [(ngModel)]="npc.ataques" name="ataques"></textarea>
           </div>
-          <!-- Botão salvar -->
-          <div class="text-end mt-4">
-            <button type="submit" class="btn btn-save px-4" [disabled]="form.invalid || salvando">
-              <ng-container *ngIf="!salvando">💾 Salvar</ng-container>
-              <ng-container *ngIf="salvando">
-                <span class="spinner-border spinner-border-sm me-2"></span> Salvando...
-              </ng-container>
-            </button>
-          </div>
-
         </div>
       </div>
     </form>
+  </div>
+
+  <!-- FABs -->
+  <div class="fab-stack">
+    <!-- Cancelar -->
+    <button class="fab fab-primary" (click)="cancelar()">
+      ⬅️
+    </button>
+
+    <!-- Salvar -->
+    <button type="submit" form="formNpc" class="fab fab-warning" [disabled]="salvando">
+      <ng-container *ngIf="!salvando">💾</ng-container>
+      <ng-container *ngIf="salvando">
+        <span class="spinner-border spinner-border-sm"></span>
+      </ng-container>
+    </button>
   </div>
 </div>

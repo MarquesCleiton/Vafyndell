@@ -128,7 +128,7 @@
   background: #2a2a2a;
   border-radius: 6px;
   padding: 6px 10px;
-  text-align: center; /* 👈 centraliza os textos */
+  text-align: center;
 }
 .atributo-item span {
   font-weight: 600;
@@ -142,37 +142,38 @@
   color: #aaa;
 }
 
-
 /* ======================
-   BOTÃO SALVAR
+   FAB (Botões flutuantes)
    ====================== */
-.btn-save {
-  background: linear-gradient(135deg, #28a745, #218838);
+.fab-stack {
+  position: fixed;
+  bottom: 70px;
+  right: 20px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 15px;
+  z-index: 1000;
+}
+.fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, background 0.2s ease;
   border: none;
-  color: #fff;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: all 0.2s ease-in-out;
+  cursor: pointer;
 }
-.btn-save:hover:not(:disabled) {
-  background: linear-gradient(135deg, #34d058, #28a745);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+.fab:hover {
+  transform: scale(1.08);
 }
-.btn-save:disabled {
-  background: #444 !important;
-  color: #bbb !important;
-  cursor: not-allowed;
-  box-shadow: none;
+.fab-warning {
+  background: #ffc107;
+  color: #000;
 }
-
-.btn-save {
-  margin-left: auto; /* empurra o botão pra direita */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
+.fab-warning:hover {
+  background: #e0a800;
 }
