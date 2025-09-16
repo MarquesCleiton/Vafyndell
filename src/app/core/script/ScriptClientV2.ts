@@ -4,8 +4,8 @@ export class ScriptClientV2 {
   private static BASE_URL =
     'https://script.google.com/macros/s/AKfycbz6KlBkfWzEFEkHOVtCyMWD83aqi3oKVXdLtCY93XCUA24BBP3BO9aINqGIj5_R1LRX/exec';
 
-  private static SHEET_ID = '1Pu5a8AasG813zPkMuzBOGtZtvYMTy7jQSwcO2pGKJDI';
-  private static FOLDER_ID = '1xKC9ZuJxUiMRuURGq-yXZW5dm-Xs7KR8';
+  private static SHEET_ID = '19B2aMGrajvhPJfOvYXt059-fECytaN38iFsP8GInD_g';
+  private static FOLDER_ID = '1zId11Ydti8d0FOQoQjd9lQmPo6GiJx26';
 
   /** Método interno genérico */
   private static async call<T>(action: string, payload: any, retry = true): Promise<T> {
