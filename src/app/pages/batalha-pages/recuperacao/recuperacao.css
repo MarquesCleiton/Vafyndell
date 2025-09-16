@@ -1,3 +1,34 @@
+/* ======================
+   WRAPPER & CONTAINER
+   ====================== */
+.recuperacao-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.recuperacao-container {
+  width: 100%;
+  max-width: 900px; /* 🔑 largura máxima padronizada */
+  margin: 0 auto;   /* 🔑 centraliza */
+}
+
+/* Card */
+.detalhe-card {
+  background: #1e1e1e;
+  border-radius: 12px;
+}
+
+/* Status */
+.status-line {
+  display: flex;
+  gap: 12px;
+  font-size: 0.9rem;
+}
+.status-line .vida { color: #dc3545; }
+.status-line .dano { color: #ffc107; }
+.status-line .armadura { color: #0dcaf0; }
+
+
 .detalhe-card {
   background: #1e1e1e;
   border-radius: 0.75rem;

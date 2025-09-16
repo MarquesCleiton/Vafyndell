@@ -2,8 +2,8 @@
   <!-- Menu lateral -->
   <mat-sidenav #sidenav mode="over" class="sidenav bg-dark text-light">
     <mat-nav-list>
-      <a mat-list-item (click)="navigateTo('/catalogo'); sidenav.close()">Catálogo</a>
-      <a mat-list-item (click)="navigateTo('/npcs'); sidenav.close()">Feras & Vilões</a>
+      <a mat-list-item (click)="navigateTo('/catalogo'); sidenav.close()">📚Catálogo</a>
+      <a mat-list-item (click)="navigateTo('/npcs'); sidenav.close()">👹 Feras & Vilões</a>
     </mat-nav-list>
   </mat-sidenav>
 
@@ -25,11 +25,6 @@
     <div class="page-content">
       <router-outlet></router-outlet>
     </div>
-
-    <!-- FAB só em /jogador -->
-    <button *ngIf="showFab()" mat-fab color="primary" class="fab-edit" (click)="editarJogador()">
-      <mat-icon>edit</mat-icon>
-    </button>
 
     <!-- Navbar inferior -->
     <nav class="bottom-nav bg-dark border-top border-secondary d-flex justify-content-around py-2 fixed-bottom">

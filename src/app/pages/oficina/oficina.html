@@ -26,100 +26,104 @@
   </div>
 
   <!-- Conteúdo -->
-  <div class="flex-grow-1 p-3">
-    <h4 class="fw-bold mb-3 title">⚒️ Oficina</h4>
+  <div class="flex-grow-1 p-3 d-flex justify-content-center">
+    <div class="oficina-container w-100">
 
-    <!-- Loading -->
-    <div *ngIf="carregando" class="text-center py-5">
-      <div class="spinner-border text-light" role="status"></div>
-      <p class="mt-2">Carregando receitas...</p>
-    </div>
+      <h4 class="fw-bold mb-3 title">⚒️ Oficina</h4>
 
-    <!-- Vazio -->
-    <div *ngIf="!carregando && categoriasFiltradas.length === 0"
-         class="text-center text-muted py-5">
-      Nenhum item encontrado.
-    </div>
+      <!-- Loading -->
+      <div *ngIf="carregando" class="text-center py-5">
+        <div class="spinner-border text-light" role="status"></div>
+        <p class="mt-2">Carregando receitas...</p>
+      </div>
 
-    <!-- Categorias -->
-    <div *ngIf="!carregando">
-      <div *ngFor="let cat of categoriasFiltradas" class="mb-3">
+      <!-- Vazio -->
+      <div *ngIf="!carregando && categoriasFiltradas.length === 0"
+           class="text-center text-muted py-5">
+        Nenhum item encontrado.
+      </div>
 
-        <!-- Cabeçalho da categoria -->
-        <button class="categoria-btn" (click)="toggleCategoria(cat)">
-          <span>{{ cat.nome || 'Outros' }}</span>
-          <span>{{ cat.expandido ? '−' : '+' }}</span>
-        </button>
+      <!-- Categorias -->
+      <div *ngIf="!carregando">
+        <div *ngFor="let cat of categoriasFiltradas" class="mb-3">
 
-        <!-- Itens -->
-        <div *ngIf="cat.expandido" class="mt-2 d-flex flex-column gap-3">
-          <div *ngFor="let rec of cat.itens" class="receita-card">
+          <!-- Cabeçalho da categoria -->
+          <button class="categoria-btn" (click)="toggleCategoria(cat)">
+            <span>{{ cat.nome || 'Outros' }}</span>
+            <span>{{ cat.expandido ? '−' : '+' }}</span>
+          </button>
 
-            <!-- Disponibilidade -->
-            <small class="status-indicador"
-                   [ngClass]="rec.fabricavel ? 'status-ok' : 'status-off'">
-              {{ rec.fabricavel ? '✔ Dispon.' : '✖ Indisp.' }}
-            </small>
+          <!-- Itens -->
+          <div *ngIf="cat.expandido" class="mt-2 d-flex flex-column gap-3">
+            <div *ngFor="let rec of cat.itens" class="receita-card">
 
-            <!-- Cabeçalho -->
-            <div class="d-flex align-items-center mb-2">
-              <div class="thumb">
-                <img *ngIf="rec.imagem" [src]="rec.imagem" alt="{{ rec.nome }}" />
-                <span *ngIf="!rec.imagem">⚒️</span>
-              </div>
-              <div>
-                <h6 class="fw-bold text-white mb-1">{{ rec.nome }}</h6>
-                <small class="raridade {{ getRaridadeClass(rec.raridade) }}">
-                  {{ rec.raridade || 'Comum' }}
-                </small>
-              </div>
-            </div>
+              <!-- Disponibilidade -->
+              <small class="status-indicador"
+                     [ngClass]="rec.fabricavel ? 'status-ok' : 'status-off'">
+                {{ rec.fabricavel ? '✔ Dispon.' : '✖ Indisp.' }}
+              </small>
 
-            <!-- Efeito e Colateral -->
-            <p *ngIf="rec.efeito" class="small text-info mb-1">✨ {{ rec.efeito }}</p>
-            <p *ngIf="rec.colateral" class="small text-danger mb-2">⚠️ {{ rec.colateral }}</p>
-
-            <!-- Ingredientes -->
-            <div *ngIf="rec.ingredientes?.length" class="ingredientes-grid">
-              <div *ngFor="let ing of rec.ingredientes"
-                   class="ingrediente-pill"
-                   [ngClass]="{ 'ok': ing.quantidadeInventario >= ing.quantidade,
-                                'fail': ing.quantidadeInventario < ing.quantidade }">
-                <div class="ingrediente-thumb">
-                  <img *ngIf="ing.imagem" [src]="ing.imagem" alt="{{ ing.nome }}" />
-                  <span *ngIf="!ing.imagem">🧪</span>
+              <!-- Cabeçalho -->
+              <div class="d-flex align-items-center mb-2">
+                <div class="thumb">
+                  <img *ngIf="rec.imagem" [src]="rec.imagem" alt="{{ rec.nome }}" />
+                  <span *ngIf="!rec.imagem">⚒️</span>
                 </div>
-                <div class="flex-grow-1">
-                  <span class="small">{{ ing.nome }}</span>
+                <div>
+                  <h6 class="fw-bold text-white mb-1">{{ rec.nome }}</h6>
+                  <small class="raridade {{ getRaridadeClass(rec.raridade) }}">
+                    {{ rec.raridade || 'Comum' }}
+                  </small>
                 </div>
-                <span class="small fw-bold">
-                  {{ ing.quantidadeInventario }}/{{ ing.quantidade }}
-                </span>
               </div>
+
+              <!-- Efeito e Colateral -->
+              <p *ngIf="rec.efeito" class="small text-info mb-1">✨ {{ rec.efeito }}</p>
+              <p *ngIf="rec.colateral" class="small text-danger mb-2">⚠️ {{ rec.colateral }}</p>
+
+              <!-- Ingredientes -->
+              <div *ngIf="rec.ingredientes?.length" class="ingredientes-grid">
+                <div *ngFor="let ing of rec.ingredientes"
+                     class="ingrediente-pill"
+                     [ngClass]="{ 'ok': ing.quantidadeInventario >= ing.quantidade,
+                                  'fail': ing.quantidadeInventario < ing.quantidade }">
+                  <div class="ingrediente-thumb">
+                    <img *ngIf="ing.imagem" [src]="ing.imagem" alt="{{ ing.nome }}" />
+                    <span *ngIf="!ing.imagem">🧪</span>
+                  </div>
+                  <div class="flex-grow-1">
+                    <span class="small">{{ ing.nome }}</span>
+                  </div>
+                  <span class="small fw-bold">
+                    {{ ing.quantidadeInventario }}/{{ ing.quantidade }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Botões (apenas se disponível) -->
+              <div *ngIf="rec.fabricavel" class="acoes-bottom">
+                <button class="btn-square success"
+                        [disabled]="loadingAction[rec.id]"
+                        (click)="criarItem(rec)">
+                  <span *ngIf="loadingAction[rec.id] === 'criar'"
+                        class="spinner-border spinner-border-sm"></span>
+                  <span *ngIf="loadingAction[rec.id] !== 'criar'">🛠️</span>
+                </button>
+
+                <button class="btn-square danger"
+                        [disabled]="loadingAction[rec.id]"
+                        (click)="forcarFalha(rec)">
+                  <span *ngIf="loadingAction[rec.id] === 'falha'"
+                        class="spinner-border spinner-border-sm"></span>
+                  <span *ngIf="loadingAction[rec.id] !== 'falha'">🧨</span>
+                </button>
+              </div>
+
             </div>
-
-            <!-- Botões (apenas se disponível) -->
-            <div *ngIf="rec.fabricavel" class="acoes-bottom">
-              <button class="btn-square success"
-                      [disabled]="loadingAction[rec.id]"
-                      (click)="criarItem(rec)">
-                <span *ngIf="loadingAction[rec.id] === 'criar'"
-                      class="spinner-border spinner-border-sm"></span>
-                <span *ngIf="loadingAction[rec.id] !== 'criar'">🛠️</span>
-              </button>
-
-              <button class="btn-square danger"
-                      [disabled]="loadingAction[rec.id]"
-                      (click)="forcarFalha(rec)">
-                <span *ngIf="loadingAction[rec.id] === 'falha'"
-                      class="spinner-border spinner-border-sm"></span>
-                <span *ngIf="loadingAction[rec.id] !== 'falha'">🧨</span>
-              </button>
-            </div>
-
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </div>

@@ -1,6 +1,6 @@
 import { Component, AfterViewInit, ElementRef, OnInit, NgZone } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { CatalogoDomain } from '../../../domain/CatalogoDomain';
 import { BaseRepository } from '../../../repositories/BaseRepository';
@@ -57,7 +57,8 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
     private router: Router,
     private el: ElementRef,
     private route: ActivatedRoute,
-    private zone: NgZone
+    private zone: NgZone,
+    private location: Location // ✅ agora disponível para cancelar()
   ) {}
 
   async ngOnInit() {
@@ -166,8 +167,8 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
         window.alert('✅ Item criado com sucesso!');
       }
 
-      const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/catalogo';
-      this.router.navigateByUrl(returnUrl);
+      // ✅ Agora reaproveita cancelar()
+      this.cancelar();
 
     } catch (err) {
       console.error('[CadastroItemCatalogo] Erro ao salvar:', err);
@@ -176,5 +177,10 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
       this.salvando = false;
       this.imagemBase64Temp = null;
     }
+  }
+
+  // 🔙 Cancelar → volta para tela anterior
+  cancelar() {
+    this.location.back();
   }
 }

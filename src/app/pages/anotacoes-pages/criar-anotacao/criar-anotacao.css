@@ -1,6 +1,15 @@
-/* ======================
-   CARD & IMAGEM
-   ====================== */
+/* Wrapper responsivo */
+.anotacao-detalhe-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.anotacao-detalhe-container {
+  width: 100%;
+  max-width: 900px; /* largura máxima no desktop */
+}
+
+/* Card */
 .detalhe-card {
   background: #1e1e1e;
   border-radius: 12px;
@@ -8,98 +17,106 @@
 }
 
 .detalhe-img {
-  height: 200px;
+  max-height: 280px;
   object-fit: cover;
-  border-radius: 8px;
+  width: 100%;
 }
 
-/* ======================
-   UPLOAD
-   ====================== */
+/* Upload box */
 .upload-box {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 2px dashed #444;
-  border-radius: 12px;
-  width: 100%;
-  height: 140px;
-  background: #1e1e1e;
-  color: #6c757d;
+  border: 2px dashed #666;
+  border-radius: 8px;
+  padding: 20px;
   cursor: pointer;
-  transition: border 0.2s ease, color 0.2s ease;
+  color: #aaa;
 }
-
 .upload-box:hover {
-  border-color: #0d6efd;
-  color: #0d6efd;
-}
-
-/* ======================
-   INPUTS & TEXTAREAS
-   ====================== */
-.input-dark {
-  background: #1e1e1e;
-  border: 1px solid #444;
-  color: #f8f9fa;
-}
-
-.input-dark::placeholder {
-  color: #aaa !important;
-  opacity: 1;
-}
-
-.input-dark:focus {
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, .25);
-  outline: none;
-}
-
-textarea.auto-expand {
-  min-height: 80px;
-  resize: vertical;
-  background: #1e1e1e;
-  border: 1px solid #444;
-  color: #f8f9fa;
-  border-radius: 6px;
-  padding: 6px 10px;
-}
-
-textarea.auto-expand:focus {
-  border-color: #0d6efd;
-  outline: none;
-  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, .25);
-}
-
-/* ======================
-   BOTÕES
-   ====================== */
-.btn-save {
-  background: linear-gradient(135deg, #28a745, #218838);
-  border: none;
+  border-color: #fff;
   color: #fff;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: all 0.2s ease-in-out;
 }
 
-.btn-save:hover:not(:disabled) {
-  background: linear-gradient(135deg, #34d058, #28a745);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+/* Input escuro */
+.input-dark {
+  background: #2a2a2a;
+  color: #f1f1f1;
+  border: 1px solid #444;
 }
-
-.btn-save:disabled {
-  background: #444 !important;
-  color: #bbb !important;
-  cursor: not-allowed;
+.input-dark:focus {
+  background: #2a2a2a;
+  color: #fff;
+  border-color: #0d6efd;
   box-shadow: none;
 }
 
-.btn-outline-danger:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+/* Auto expand */
+textarea.auto-expand {
+  overflow-y: hidden;
+  resize: none;
+  min-height: 60px;
+  max-height: 200px;
+}
+
+/* FAB stack */
+.fab-stack {
+  position: fixed;
+  bottom: 70px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 1000;
+}
+
+/* FAB base */
+.fab {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease;
+}
+.fab:hover {
+  transform: scale(1.08);
+}
+
+/* Variações */
+.fab-primary {
+  background: #0d6efd;
+  color: #fff;
+}
+.fab-primary:hover { background: #0b5ed7; }
+
+.fab-warning {
+  background: #ffc107;
+  color: #000;
+}
+.fab-warning:hover { background: #e0a800; }
+
+.fab-danger {
+  background: #ff4d6d;
+  color: #fff;
+}
+.fab-danger:hover { background: #e63e5b; }
+
+/* Desktop ajuste */
+@media (min-width: 992px) {
+  .anotacao-detalhe-container {
+    padding: 0 2rem;
+  }
+
+  .detalhe-card {
+    border-radius: 16px;
+  }
+
+  .fab-stack {
+    right: calc(50% - 450px + 20px);
+  }
 }

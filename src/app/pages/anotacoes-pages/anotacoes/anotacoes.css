@@ -1,41 +1,110 @@
+/* ======================
+   WRAPPER & CONTAINER
+   ====================== */
+.anotacoes-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.anotacoes-container {
+  width: 100%;
+  max-width: 900px;   /* 🔑 largura máxima padronizada */
+  margin: 0 auto;     /* 🔑 centraliza o conteúdo */
+}
+
+/* ======================
+   BARRA DE PESQUISA
+   ====================== */
+.search-input {
+  background: #1e1e1e !important;
+  border: 1px solid #444 !important;
+  color: #f8f9fa !important;
+}
+.search-input:focus {
+  border-color: #0d6efd !important;
+  box-shadow: 0 0 0 0.2rem rgba(13,110,253,.25) !important;
+  outline: none !important;
+}
+
+/* ======================
+   CARD
+   ====================== */
 .anotacao-card {
   background: #1e1e1e;
   border: 1px solid #333;
   border-radius: 14px;
   transition: all 0.2s ease-in-out;
+  word-break: break-word;   /* força quebra de palavras longas */
+  white-space: normal;      /* permite múltiplas linhas */
 }
 .anotacao-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
 }
 
+/* ======================
+   TEXTO
+   ====================== */
 .descricao-text {
   color: #cfcfcf !important;
-  white-space: pre-line; /* 👈 mantém \n como quebra */
+  white-space: pre-line; /* mantém \n como quebra */
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
-
 
 .text-secondary {
   color: #bfbfbf !important;
+  white-space: normal;
 }
 
-/* FAB */
-.fab {
+/* ======================
+   FAB STACK
+   ====================== */
+.fab-stack {
   position: fixed;
-  bottom: 80px;
+  bottom: 70px;
   right: 20px;
-  width: 56px;
-  height: 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 1000;
+}
+
+/* FAB base */
+.fab {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 1.6rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  z-index: 100;
-  background: #0d6efd;
+  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease;
   border: none;
-  transition: all 0.2s ease-in-out;
 }
 .fab:hover {
   transform: scale(1.1);
+}
+
+/* FAB variações */
+.fab-primary {
+  background: #0d6efd;
+  color: #fff;
+}
+.fab-primary:hover {
   background: #0b5ed7;
+}
+
+/* ======================
+   DESKTOP AJUSTE
+   ====================== */
+@media (min-width: 992px) {
+  .anotacoes-container {
+    padding: 0 2rem;
+  }
+
+  .fab-stack {
+    right: calc(50% - 450px + 20px); /* ancora ao card central */
+  }
 }

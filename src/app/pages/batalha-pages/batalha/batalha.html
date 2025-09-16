@@ -1,104 +1,116 @@
-<div class="d-flex flex-column min-vh-100 bg-dark text-light">
+<div class="batalha-wrapper d-flex flex-column min-vh-100 bg-dark text-light">
   <!-- Conteúdo -->
-  <div class="flex-grow-1 p-2 overflow-auto">
-    <!-- Loading -->
-    <div *ngIf="carregando" class="text-center py-5">
-      <div class="spinner-border text-light" role="status"></div>
-      <p class="mt-2">Carregando jogadores...</p>
-    </div>
+  <div class="flex-grow-1 p-2 overflow-auto d-flex justify-content-center">
+    <div class="batalha-container w-100">
+      
+      <!-- Loading -->
+      <div *ngIf="carregando" class="text-center py-5">
+        <div class="spinner-border text-light" role="status"></div>
+        <p class="mt-2">Carregando jogadores...</p>
+      </div>
 
-    <!-- Lista -->
-    <div *ngIf="!carregando && jogadoresFiltrados.length > 0">
-      <div *ngFor="let j of jogadoresFiltrados" class="card catalogo-card mb-2 shadow-sm p-2"
-        (click)="abrirDetalhes(j)">
+      <!-- Lista -->
+      <div *ngIf="!carregando && jogadoresFiltrados.length > 0">
+        <div *ngFor="let j of jogadoresFiltrados" 
+             class="card catalogo-card mb-2 shadow-sm p-2"
+             (click)="abrirDetalhes(j)">
 
-        <div class="d-flex align-items-center">
-          <!-- Coluna 1: Imagem -->
-          <div class="me-3 d-flex align-items-center justify-content-center bg-dark rounded"
-            style="width: 55px; height: 55px; overflow: hidden;">
+          <div class="d-flex align-items-center">
+            <!-- Coluna 1: Imagem -->
+            <div class="me-3 d-flex align-items-center justify-content-center bg-dark rounded"
+                 style="width: 55px; height: 55px; overflow: hidden;">
 
-            <!-- Se estiver morto, mostra caveira -->
-            <span *ngIf="JogadorUtils.estaMorto(j)" class="fs-3">💀</span>
+              <!-- Se estiver morto, mostra caveira -->
+              <span *ngIf="JogadorUtils.estaMorto(j)" class="fs-3">💀</span>
 
-            <!-- Se tiver imagem e não estiver morto -->
-            <img *ngIf="j.imagem && !JogadorUtils.estaMorto(j)" [src]="j.imagem" alt="{{ j.personagem }}"
-              style="width: 100%; height: 100%; object-fit: cover;" />
+              <!-- Se tiver imagem válida e não estiver morto -->
+              <img *ngIf="j.imagem && j.imagem !== '-' && !JogadorUtils.estaMorto(j)"
+                   [src]="j.imagem"
+                   alt="{{ j.personagem }}"
+                   style="width: 100%; height: 100%; object-fit: cover;" />
 
-            <!-- Se não tiver imagem e não estiver morto -->
-            <span *ngIf="!j.imagem && !JogadorUtils.estaMorto(j)" class="text-secondary">👤</span>
-          </div>
-
-          <!-- Coluna 2: Nome + classificação/tipo -->
-          <div class="flex-grow-1">
-            <h6 class="text-light fw-bold mb-1">{{ j.personagem }}</h6>
-            <small class="text-secondary">
-              {{ j.classificacao || 'Jogador' }}
-              <span *ngIf="j.tipo">| {{ j.tipo }}</span>
-            </small>
-          </div>
-
-          <!-- Coluna 3: Vida/armadura + botões -->
-          <div class="d-flex flex-column align-items-end ms-2" (click)="$event.stopPropagation()">
-
-            <!-- Linha 1: Vida atual + Armadura -->
-            <div class="d-flex mb-1 align-items-center">
-              <div class="me-3 text-danger fw-bold">
-                ❤️ {{ JogadorUtils.getVidaAtual(j) }}/{{ JogadorUtils.getVidaBase(j) }}
-              </div>
-              <div class="text-info">🛡️ {{ j.classe_de_armadura }}</div>
+              <!-- Se não tiver imagem -->
+              <span *ngIf="(!j.imagem || j.imagem === '-') && !JogadorUtils.estaMorto(j)" 
+                    class="text-secondary">👤</span>
             </div>
 
-            <!-- Linha 2: Dano tomado -->
-            <div class="text-warning small mb-1">
-              💥 Dano: {{ j.dano_tomado || 0 }}
+            <!-- Coluna 2: Nome + classificação/tipo -->
+            <div class="flex-grow-1">
+              <h6 class="text-light fw-bold mb-1">{{ j.personagem }}</h6>
+              <small class="text-secondary">
+                {{ j.classificacao || 'Jogador' }}
+                <span *ngIf="j.tipo">| {{ j.tipo }}</span>
+              </small>
             </div>
 
-            <!-- Linha 3: Botões -->
-            <div class="d-flex">
-              <!-- Botão excluir (NPCs apenas, mas mantém espaço vazio se não tiver) -->
-              <div class="me-1">
-                <button *ngIf="!j.email" class="btn btn-sm btn-outline-danger"
-                  [disabled]="processando[j.id] === 'excluir'" (click)="excluirNpcDaBatalha(j)">
-                  <ng-container *ngIf="processando[j.id] === 'excluir'; else excluirIcon">
-                    <span class="spinner-border spinner-border-sm"></span>
-                  </ng-container>
-                  <ng-template #excluirIcon>🗑️</ng-template>
-                </button>
-                <div *ngIf="j.email" style="width:32px; height:32px;"></div>
+            <!-- Coluna 3: Vida/armadura + botões -->
+            <div class="d-flex flex-column align-items-end ms-2" (click)="$event.stopPropagation()">
+
+              <!-- Vida + Armadura -->
+              <div class="d-flex mb-1 align-items-center">
+                <div class="me-3 text-danger fw-bold">
+                  ❤️ {{ JogadorUtils.getVidaAtual(j) }}/{{ JogadorUtils.getVidaBase(j) }}
+                </div>
+                <div class="text-info">🛡️ {{ j.classe_de_armadura }}</div>
               </div>
 
-              <!-- Botão recuperação -->
-              <div class="me-1">
-                <button class="btn btn-sm btn-outline-success" [disabled]="processando[j.id] === 'recuperar'"
-                  (click)="acaoRecuperacao(j)">
-                  <ng-container *ngIf="processando[j.id] === 'recuperar'; else recuperarIcon">
-                    <span class="spinner-border spinner-border-sm"></span>
-                  </ng-container>
-                  <ng-template #recuperarIcon>💊</ng-template>
-                </button>
+              <!-- Dano -->
+              <div class="text-warning small mb-1">
+                💥 Dano: {{ j.dano_tomado || 0 }}
               </div>
 
-              <!-- Botão espada -->
-              <div>
-                <button class="btn btn-sm btn-outline-light" [disabled]="processando[j.id] === 'espada'"
-                  (click)="acaoEspada(j)">
-                  <ng-container *ngIf="processando[j.id] === 'espada'; else espadaIcon">
-                    <span class="spinner-border spinner-border-sm"></span>
-                  </ng-container>
-                  <ng-template #espadaIcon>⚔️</ng-template>
-                </button>
+              <!-- Botões -->
+              <div class="d-flex">
+                <!-- Excluir -->
+                <div class="me-1">
+                  <button *ngIf="!j.email" 
+                          class="btn btn-sm btn-outline-danger"
+                          [disabled]="processando[j.id] === 'excluir'" 
+                          (click)="excluirNpcDaBatalha(j)">
+                    <ng-container *ngIf="processando[j.id] === 'excluir'; else excluirIcon">
+                      <span class="spinner-border spinner-border-sm"></span>
+                    </ng-container>
+                    <ng-template #excluirIcon>🗑️</ng-template>
+                  </button>
+                  <div *ngIf="j.email" style="width:32px; height:32px;"></div>
+                </div>
+
+                <!-- Recuperar -->
+                <div class="me-1">
+                  <button class="btn btn-sm btn-outline-success"
+                          [disabled]="processando[j.id] === 'recuperar'"
+                          (click)="acaoRecuperacao(j)">
+                    <ng-container *ngIf="processando[j.id] === 'recuperar'; else recuperarIcon">
+                      <span class="spinner-border spinner-border-sm"></span>
+                    </ng-container>
+                    <ng-template #recuperarIcon>💊</ng-template>
+                  </button>
+                </div>
+
+                <!-- Espada -->
+                <div>
+                  <button class="btn btn-sm btn-outline-light"
+                          [disabled]="processando[j.id] === 'espada'"
+                          (click)="acaoEspada(j)">
+                    <ng-container *ngIf="processando[j.id] === 'espada'; else espadaIcon">
+                      <span class="spinner-border spinner-border-sm"></span>
+                    </ng-container>
+                    <ng-template #espadaIcon>⚔️</ng-template>
+                  </button>
+                </div>
               </div>
             </div>
-
           </div>
 
         </div>
       </div>
-    </div>
 
-    <!-- Vazio -->
-    <div *ngIf="!carregando && jogadoresFiltrados.length === 0" class="text-center text-muted py-5">
-      Nenhum jogador encontrado.
+      <!-- Vazio -->
+      <div *ngIf="!carregando && jogadoresFiltrados.length === 0" 
+           class="text-center text-muted py-5">
+        Nenhum jogador encontrado.
+      </div>
+
     </div>
   </div>
 </div>

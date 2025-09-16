@@ -1,4 +1,17 @@
 /* ======================
+   WRAPPER & CONTAINER
+   ====================== */
+.jogador-edit-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+.jogador-edit-container {
+  width: 100%;
+  max-width: 900px; /* 🔑 largura máxima padronizada */
+  margin: 0 auto;
+}
+
+/* ======================
    CARD & IMAGEM
    ====================== */
 .detalhe-card {
@@ -134,7 +147,7 @@
   background: #2a2a2a;
   border-radius: 6px;
   padding: 6px 10px;
-  text-align: center; /* 👈 centraliza os textos */
+  text-align: center;
 }
 .atributo-item span {
   font-weight: 600;
@@ -145,11 +158,11 @@
 }
 .atributo-item small {
   font-size: 0.75rem;
-  color: #aaa;
+  color: #f8f9fa;
 }
 
 /* ======================
-   BOTÕES
+   BOTÕES DE AÇÃO
    ====================== */
 .btn-save {
   background: linear-gradient(135deg, #28a745, #218838);
@@ -174,16 +187,72 @@
   box-shadow: none;
 }
 
-.btn-save {
-  margin-left: auto; /* alinhado à direita */
+/* ======================
+   FAB (Botões flutuantes)
+   ====================== */
+.fab-stack {
+  position: fixed;
+  bottom: 70px;
+  right: 20px;
+  display: flex;
+  flex-direction: column-reverse; /* Último no HTML fica em cima */
+  gap: 15px;
+  z-index: 1000;
 }
 
-/* Deixa o texto dos atributos calculados branco */
-.atributo-item small {
-  color: #f8f9fa !important;
-}
-/* Deixa o texto dos atributos calculados branco */
-.atributo-item small {
-  color: #f8f9fa !important;
+.fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, background 0.2s ease;
+  border: none;
+  cursor: pointer;
 }
 
+.fab:hover {
+  transform: scale(1.08);
+}
+
+/* Variações */
+.fab-primary {
+  background: #0d6efd;
+  color: #fff;
+}
+.fab-primary:hover {
+  background: #0b5ed7;
+}
+
+.fab-warning {
+  background: #ffc107;
+  color: #000;
+}
+.fab-warning:hover {
+  background: #e0a800;
+}
+
+.fab-danger {
+  background: #ff4d6d;
+  color: #fff;
+}
+.fab-danger:hover {
+  background: #e63e5b;
+}
+
+/* ======================
+   WRAPPER & CONTAINER
+   ====================== */
+.jogador-edit-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.jogador-edit-container {
+  width: 100%;
+  max-width: 900px;  /* 🔑 largura máxima padronizada */
+  margin: 0 auto;    /* 🔑 centraliza no meio da tela */
+}

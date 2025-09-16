@@ -1,4 +1,20 @@
-/* Card detalhe */
+/* ======================
+   WRAPPER & CONTAINER
+   ====================== */
+.personagem-detalhe-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.personagem-detalhe-container {
+  width: 100%;
+  max-width: 900px; /* 🔑 largura máxima padronizada */
+  margin: 0 auto;   /* 🔑 centraliza o card */
+}
+
+/* ======================
+   CARD
+   ====================== */
 .detalhe-card {
   background: #1e1e1e;
   border-radius: 12px;
@@ -8,9 +24,12 @@
 .detalhe-img {
   max-height: 220px;
   object-fit: cover;
+  width: 100%;
 }
 
-/* Lista infos */
+/* ======================
+   LISTA DE INFOS
+   ====================== */
 .info-list {
   list-style: none;
   padding: 0;
@@ -19,21 +38,26 @@
 }
 
 .info-list li {
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   color: #f1f1f1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap; /* 🔑 evita sobreposição */
 }
 
 .info-list span {
   font-weight: 600;
   color: #f8f9fa;
-  /* text-light */
 }
 
-/* Grid de atributos */
+/* ======================
+   GRID DE ATRIBUTOS
+   ====================== */
 .atributos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 8px 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* 🔑 aumentei para 180px */
+  gap: 10px 14px;
   font-size: 0.9rem;
   color: #f1f1f1;
 }
@@ -41,18 +65,21 @@
 .atributo-item {
   display: flex;
   align-items: center;
-  gap: 4px;
-  white-space: nowrap;
+  gap: 6px;
   font-size: 0.9rem;
   background: #2a2a2a;
   border-radius: 6px;
-  padding: 4px 8px;
+  padding: 6px 10px;
+  min-width: 0;      
+  white-space: nowrap; 
+  overflow: hidden;   
+  text-overflow: ellipsis;
 }
+
 
 .atributo-item span {
   font-weight: 500;
   color: #ccc;
-  margin-right: 2px;
 }
 
 .atributo-item b {
@@ -60,36 +87,23 @@
 }
 
 .atributo-item small {
-  color: #aaa;
-  margin-left: 2px;
-}
-
-/* Texto extra */
-.descricao-text {
-  color: #ddd;
-  font-size: 0.95rem;
-}
-
-.ataques-text {
-  color: #f8d775;
-  font-size: 0.9rem;
-}
-
-/* Deixa o texto dos atributos calculados branco */
-.atributo-item small {
   color: #f8f9fa !important;
 }
 
-/* Texto extra */
+
+/* ======================
+   TEXTOS EXTRAS
+   ====================== */
 .descricao-text,
 .ataques-text {
-  white-space: pre-line;   /* 👈 respeita quebras de linha do texto */
+  white-space: pre-line;   /* 👈 respeita quebras de linha */
   color: #ddd;
   font-size: 0.95rem;
   background: #2a2a2a;
   border-radius: 6px;
   padding: 8px 10px;
   line-height: 1.4;
+  margin-top: 8px;
 }
 
 .ataques-text {

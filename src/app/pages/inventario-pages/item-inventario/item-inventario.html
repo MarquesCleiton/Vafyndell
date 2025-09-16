@@ -1,72 +1,85 @@
-<div class="d-flex flex-column min-vh-100 bg-dark text-light p-3">
-
-  <!-- Loading -->
+<div class="inventario-detalhe-wrapper d-flex flex-column min-vh-100 bg-dark text-light pb-5 mb-5">
+  <!-- Loading inicial -->
   <div *ngIf="carregando" class="text-center py-5">
     <div class="spinner-border text-light" role="status"></div>
     <p class="mt-2">Carregando item...</p>
   </div>
 
-  <ng-container *ngIf="!carregando && item">
+  <!-- Conteúdo -->
+  <div class="flex-grow-1 p-3 d-flex justify-content-center" *ngIf="!carregando && item">
+    <div class="inventario-detalhe-container w-100">
+      <div class="card detalhe-card shadow-lg border-0">
 
-    <!-- Imagem -->
-    <div class="text-center mb-3">
-      <img *ngIf="item.catalogo?.imagem" [src]="item.catalogo?.imagem" alt="{{ item.catalogo?.nome }}"
-        class="img-fluid rounded shadow-sm" style="max-height: 280px; object-fit: cover; width: 100%;" />
-      <div *ngIf="!item.catalogo?.imagem" class="bg-secondary d-flex align-items-center justify-content-center rounded"
-        style="height: 200px; width: 100%;">
-        <span class="text-light">📦 Sem imagem</span>
+        <!-- Cabeçalho -->
+        <div class="card-body p-3 border-bottom d-flex align-items-center gap-2">
+          <button type="button" class="btn btn-outline-light btn-sm" (click)="cancelar()">
+            ⬅ Voltar
+          </button>
+          <h4 class="fw-bold mb-0 text-capitalize text-light">
+            🎒 {{ item.catalogo?.nome || 'Item desconhecido' }}
+          </h4>
+        </div>
+
+        <!-- Imagem -->
+        <ng-container *ngIf="item.catalogo?.imagem && item.catalogo?.imagem !== '-'">
+          <img [src]="item.catalogo?.imagem" class="card-img-top detalhe-img" alt="{{ item.catalogo?.nome }}" />
+        </ng-container>
+        <div *ngIf="!item.catalogo?.imagem || item.catalogo?.imagem === '-'"
+          class="bg-secondary d-flex align-items-center justify-content-center detalhe-img rounded">
+          <span class="text-light">📦 Sem imagem</span>
+        </div>
+
+        <!-- Informações -->
+        <div class="card-body">
+          <p class="text-light mb-1"><b>📂 Categoria:</b> {{ item.catalogo?.categoria || '—' }}</p>
+          <p class="text-light mb-1"><b>🌱 Origem:</b> {{ item.catalogo?.origem || '—' }}</p>
+          <p class="text-light mb-1"><b>💎 Raridade:</b> {{ item.catalogo?.raridade || '—' }}</p>
+          <p class="text-light mb-1"><b>🔢 Quantidade:</b>
+            {{ item.inventario.quantidade }} {{ item.catalogo?.unidade_medida || '' }}
+          </p>
+          <p class="text-light mb-3"><b>⚖️ Peso total:</b>
+            {{ (item.inventario.quantidade || 0) * (item.catalogo?.peso || 0) }} kg
+          </p>
+
+          <hr class="border-secondary" />
+
+          <p *ngIf="item.catalogo?.efeito" class="mb-1 text-info">
+            ✨ <b>Efeito:</b> {{ item.catalogo?.efeito }}
+          </p>
+          <p *ngIf="item.catalogo?.colateral" class="mb-1 text-danger">
+            ⚠️ <b>Colateral:</b> {{ item.catalogo?.colateral }}
+          </p>
+          <p *ngIf="item.catalogo?.descricao" class="fst-italic text-light">
+            📝 <b>Descrição:</b> {{ item.catalogo?.descricao }}
+          </p>
+        </div>
       </div>
     </div>
+  </div>
 
-    <!-- Detalhes -->
-    <div class="card bg-dark border-0 shadow-sm p-3">
-      <h4 class="fw-bold mb-3 text-light">{{ item.catalogo?.nome || 'Item desconhecido' }}</h4>
+  <!-- FABs: Cancelar, Editar, Excluir -->
+  <div class="fab-stack">
 
-      <div class="meta-info">
-        <p><span class="icon">📂</span> <b>Categoria: </b> {{ item.catalogo?.categoria || '—' }}</p>
-        <p><span class="icon">🌱</span> <b>Origem:</b> {{ item.catalogo?.origem || '—' }}</p>
-        <p><span class="icon">💎</span> <b>Raridade:</b> {{ item.catalogo?.raridade || '—' }}</p>
-        <p><span class="icon">🔢</span> <b>Quantidade:</b>
-          {{ item.inventario.quantidade }} {{ item.catalogo?.unidade_medida || '' }}
-        </p>
-        <p><span class="icon">⚖️</span> <b>Peso total:</b>
-          {{ (item.inventario.quantidade || 0) * (item.catalogo?.peso || 0) }} kg
-        </p>
-      </div>
+    <!-- Cancelar -->
+    <button class="fab fab-primary" (click)="cancelar()">
+      ⬅️
+    </button>
 
-      <hr class="border-secondary" />
+    <!-- Excluir -->
+    <button class="fab fab-danger" [disabled]="processandoExcluir" (click)="excluirItem()">
+      <ng-container *ngIf="!processandoExcluir">🗑️</ng-container>
+      <ng-container *ngIf="processandoExcluir">
+        <span class="spinner-border spinner-border-sm"></span>
+      </ng-container>
+    </button>
 
-      <p *ngIf="item.catalogo?.efeito" class="efeito-text mt-2">
-        ✨ <b>Efeito:</b> {{ item.catalogo?.efeito }}
-      </p>
-      <p *ngIf="item.catalogo?.colateral" class="colateral mt-2">
-        ⚠️ <b>Colateral:</b> {{ item.catalogo?.colateral }}
-      </p>
-      <p *ngIf="item.catalogo?.descricao" class="descricao-text mt-2 fst-italic">
-        📝 {{ item.catalogo?.descricao }}
-      </p>
-    </div>
+    <!-- Editar -->
+    <button class="fab fab-warning" [disabled]="processandoEditar" (click)="editarItem()">
+      <ng-container *ngIf="!processandoEditar">✏️</ng-container>
+      <ng-container *ngIf="processandoEditar">
+        <span class="spinner-border spinner-border-sm"></span>
+      </ng-container>
+    </button>
+  </div>
 
-
-    <!-- Botões -->
-    <div class="d-flex gap-2 mt-4">
-      <button class="btn btn-secondary flex-fill" (click)="cancelar()">
-        ⬅️ Cancelar
-      </button>
-
-      <button class="btn btn-outline-warning flex-fill" [disabled]="processandoEditar" (click)="editarItem()">
-        <ng-container *ngIf="!processandoEditar">✏️ Editar</ng-container>
-        <ng-container *ngIf="processandoEditar">
-          <span class="spinner-border spinner-border-sm me-1"></span> Editando...
-        </ng-container>
-      </button>
-
-      <button class="btn btn-outline-danger flex-fill" [disabled]="processandoExcluir" (click)="excluirItem()">
-        <ng-container *ngIf="!processandoExcluir">🗑️ Excluir</ng-container>
-        <ng-container *ngIf="processandoExcluir">
-          <span class="spinner-border spinner-border-sm me-1"></span> Excluindo...
-        </ng-container>
-      </button>
-    </div>
-  </ng-container>
 </div>

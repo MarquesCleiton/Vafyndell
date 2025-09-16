@@ -1,4 +1,15 @@
-/* Card detalhes (mesmo do NPC) */
+/* Wrapper & Container */
+.jogador-detalhe-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+.jogador-detalhe-container {
+  width: 100%;
+  max-width: 900px; /* largura máxima padronizada */
+  margin: 0 auto;
+}
+
+/* Card */
 .detalhe-card {
   background: #1e1e1e;
   border-radius: 12px;
@@ -7,9 +18,10 @@
 .detalhe-img {
   max-height: 220px;
   object-fit: cover;
+  width: 100%;
 }
 
-/* Lista de infos */
+/* Lista infos */
 .info-list {
   list-style: none;
   padding: 0;
@@ -22,58 +34,67 @@
 }
 .info-list span {
   font-weight: 600;
-  color: #dddddd; /* destaque em amarelo */
+  color: #f8f9fa;
 }
 
-/* Grid de atributos (chips) */
+/* Atributos */
 .atributos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 8px 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* 🔑 ajustado */
+  gap: 10px 14px;
   font-size: 0.9rem;
   color: #f1f1f1;
 }
 .atributo-item {
   display: flex;
   align-items: center;
-  gap: 4px;
-  white-space: nowrap;
+  gap: 6px;
   font-size: 0.9rem;
   background: #2a2a2a;
   border-radius: 6px;
-  padding: 4px 8px;
+  padding: 6px 10px;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .atributo-item span {
   font-weight: 500;
   color: #ccc;
-  margin-right: 2px;
 }
 .atributo-item b {
   color: #fff;
 }
 .atributo-item small {
-  color: #aaa;
-  margin-left: 2px;
+  color: #f8f9fa;
 }
 
 /* FAB */
 .fab {
-  position: fixed;
-  bottom: 80px;
-  right: 20px;
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
-}
-.fab-primary {
+  position: fixed;
+  bottom: 70px;
+  right: 20px; /* padrão mobile */
   background: #0d6efd;
   color: #fff;
+  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease;
+  border: none;
 }
-.fab-primary:hover {
-  background: #0b5ed7;
+.fab:hover {
+  transform: scale(1.08);
 }
+
+/* Em telas largas, ancora o FAB ao container */
+@media (min-width: 992px) {
+  .fab {
+    right: calc(50% - 450px + 20px); /* 450px = metade do max-width (900px) */
+  }
+}
+

@@ -1,35 +1,96 @@
-/* Imagem ocupa toda a largura, estilo fill */
-.item-image img {
+/* Wrapper responsivo */
+.item-detalhe-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.item-detalhe-container {
   width: 100%;
-  height: 220px;
+  max-width: 900px; /* largura máxima no desktop */
+}
+
+/* Card */
+.detalhe-card {
+  background: #1e1e1e;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.detalhe-img {
+  max-height: 280px;
   object-fit: cover;
-  border-radius: 10px;
+  width: 100%;
 }
 
-/* Texto */
-h4 {
+/* Raridade */
+.raridade {
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.raridade.comum { color: #ccc; }
+.raridade.incomum { color: #00bcd4; }
+.raridade.raro { color: #673ab7; }
+/* .raridade['muito-raro'] { color: #ff5722; } */
+.raridade.lendario { color: gold; }
+
+/* FAB stack */
+.fab-stack {
+  position: fixed;
+  bottom: 70px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 1000;
+}
+
+/* FAB base */
+.fab {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease;
+}
+.fab:hover {
+  transform: scale(1.08);
+}
+
+/* Variações */
+.fab-primary {
+  background: #0d6efd;
   color: #fff;
-  margin-bottom: 0.5rem;
 }
+.fab-primary:hover { background: #0b5ed7; }
 
-p {
-  color: #ddd;
-  margin-bottom: 0.4rem;
+.fab-warning {
+  background: #ffc107;
+  color: #000;
 }
+.fab-warning:hover { background: #e0a800; }
 
-hr {
-  opacity: 0.3;
-  margin: 1rem 0;
+.fab-danger {
+  background: #ff4d6d;
+  color: #fff;
 }
+.fab-danger:hover { background: #e63e5b; }
 
-/* Botões minimalistas */
-button {
-  font-weight: 500;
-  border-radius: 8px;
-  padding: 0.5rem;
-  transition: all 0.2s ease-in-out;
-}
+/* Desktop ajuste */
+@media (min-width: 992px) {
+  .item-detalhe-container {
+    padding: 0 2rem;
+  }
 
-button:hover {
-  transform: translateY(-2px);
+  .detalhe-card {
+    border-radius: 16px;
+  }
+
+  .fab-stack {
+    right: calc(50% - 450px + 20px); /* ancora ao card central */
+  }
 }

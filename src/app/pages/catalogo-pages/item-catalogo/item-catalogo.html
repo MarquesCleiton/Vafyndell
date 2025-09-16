@@ -1,54 +1,84 @@
-<div class="d-flex flex-column min-vh-100 bg-dark text-light p-3">
-    <!-- Loading inicial -->
-    <div *ngIf="carregando" class="text-center py-5">
-        <div class="spinner-border text-light" role="status"></div>
-        <p class="mt-2">Carregando item...</p>
-    </div>
+<div class="item-detalhe-wrapper d-flex flex-column min-vh-100 bg-dark text-light pb-5 mb-5">
+  <!-- Loading inicial -->
+  <div *ngIf="carregando" class="text-center py-5">
+    <div class="spinner-border text-light" role="status"></div>
+    <p class="mt-2">Carregando item...</p>
+  </div>
 
-    <!-- Conteúdo do item -->
-    <ng-container *ngIf="!carregando && item">
+  <!-- Conteúdo -->
+  <div class="flex-grow-1 p-3 d-flex justify-content-center" *ngIf="!carregando && item">
+    <div class="item-detalhe-container w-100">
+      <div class="card detalhe-card shadow-lg border-0">
+
+        <!-- Cabeçalho -->
+        <div class="card-body p-3 border-bottom d-flex align-items-center gap-2">
+          <button class="btn btn-outline-light btn-sm" (click)="cancelar()">⬅ Voltar</button>
+          <h4 class="fw-bold mb-0 text-capitalize text-light">
+            📦 {{ item.nome || 'Sem nome' }}
+          </h4>
+        </div>
+
         <!-- Imagem -->
-        <div class="item-image mb-3">
-            <img *ngIf="item.imagem" [src]="item.imagem" alt="{{item.nome}}" />
+        <ng-container *ngIf="item.imagem && item.imagem !== '-'">
+          <img [src]="item.imagem"
+               class="card-img-top detalhe-img"
+               alt="{{ item.nome || 'Item' }}"
+               style="object-fit: cover;" />
+        </ng-container>
+
+        <!-- Informações -->
+        <div class="card-body">
+          <p class="text-light mb-1"><b>📂 Categoria:</b> {{ item.categoria }}</p>
+          <p class="text-light mb-1"><b>🌱 Origem:</b> {{ item.origem }}</p>
+          <p class="text-light mb-1">
+            <b>💎 Raridade:</b>
+            <span class="raridade {{ getRaridadeClass(item.raridade) }}">
+              {{ item.raridade || 'Comum' }}
+            </span>
+          </p>
+          <p class="text-light mb-3"><b>⚖️ Peso:</b> {{ item.peso }} {{ item.unidade_medida }}</p>
+
+          <hr class="border-secondary" />
+
+          <p *ngIf="item.efeito" class="mb-1 text-info">
+            ✨ <b>Efeito:</b> {{ item.efeito }}
+          </p>
+          <p *ngIf="item.colateral" class="mb-1 text-danger">
+            ⚠️ <b>Colateral:</b> {{ item.colateral }}
+          </p>
+          <p *ngIf="item.descricao" class="fst-italic text-light">
+            📝 <b>Descrição:</b> {{ item.descricao }}
+          </p>
         </div>
+      </div>
+    </div>
+  </div>
 
-        <!-- Informações principais -->
-        <h4 class="fw-bold text-capitalize">{{ item.nome }}</h4>
-        <p><b>Categoria:</b> {{ item.categoria }}</p>
-        <p><b>Origem:</b> {{ item.origem }}</p>
-        <p><b>Raridade:</b> {{ item.raridade }}</p>
-        <p><b>Peso:</b> {{ item.peso }} {{ item.unidade_medida }}</p>
+  <!-- FABs -->
+  <div class="fab-stack">
+    <!-- Editar -->
+    <button class="fab fab-warning"
+            [disabled]="processandoEditar"
+            (click)="editarItem()">
+      <ng-container *ngIf="!processandoEditar">✏️</ng-container>
+      <ng-container *ngIf="processandoEditar">
+        <span class="spinner-border spinner-border-sm"></span>
+      </ng-container>
+    </button>
 
-        <hr class="border-secondary" />
+    <!-- Excluir -->
+    <button class="fab fab-danger"
+            [disabled]="processandoExcluir"
+            (click)="excluirItem()">
+      <ng-container *ngIf="!processandoExcluir">🗑️</ng-container>
+      <ng-container *ngIf="processandoExcluir">
+        <span class="spinner-border spinner-border-sm"></span>
+      </ng-container>
+    </button>
 
-        <!-- Detalhes -->
-        <p *ngIf="item.efeito"><span class="text-warning">✨</span> <b>Efeito:</b> {{ item.efeito }}</p>
-        <p *ngIf="item.colateral"><span class="text-danger">⚠️</span> <b>Colateral:</b> {{ item.colateral }}</p>
-        <p *ngIf="item.descricao"><span class="text-info">📝</span> <b>Descrição:</b> {{ item.descricao }}</p>
-
-        <!-- Botões -->
-        <div class="d-flex gap-2 mt-4">
-            <!-- Cancelar -->
-            <button class="btn btn-secondary flex-fill" (click)="cancelar()">
-                ⬅️ Cancelar
-            </button>
-
-            <!-- Excluir -->
-            <button class="btn btn-outline-danger flex-fill" [disabled]="processandoExcluir" (click)="excluirItem()">
-                <ng-container *ngIf="!processandoExcluir">🗑️ Excluir</ng-container>
-                <ng-container *ngIf="processandoExcluir">
-                    <span class="spinner-border spinner-border-sm me-1"></span> Excluindo...
-                </ng-container>
-            </button>
-
-            <!-- Editar -->
-            <button class="btn btn-outline-warning flex-fill" [disabled]="processandoEditar" (click)="editarItem()">
-                <ng-container *ngIf="!processandoEditar">✏️ Editar</ng-container>
-                <ng-container *ngIf="processandoEditar">
-                    <span class="spinner-border spinner-border-sm me-1"></span> Editando...
-                </ng-container>
-            </button>
-
-        </div>
-    </ng-container>
+    <!-- Cancelar -->
+    <button class="fab fab-primary" (click)="cancelar()">
+      ⬅️
+    </button>
+  </div>
 </div>

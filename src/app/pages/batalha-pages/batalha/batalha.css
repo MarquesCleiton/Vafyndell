@@ -1,3 +1,33 @@
+/* ======================
+   WRAPPER & CONTAINER
+   ====================== */
+.batalha-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.batalha-container {
+  width: 100%;
+  max-width: 900px; /* 🔑 largura máxima padronizada */
+  margin: 0 auto;   /* 🔑 centraliza */
+}
+
+/* ======================
+   CARD
+   ====================== */
+.catalogo-card {
+  background: #1e1e1e;
+  border-radius: 12px;
+  border: none;
+  transition: transform 0.2s ease;
+}
+.catalogo-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+
+
 /* ===== Card estilo catálogo (tema dark) ===== */
 .catalogo-card {
   background: #1e1e1e;

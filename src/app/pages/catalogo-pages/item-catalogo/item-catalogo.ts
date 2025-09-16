@@ -1,10 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { Location } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { CatalogoDomain } from '../../../domain/CatalogoDomain';
 import { BaseRepository } from '../../../repositories/BaseRepository';
-
 
 @Component({
   selector: 'app-item-catalogo',
@@ -20,7 +18,6 @@ export class ItemCatalogo implements OnInit {
   processandoEditar = false;
   processandoExcluir = false;
 
-  // ✅ Reuso do BaseRepository
   private repo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
 
   constructor(
@@ -110,6 +107,26 @@ export class ItemCatalogo implements OnInit {
       alert('❌ Erro ao excluir item. Veja o console.');
     } finally {
       this.processandoExcluir = false;
+    }
+  }
+
+  // ✅ Método para mapear a raridade em classes CSS
+  getRaridadeClass(raridade?: string): string {
+    switch ((raridade || '').toLowerCase()) {
+      case 'comum':
+        return 'raridade-comum';
+      case 'incomum':
+        return 'raridade-incomum';
+      case 'raro':
+        return 'raridade-raro';
+      case 'épico':
+      case 'epico':
+        return 'raridade-epico';
+      case 'lendário':
+      case 'lendario':
+        return 'raridade-lendario';
+      default:
+        return 'raridade-comum';
     }
   }
 }

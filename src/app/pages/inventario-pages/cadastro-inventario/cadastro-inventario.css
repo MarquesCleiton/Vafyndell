@@ -1,76 +1,104 @@
-/* Card padrão */
+/* Wrapper responsivo */
+.inventario-cadastro-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.inventario-cadastro-container {
+  width: 100%;
+  max-width: 900px; /* largura máxima no desktop */
+}
+
+/* Card */
 .detalhe-card {
   background: #1e1e1e;
   border-radius: 12px;
   overflow: hidden;
 }
 
-/* Input Angular Material Dark */
-.input-dark .mat-mdc-text-field-wrapper {
-  background: #1e1e1e;
-  color: #f8f9fa;
+/* Inputs / Material */
+.input-dark {
+  background: #1e1e1e !important;
   border-radius: 6px;
+  color: #f8f9fa !important;
 }
 .input-dark input {
   color: #f8f9fa !important;
 }
-.input-dark .mat-mdc-form-field-outline {
-  color: #444 !important;
-}
-.input-dark .mat-mdc-form-field-outline-thick {
-  stroke: #0d6efd !important;
-}
 
-/* Preview Card */
+/* Preview */
 .preview-card {
   background: #2a2a2a;
   border-radius: 8px;
   padding: 10px;
-  border: 1px solid #444;
+  color: #f8f9fa;
 }
 
-/* Quantidade box */
+/* Quantidade */
 .quantidade-box {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 .quantidade-input {
-  width: 70px;
+  width: 80px;
   text-align: center;
-  font-weight: bold;
-  color: #fff;
-  background: #1e1e1e;
-  border: 1px solid #444;
   border-radius: 6px;
-  padding: 4px;
-}
-.quantidade-input:focus {
-  border-color: #0d6efd;
-  outline: none;
-  box-shadow: 0 0 0 0.2rem rgba(13,110,253,.25);
+  border: 1px solid #444;
+  background: #1e1e1e;
+  color: #fff;
+  padding: 4px 6px;
 }
 
-/* Botão salvar */
-.btn-save {
-  background: linear-gradient(135deg, #28a745, #218838);
-  border: none;
-  color: #fff;
-  font-weight: 600;
-  display: inline-flex;
+/* FAB stack */
+.fab-stack {
+  position: fixed;
+  bottom: 70px;
+  right: 20px;
+  display: flex;
+  flex-direction: column-reverse; /* último no HTML fica no topo */
+  gap: 15px;
+  z-index: 1000;
+}
+.fab {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 1.6rem;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  transition: all 0.2s ease-in-out;
+  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease;
 }
-.btn-save:hover:not(:disabled) {
-  background: linear-gradient(135deg, #34d058, #28a745);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+.fab:hover {
+  transform: scale(1.08);
 }
-.btn-save:disabled {
-  background: #444 !important;
-  color: #bbb !important;
-  cursor: not-allowed;
-  box-shadow: none;
+
+/* Variações */
+.fab-primary {
+  background: #0d6efd;
+  color: #fff;
+}
+.fab-primary:hover { background: #0b5ed7; }
+
+.fab-warning {
+  background: #ffc107;
+  color: #000;
+}
+.fab-warning:hover { background: #e0a800; }
+
+/* Desktop ajuste */
+@media (min-width: 992px) {
+  .inventario-cadastro-container {
+    padding: 0 2rem;
+  }
+
+  .detalhe-card {
+    border-radius: 16px;
+  }
+
+  .fab-stack {
+    right: calc(50% - 450px + 20px); /* ancora ao card central */
+  }
 }

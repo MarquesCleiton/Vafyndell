@@ -1,120 +1,123 @@
-<div class="d-flex flex-column min-vh-100 bg-dark text-light">
-  <div class="flex-grow-1 pb-5">
-    <form *ngIf="jogador" #form="ngForm" (ngSubmit)="salvar(form)">
+<div class="jogador-edit-wrapper d-flex flex-column min-vh-100 bg-dark text-light">
+  <div class="flex-grow-1 p-3 d-flex justify-content-center">
+    <div class="jogador-edit-container w-100">
 
-      <!-- Upload imagem -->
-      <div class="position-relative text-center mb-3">
-        <ng-container *ngIf="jogador.imagem; else uploadBox">
-          <img [src]="jogador.imagem" class="w-100 rounded detalhe-img shadow-sm" alt="Preview" />
-          <button type="button"
-                  class="btn btn-danger rounded-circle position-absolute d-flex align-items-center justify-content-center"
-                  style="top: 10px; right: 10px; width: 40px; height: 40px;"
-                  (click)="removerImagem()">✖</button>
-        </ng-container>
-        <ng-template #uploadBox>
-          <label class="upload-box">
-            <span class="fs-1">📷</span>
-            <input type="file" class="d-none" (change)="onFileChange($event)" accept="image/*" />
-          </label>
-        </ng-template>
-      </div>
+      <form *ngIf="jogador" #form="ngForm" (ngSubmit)="salvar(form)">
 
-      <!-- Card principal -->
-      <div class="card detalhe-card shadow-lg border-0">
-        <div class="card-body">
-          <h4 class="fw-bold mb-3 text-light">✏️ Edição de Personagem</h4>
+        <!-- Upload imagem -->
+        <div class="position-relative text-center mb-3">
+          <ng-container *ngIf="jogador.imagem; else uploadBox">
+            <img [src]="jogador.imagem" class="w-100 rounded detalhe-img shadow-sm" alt="Preview" />
+            <button type="button"
+                    class="btn btn-danger rounded-circle position-absolute d-flex align-items-center justify-content-center"
+                    style="top: 10px; right: 10px; width: 40px; height: 40px;"
+                    (click)="removerImagem()">✖</button>
+          </ng-container>
+          <ng-template #uploadBox>
+            <label class="upload-box">
+              <span class="fs-1">📷</span>
+              <input type="file" class="d-none" (change)="onFileChange($event)" accept="image/*" />
+            </label>
+          </ng-template>
+        </div>
 
-          <!-- Nome -->
-          <div class="mb-3">
-            <label class="form-label text-light">🧙 Nome do Personagem *</label>
-            <input type="text" class="form-control input-dark"
-                   [(ngModel)]="jogador.personagem" name="personagem" required />
-          </div>
+        <!-- Card principal -->
+        <div class="card detalhe-card shadow-lg border-0">
+          <div class="card-body">
+            <h4 class="fw-bold mb-3 text-light">✏️ Edição de Personagem</h4>
 
-          <!-- Alinhamento -->
-          <div class="mb-3">
-            <label class="form-label text-light">⚖️ Alinhamento *</label>
-            <select class="form-select input-dark"
-                    [(ngModel)]="jogador.alinhamento" name="alinhamento" required>
-              <option value="" disabled>Selecione...</option>
-              <option>Leal e Bom (Lawful Good)</option>
-              <option>Neutro e Bom (Neutral Good)</option>
-              <option>Caótico e Bom (Chaotic Good)</option>
-              <option>Leal e Neutro (Lawful Neutral)</option>
-              <option>Neutro (True Neutral)</option>
-              <option>Caótico e Neutro (Chaotic Neutral)</option>
-              <option>Leal e Mau (Lawful Evil)</option>
-              <option>Neutro e Mau (Neutral Evil)</option>
-              <option>Caótico e Mau (Chaotic Evil)</option>
-            </select>
-          </div>
+            <!-- Nome -->
+            <div class="mb-3">
+              <label class="form-label text-light">🧙 Nome do Personagem *</label>
+              <input type="text" class="form-control input-dark"
+                     [(ngModel)]="jogador.personagem" name="personagem" required />
+            </div>
 
-          <!-- Tipo de jogador -->
-          <div class="mb-3">
-            <label class="form-label text-light">🎭 Tipo de Jogador *</label>
-            <select class="form-select input-dark"
-                    [(ngModel)]="jogador.tipo_jogador" name="tipoJogador" required>
-              <option value="" disabled>Selecione...</option>
-              <option>Aventureiro</option>
-              <option>Mestre</option>
-            </select>
-          </div>
+            <!-- Alinhamento -->
+            <div class="mb-3">
+              <label class="form-label text-light">⚖️ Alinhamento *</label>
+              <select class="form-select input-dark"
+                      [(ngModel)]="jogador.alinhamento" name="alinhamento" required>
+                <option value="" disabled>Selecione...</option>
+                <option>Leal e Bom (Lawful Good)</option>
+                <option>Neutro e Bom (Neutral Good)</option>
+                <option>Caótico e Bom (Chaotic Good)</option>
+                <option>Leal e Neutro (Lawful Neutral)</option>
+                <option>Neutro (True Neutral)</option>
+                <option>Caótico e Neutro (Chaotic Neutral)</option>
+                <option>Leal e Mau (Lawful Evil)</option>
+                <option>Neutro e Mau (Neutral Evil)</option>
+                <option>Caótico e Mau (Chaotic Evil)</option>
+              </select>
+            </div>
 
-          <!-- Atributos Numéricos -->
-          <h6 class="fw-bold mt-4 text-light">📊 Atributos Numéricos</h6>
-          <div class="atributos-grid-edit mb-3">
-            <div class="atributo-item-edit" *ngFor="let attr of atributosNumericos">
-              <div class="atributo-label text-center">
-                {{ attr.icon }} {{ attr.label }}
+            <!-- Tipo de jogador -->
+            <div class="mb-3">
+              <label class="form-label text-light">🎭 Tipo de Jogador *</label>
+              <select class="form-select input-dark"
+                      [(ngModel)]="jogador.tipo_jogador" name="tipoJogador" required>
+                <option value="" disabled>Selecione...</option>
+                <option>Aventureiro</option>
+                <option>Mestre</option>
+              </select>
+            </div>
+
+            <!-- Atributos Numéricos -->
+            <h6 class="fw-bold mt-4 text-light">📊 Atributos Numéricos</h6>
+            <div class="atributos-grid-edit mb-3">
+              <div class="atributo-item-edit" *ngFor="let attr of atributosNumericos">
+                <div class="atributo-label text-center">
+                  {{ attr.icon }} {{ attr.label }}
+                </div>
+                <div class="atributo-controls">
+                  <button type="button" class="btn btn-sm btn-outline-light"
+                          (click)="ajustarValor(attr.key, -1)">−</button>
+
+                  <input type="number" class="atributo-input"
+                         [ngModel]="getValor(attr.key)"
+                         (ngModelChange)="setValor(attr.key, $event)"
+                         name="{{attr.key}}" min="0" />
+
+                  <button type="button" class="btn btn-sm btn-outline-light"
+                          (click)="ajustarValor(attr.key, 1)">+</button>
+                </div>
               </div>
-              <div class="atributo-controls">
-                <button type="button" class="btn btn-sm btn-outline-light"
-                        (click)="ajustarValor(attr.key, -1)">−</button>
+            </div>
 
-                <input type="number" class="atributo-input"
-                       [ngModel]="getValor(attr.key)"
-                       (ngModelChange)="setValor(attr.key, $event)"
-                       name="{{attr.key}}" min="0" />
-
-                <button type="button" class="btn btn-sm btn-outline-light"
-                        (click)="ajustarValor(attr.key, 1)">+</button>
+            <!-- Atributos Calculados -->
+            <h6 class="fw-bold mt-4 text-light">⚔️ Atributos Calculados</h6>
+            <div class="atributos-grid mb-3">
+              <div class="atributo-item">
+                <span>❤️ Vida</span> <b>{{ vida }}</b>
+                <small>(Energia + Constituição)</small>
+              </div>
+              <div class="atributo-item">
+                <span>💖 Vida Total</span> <b>{{ vidaTotal }}</b>
+                <small>(Vida + Armadura)</small>
+              </div>
+              <div class="atributo-item">
+                <span>✨ Fator de Cura</span> <b>{{ fatorCura }}</b>
+                <small>(Energia / 3)</small>
+              </div>
+              <div class="atributo-item">
+                <span>🏃 Deslocamento</span> <b>{{ deslocamento }}</b>
+                <small>(Destreza / 3)</small>
               </div>
             </div>
-          </div>
 
-          <!-- Atributos Calculados -->
-          <h6 class="fw-bold mt-4 text-light">⚔️ Atributos Calculados</h6>
-          <div class="atributos-grid mb-3">
-            <div class="atributo-item">
-              <span>❤️ Vida</span> <b>{{ vida }}</b>
-              <small>(Energia + Constituição)</small>
+            <!-- Botões -->
+            <div class="d-flex justify-content-between mt-4">
+              <button type="button" class="btn btn-outline-light px-4" (click)="cancelar()">⬅ Cancelar</button>
+              <button type="submit" class="btn btn-save px-4" [disabled]="form.invalid || salvando">
+                <ng-container *ngIf="!salvando">💾 Atualizar</ng-container>
+                <ng-container *ngIf="salvando">
+                  <span class="spinner-border spinner-border-sm me-2"></span> Salvando...
+                </ng-container>
+              </button>
             </div>
-            <div class="atributo-item">
-              <span>💖 Vida Total</span> <b>{{ vidaTotal }}</b>
-              <small>(Vida + Armadura)</small>
-            </div>
-            <div class="atributo-item">
-              <span>✨ Fator de Cura</span> <b>{{ fatorCura }}</b>
-              <small>(Energia / 3)</small>
-            </div>
-            <div class="atributo-item">
-              <span>🏃 Deslocamento</span> <b>{{ deslocamento }}</b>
-              <small>(Destreza / 3)</small>
-            </div>
-          </div>
-
-          <!-- Botões -->
-          <div class="d-flex justify-content-between mt-4">
-            <button type="button" class="btn btn-outline-light w-45" (click)="cancelar()">⬅ Cancelar</button>
-            <button type="submit" class="btn btn-save w-45" [disabled]="form.invalid || salvando">
-              <ng-container *ngIf="!salvando">💾 Atualizar</ng-container>
-              <ng-container *ngIf="salvando">
-                <span class="spinner-border spinner-border-sm me-2"></span> Salvando...
-              </ng-container>
-            </button>
           </div>
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
 </div>
