@@ -205,6 +205,13 @@ export class CadastroNpc implements OnInit, AfterViewInit {
   }
 
   cancelar() {
-    this.router.navigate(['/npcs']);
+    if (this.editMode && this.npc?.id) {
+      // Se está editando → volta pros detalhes do NPC
+      this.router.navigate(['/npc-detalhes', this.npc.id]);
+    } else {
+      // Se está cadastrando novo → volta pra lista
+      this.router.navigate(['/npcs']);
+    }
   }
+
 }

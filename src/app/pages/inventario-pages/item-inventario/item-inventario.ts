@@ -116,7 +116,8 @@ export class ItemInventario implements OnInit {
   }
 
   cancelar() {
-    this.location.back();
+      // Se não está editando, volta para a lista geral
+      this.router.navigate(['/inventario-jogador']);
   }
 
   editarItem() {

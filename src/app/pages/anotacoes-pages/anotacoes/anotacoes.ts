@@ -27,7 +27,7 @@ export class Anotacoes implements OnInit {
 
   private repo = new BaseRepository<AnotacaoDomain>('Anotacoes', 'Anotacoes');
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   async ngOnInit() {
     this.carregando = true;
@@ -93,7 +93,7 @@ export class Anotacoes implements OnInit {
   }
 
   aplicarFiltro() {
-    const termo = this.filtro.toLowerCase().trim();
+    const termo = this.normalizarTexto(this.filtro);
     if (!termo) {
       this.secoesFiltradas = [...this.secoes];
       return;
@@ -103,15 +103,16 @@ export class Anotacoes implements OnInit {
       .map((s) => ({
         ...s,
         itens: s.itens.filter((a) =>
-          String(a.titulo || '').toLowerCase().includes(termo) ||
-          String(a.descricao || '').toLowerCase().includes(termo) ||
-          String(a.tags || '').toLowerCase().includes(termo) ||
-          String(a.autor || '').toLowerCase().includes(termo)
+          this.normalizarTexto(a.titulo || "").includes(termo) ||
+          this.normalizarTexto(a.descricao || "").includes(termo) ||
+          this.normalizarTexto(a.tags || "").includes(termo) ||
+          this.normalizarTexto(a.autor || "").includes(termo)
         ),
         expandido: true,
       }))
       .filter((s) => s.itens.length > 0);
   }
+
 
   toggleSecao(secao: SecaoAnotacao) {
     secao.expandido = !secao.expandido;
@@ -133,4 +134,12 @@ export class Anotacoes implements OnInit {
   abrirAnotacao(anotacao: AnotacaoDomain) {
     this.router.navigate(['/criar-anotacao', anotacao.id]);
   }
+
+  /** Remove acentos e normaliza texto */
+  private normalizarTexto(txt: string): string {
+    return txt
+      ? txt.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim()
+      : "";
+  }
+
 }

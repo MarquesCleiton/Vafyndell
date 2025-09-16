@@ -84,9 +84,7 @@ export class ItemCatalogo implements OnInit {
     this.processandoEditar = true;
 
     setTimeout(() => {
-      this.router.navigate(['/cadastro-item-catalogo', this.item!.id], {
-        queryParams: { returnUrl: this.router.url },
-      });
+      this.router.navigate(['/cadastro-item-catalogo', this.item!.id]); // 🚀 sem returnUrl
       this.processandoEditar = false;
     }, 300);
   }

@@ -30,28 +30,35 @@ export class InventarioJogador implements OnInit {
   carregando = true;
   filtro = '';
 
-  resumo = {
-    tipos: 0,
-    unidades: 0,
-    pesoTotal: 0,
-    categorias: 0,
-  };
+  abaAtiva: 'recursos' | 'equipamentos' | 'pocoes' | 'outros' = 'recursos';
+
+  resumo = { tipos: 0, unidades: 0, pesoTotal: 0, categorias: 0 };
 
   private catalogoRepo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
   private inventarioRepo = new BaseRepository<InventarioDomain>('Inventario', 'Inventario');
+
+  private mapaAbas: Record<string, string[]> = {
+    recursos: ['Recursos botânicos', 'Mineral', 'Componentes bestiais e animalescos', 'Tesouro', 'Moeda'],
+    equipamentos: ['Equipamento', 'Ferramentas', 'Utilitário – Bombas, armadilhas, luz, som, gás, adesivos'],
+    pocoes: [
+      'Poção de Cura – Regenera vida, cicatriza feridas',
+      'Poção Mental – Calmante, foco, memória, sono, esquecimento',
+      'Poção de Aprimoramento Físico – Força, resistência, agilidade',
+      'Poção Sensorial – Visão, audição, percepção, voz, respiração',
+      'Poção de Furtividade – Camuflagem, passos suaves, silêncio',
+      'Poção de Energia – Percepção da energia fundamental',
+      'Veneno – Sonolência, confusão ou morte',
+    ],
+    outros: ['Outros'],
+  };
 
   constructor(private router: Router) {}
 
   async ngOnInit() {
     try {
-      console.log('[InventarioJogador] 🔄 Iniciando carregamento...');
       this.carregando = true;
-
       const user = AuthService.getUser();
       if (!user?.email) throw new Error('Usuário não autenticado.');
-
-      console.log('[InventarioJogador] Usuário logado:', user.email);
-
       await this.loadLocalAndSync(user.email);
     } catch (err) {
       console.error('[InventarioJogador] ❌ Erro ao carregar inventário:', err);
@@ -61,16 +68,10 @@ export class InventarioJogador implements OnInit {
   }
 
   private async loadLocalAndSync(email: string) {
-    console.log('[InventarioJogador] 🔄 Iniciando carregamento do inventário...');
-
     const [catalogoLocal, inventarioLocal] = await Promise.all([
       this.catalogoRepo.getLocal(),
       this.inventarioRepo.getLocal(),
     ]);
-
-    console.log(
-      `[InventarioJogador] Cache local → catálogo: ${catalogoLocal.length}, inventário: ${inventarioLocal.length}`
-    );
 
     const meusItens = inventarioLocal.filter((i) => i.jogador === email);
     this.processarInventario(meusItens, catalogoLocal);
@@ -78,9 +79,7 @@ export class InventarioJogador implements OnInit {
     (async () => {
       const catSync = await this.catalogoRepo.sync();
       const invSync = await this.inventarioRepo.sync();
-
       if (catSync || invSync) {
-        console.log('[InventarioJogador] ✅ Sync trouxe alterações → recarregando dados...');
         const [catAtualizado, invAtualizado] = await Promise.all([
           this.catalogoRepo.getLocal(),
           this.inventarioRepo.getLocal(),
@@ -91,10 +90,8 @@ export class InventarioJogador implements OnInit {
     })();
 
     if (!meusItens.length) {
-      console.warn('[InventarioJogador] ⚠️ Nenhum inventário local. Forçando fetch online...');
       await this.catalogoRepo.forceFetch();
       await this.inventarioRepo.forceFetch();
-
       const [catalogoOnline, inventarioOnline] = await Promise.all([
         this.catalogoRepo.getLocal(),
         this.inventarioRepo.getLocal(),
@@ -104,16 +101,9 @@ export class InventarioJogador implements OnInit {
     }
   }
 
-  /** 🔧 Monta categorias e resumo */
-  private processarInventario(
-    inventarioBruto: InventarioDomain[],
-    catalogo: CatalogoDomain[]
-  ) {
+  private processarInventario(inventarioBruto: InventarioDomain[], catalogo: CatalogoDomain[]) {
     const inventarioDetalhado: InventarioDetalhado[] = inventarioBruto.map((inv) => {
       const detalhe = catalogo.find((c) => String(c.id) === String(inv.item_catalogo));
-      if (!detalhe) {
-        console.warn('[InventarioJogador] ❗ Item de inventário sem detalhe no catálogo:', inv);
-      }
       return { ...inv, itemDetalhe: detalhe };
     });
 
@@ -136,13 +126,10 @@ export class InventarioJogador implements OnInit {
 
     this.categoriasFiltradas = [...this.categorias];
     this.calcularResumo();
-
-    console.log('[InventarioJogador] ✅ Resumo →', this.resumo);
   }
 
   private calcularResumo() {
     const todosItens = this.categorias.flatMap((c) => c.itens);
-
     this.resumo.tipos = todosItens.length;
     this.resumo.unidades = todosItens.reduce((sum, i) => sum + (i.quantidade || 0), 0);
     this.resumo.pesoTotal = todosItens.reduce(
@@ -153,23 +140,41 @@ export class InventarioJogador implements OnInit {
   }
 
   aplicarFiltro() {
-    const termo = this.filtro.toLowerCase();
+    const termo = this.normalizarTexto(this.filtro);
     if (!termo) {
       this.categoriasFiltradas = [...this.categorias];
       return;
     }
 
     this.categoriasFiltradas = this.categorias
-      .map((c) => ({
-        ...c,
-        itens: c.itens.filter(
-          (i) =>
-            String(i.itemDetalhe?.nome || '').toLowerCase().includes(termo) ||
-            String(i.itemDetalhe?.raridade || '').toLowerCase().includes(termo) ||
-            String(i.itemDetalhe?.categoria || '').toLowerCase().includes(termo)
-        ),
-      }))
+      .map((c) => {
+        const itensFiltrados = c.itens.filter((i) =>
+          [
+            i.itemDetalhe?.nome,
+            i.itemDetalhe?.raridade,
+            i.itemDetalhe?.efeito,
+            i.itemDetalhe?.colateral,
+            i.itemDetalhe?.categoria,
+          ]
+            .map((v) => this.normalizarTexto(String(v || '')))
+            .some((texto) => texto.includes(termo))
+        );
+        return { ...c, itens: itensFiltrados, expandido: itensFiltrados.length > 0 };
+      })
       .filter((c) => c.itens.length > 0);
+  }
+
+  private normalizarTexto(texto: string): string {
+    return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  }
+
+  selecionarAba(aba: 'recursos' | 'equipamentos' | 'pocoes' | 'outros') {
+    this.abaAtiva = aba;
+  }
+
+  pertenceAba(categoria?: string): boolean {
+    if (!categoria) return this.abaAtiva === 'outros';
+    return this.mapaAbas[this.abaAtiva].includes(categoria);
   }
 
   toggleCategoria(cat: CategoriaInventario) {

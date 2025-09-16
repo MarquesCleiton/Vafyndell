@@ -164,8 +164,15 @@ export class CadastroInventario implements OnInit {
   }
 
   cancelar() {
-    this.router.navigate(['/inventario-jogador']);
+    if (this.editando && this.inventarioAtual?.id) {
+      // Se está editando, volta para a página de detalhes do item
+      this.router.navigate(['/item-inventario', this.inventarioAtual.id]);
+    } else {
+      // Se não está editando, volta para a lista geral
+      this.router.navigate(['/inventario-jogador']);
+    }
   }
+
 
   novoItem() {
     this.router.navigate(['/cadastro-item-catalogo']);

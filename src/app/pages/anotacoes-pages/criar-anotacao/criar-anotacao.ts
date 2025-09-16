@@ -42,7 +42,7 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
     private route: ActivatedRoute,
     private el: ElementRef,
     private zone: NgZone
-  ) {}
+  ) { }
 
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -134,7 +134,11 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
 
       this.anotacao.autor = user.email;
       this.anotacao.jogador = user.email;
-      this.anotacao.data = new Date().toISOString();
+
+      // 🔑 Só define data se for nova ou se estava vazia
+      if (!this.editMode || !this.anotacao.data) {
+        this.anotacao.data = new Date().toISOString();
+      }
 
       // Prepara payload
       const payload: any = { ...this.anotacao };
@@ -167,6 +171,7 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
       this.imagemBase64Temp = null;
     }
   }
+
 
   cancelar() {
     this.router.navigate(['/anotacoes']);

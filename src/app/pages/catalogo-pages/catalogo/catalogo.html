@@ -9,11 +9,29 @@
            (input)="aplicarFiltro()" />
   </div>
 
+  <!-- Tabs -->
+  <ul class="nav nav-tabs bg-dark px-3" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" [class.active]="abaAtiva === 'recursos'"
+              (click)="selecionarAba('recursos')">🌿 Recursos</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" [class.active]="abaAtiva === 'equipamentos'"
+              (click)="selecionarAba('equipamentos')">⚔️ Equipamentos</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" [class.active]="abaAtiva === 'pocoes'"
+              (click)="selecionarAba('pocoes')">🧪 Poções</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" [class.active]="abaAtiva === 'outros'"
+              (click)="selecionarAba('outros')">📦 Outros</button>
+    </li>
+  </ul>
+
   <!-- Conteúdo -->
   <div class="flex-grow-1 p-3 d-flex justify-content-center">
     <div class="catalogo-container w-100">
-
-      <h4 class="fw-bold mb-3">📚 Catálogo</h4>
 
       <!-- Loading -->
       <div *ngIf="carregando" class="text-center py-5">
@@ -27,9 +45,9 @@
         Nenhum item encontrado.
       </div>
 
-      <!-- Categorias -->
+      <!-- Categorias filtradas -->
       <div *ngIf="!carregando">
-        <div *ngFor="let cat of categoriasFiltradas" class="mb-3">
+        <div *ngFor="let cat of categoriasFiltradas" class="mb-3" [hidden]="!pertenceAba(cat.nome)">
 
           <!-- Cabeçalho da categoria -->
           <button class="btn btn-categoria w-100 d-flex justify-content-between align-items-center"
@@ -38,7 +56,7 @@
             <span>{{ cat.expandido ? '−' : '+' }}</span>
           </button>
 
-          <!-- Itens da categoria -->
+          <!-- Itens -->
           <div *ngIf="cat.expandido" class="mt-2">
             <div class="row row-cols-1 g-2">
               <div class="col" *ngFor="let item of cat.itens">
@@ -46,12 +64,10 @@
                      (click)="abrirItem(item)"
                      style="cursor: pointer;">
 
-                  <!-- Cabeçalho -->
                   <div class="d-flex align-items-center mb-2">
                     <div class="item-thumb me-3">
                       <img *ngIf="item.imagem && item.imagem !== '-'"
-                           [src]="item.imagem"
-                           alt="{{ item.nome || 'Item' }}" />
+                           [src]="item.imagem" alt="{{ item.nome || 'Item' }}" />
                       <span *ngIf="!item.imagem || item.imagem === '-'" class="text-muted fs-4">📦</span>
                     </div>
 
@@ -63,16 +79,9 @@
                     </div>
                   </div>
 
-                  <!-- Detalhes extras -->
-                  <p *ngIf="item.efeito" class="small mt-2 text-info">
-                    ✨ {{ item.efeito }}
-                  </p>
-                  <p *ngIf="item.colateral" class="small text-danger">
-                    ⚠️ {{ item.colateral }}
-                  </p>
-                  <p *ngIf="item.descricao" class="small descricao-text fst-italic">
-                    📝 {{ item.descricao }}
-                  </p>
+                  <p *ngIf="item.efeito" class="small mt-2 text-info">✨ {{ item.efeito }}</p>
+                  <p *ngIf="item.colateral" class="small text-danger">⚠️ {{ item.colateral }}</p>
+                  <p *ngIf="item.descricao" class="small descricao-text fst-italic">📝 {{ item.descricao }}</p>
                 </div>
               </div>
             </div>

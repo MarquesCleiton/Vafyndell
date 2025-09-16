@@ -1,3 +1,19 @@
+/* Tabs */
+.nav-tabs {
+  border-bottom: 1px solid #444;
+}
+.nav-tabs .nav-link {
+  color: #aaa;
+  background: transparent;
+  border: none;
+  font-weight: 600;
+}
+.nav-tabs .nav-link.active {
+  color: #fff;
+  background: #2a2a2a;
+  border-radius: 8px 8px 0 0;
+}
+
 /* Wrapper responsivo */
 .catalogo-wrapper {
   display: flex;
@@ -6,7 +22,7 @@
 
 .catalogo-container {
   width: 100%;
-  max-width: 900px; /* largura padrão */
+  max-width: 900px;
 }
 
 /* Barra de pesquisa */
@@ -24,7 +40,7 @@
 /* Categoria */
 .btn-categoria {
   background: #2a2a2a;
-  color: #f8f9fa; /* 🔥 texto bem claro */
+  color: #f8f9fa;
   font-weight: 600;
   border-radius: 8px;
   padding: 0.6rem 1rem;
@@ -35,12 +51,12 @@
   color: #fff;
 }
 
-/* Cards do catálogo */
+/* Cards */
 .catalogo-card {
   background: #1e1e1e;
   border-radius: 10px;
   transition: transform 0.15s ease;
-  color: #f1f1f1; /* 🔥 texto interno sempre claro */
+  color: #f1f1f1;
 }
 .catalogo-card:hover {
   transform: scale(1.02);
@@ -64,24 +80,19 @@
   object-fit: cover;
 }
 .item-thumb span {
-  color: #bbb; /* ícone placeholder */
+  color: #bbb;
 }
 
 /* Texto */
 .catalogo-card h6 {
-  color: #fff; /* 🔥 nome do item bem visível */
+  color: #fff;
 }
 .catalogo-card small {
-  color: #ddd; /* 🔥 detalhes mais claros */
+  color: #ddd;
 }
 .catalogo-card p {
-  color: #e0e0e0; /* 🔥 corpo do texto mais legível */
-  white-space: pre-line; /* aceita quebra de linha */
-}
-
-/* Raridade (mantém cores próprias) */
-.raridade {
-  font-weight: bold;
+  color: #e0e0e0;
+  white-space: pre-line;
 }
 
 /* FAB */
@@ -118,7 +129,7 @@
   background: #0b5ed7;
 }
 
-/* Desktop: alinhado ao card */
+/* Desktop */
 @media (min-width: 992px) {
   .catalogo-container {
     padding: 0 2rem;
@@ -128,3 +139,41 @@
     transform: translateX(450px);
   }
 }
+
+
+/* Tabs mais responsivas */
+.nav-tabs {
+  display: flex;
+  flex-wrap: nowrap;          /* não quebra linha */
+  overflow-x: auto;           /* permite rolar horizontal */
+  -webkit-overflow-scrolling: touch; /* rolagem suave no mobile */
+  border-bottom: 1px solid #444;
+  scrollbar-width: none;      /* oculta barra no Firefox */
+}
+.nav-tabs::-webkit-scrollbar {
+  display: none;              /* oculta barra no Chrome/Safari */
+}
+
+.nav-tabs .nav-item {
+  flex: 1 0 auto;             /* não deixa encolher demais */
+  text-align: center;
+}
+
+.nav-tabs .nav-link {
+  color: #aaa;
+  background: transparent;
+  border: none;
+  font-weight: 600;
+  padding: 0.5rem 0.8rem;      /* padding menor → mais compacto */
+  display: flex;
+  align-items: center;
+  gap: 6px;                    /* espaço entre emoji/ícone e texto */
+  white-space: nowrap;         /* evita quebra de linha */
+}
+
+.nav-tabs .nav-link.active {
+  color: #fff;
+  background: #2a2a2a;
+  border-radius: 8px 8px 0 0;
+}
+

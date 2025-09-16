@@ -40,15 +40,22 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
   origens = ['Fabricável', 'Natural'];
   raridades = ['Comum', 'Incomum', 'Raro', 'Épico', 'Lendário'];
   categorias = [
-    'Recursos botânicos', 'Mineral', 'Equipamento', 'Moeda', 'Tesouro',
-    'Componentes bestiais e animalescos', 'Poção de Cura – Regenera vida, cicatriza feridas',
+    'Recursos botânicos', 
+    'Mineral', 
+    'Equipamento', 
+    'Moeda', 
+    'Tesouro',
+    'Componentes bestiais e animalescos', 
+    'Poção de Cura – Regenera vida, cicatriza feridas',
     'Poção Mental – Calmante, foco, memória, sono, esquecimento',
     'Poção de Aprimoramento Físico – Força, resistência, agilidade',
     'Poção Sensorial – Visão, audição, percepção, voz, respiração',
     'Poção de Furtividade – Camuflagem, passos suaves, silêncio',
     'Poção de Energia – Percepção da energia fundamental',
-    'Veneno – Sonolência, confusão ou morte', 'Utilitário – Bombas, armadilhas, luz, som, gás, adesivos',
-    'Ferramentas', 'Outros',
+    'Veneno – Sonolência, confusão ou morte', 
+    'Utilitário – Bombas, armadilhas, luz, som, gás, adesivos',
+    'Ferramentas', 
+    'Outros',
   ];
 
   private repo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
@@ -59,7 +66,7 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
     private route: ActivatedRoute,
     private zone: NgZone,
     private location: Location // ✅ agora disponível para cancelar()
-  ) {}
+  ) { }
 
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -146,12 +153,12 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
       if (!user?.email) throw new Error('Usuário não autenticado');
       this.item.email = user.email;
 
-      const payload: any = { ...this.item };
-      if (this.imagemBase64Temp) {
-        payload.imagem = this.imagemBase64Temp; // envia base64 → Script faz upload
-      }
-
       if (this.editMode) {
+        const payload: any = { ...this.item };
+        if (this.imagemBase64Temp) {
+          payload.imagem = this.imagemBase64Temp;
+        }
+
         const updated = await this.repo.update(payload);
         this.item = { ...updated };
         window.alert('✅ Item atualizado com sucesso!');
@@ -159,17 +166,20 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
         const locais = await this.repo.getLocal();
         const maxIndex = locais.length > 0 ? Math.max(...locais.map(i => i.index || 0)) : 0;
 
-        this.item.id = IdUtils.generateULID();
+        this.item.id = IdUtils.generateULID();   // gera id antes
         this.item.index = maxIndex + 1;
+
+        const payload: any = { ...this.item };
+        if (this.imagemBase64Temp) {
+          payload.imagem = this.imagemBase64Temp;
+        }
 
         const created = await this.repo.create(payload);
         this.item = { ...created };
         window.alert('✅ Item criado com sucesso!');
       }
 
-      // ✅ Agora reaproveita cancelar()
       this.cancelar();
-
     } catch (err) {
       console.error('[CadastroItemCatalogo] Erro ao salvar:', err);
       window.alert('❌ Erro ao salvar item. Veja o console.');
@@ -178,6 +188,7 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
       this.imagemBase64Temp = null;
     }
   }
+
 
   // 🔙 Cancelar → volta para tela anterior
   cancelar() {

@@ -6,7 +6,7 @@ import { BaseRepository } from '../../../repositories/BaseRepository';
 import { NpcDomain } from '../../../domain/NpcDomain';
 
 interface CategoriaNpc {
-  nome: string;
+  nome: string; // tipo (Comum, Elite, Mágico, Lendário)
   itens: NpcDomain[];
   expandido: boolean;
 }
@@ -24,13 +24,12 @@ export class Npcs implements OnInit {
   carregando = true;
   filtro = '';
 
-  // ✅ Reuso do BaseRepository genérico
-  private repo = new BaseRepository<NpcDomain>(
-    'NPCs',
-    'NPCs'
-  );
+  abaAtiva: 'bestiais' | 'inimigos' = 'bestiais';
 
-  constructor(private router: Router) { }
+  private repo = new BaseRepository<NpcDomain>('NPCs', 'NPCs');
+  private todosNpcs: NpcDomain[] = []; // 🔹 cache local em memória
+
+  constructor(private router: Router) {}
 
   async ngOnInit() {
     this.carregando = true;
@@ -43,69 +42,87 @@ export class Npcs implements OnInit {
     }
   }
 
-  /** 🔄 Carrega do cache e sincroniza em paralelo */
   private async loadLocalAndSync() {
-    // 1. Carrega cache local
     const locais = await this.repo.getLocal();
-    this.processarCategorias(locais);
+    this.todosNpcs = locais;
+    this.processarCategorias(this.todosNpcs);
 
-    // 2. Sincroniza em paralelo
     this.repo.sync().then(async (updated) => {
       if (updated) {
         const atualizados = await this.repo.getLocal();
-        this.processarCategorias(atualizados);
+        this.todosNpcs = atualizados;
+        this.processarCategorias(this.todosNpcs);
       }
     });
 
-    // 3. Se não havia nada local, força fetch
     if (locais.length === 0) {
       const online = await this.repo.forceFetch();
-      this.processarCategorias(online);
+      this.todosNpcs = online;
+      this.processarCategorias(this.todosNpcs);
     }
   }
 
-  /** Agrupa NPCs por categoria */
+  /** 🔧 Agrupa NPCs pelo campo `tipo`, filtrando por aba (classificacao) */
   private processarCategorias(lista: NpcDomain[]) {
-    // 👇 Guarda o estado expandido das categorias já renderizadas
     const estados = new Map(this.categorias.map(c => [c.nome, c.expandido]));
-
     const mapa = new Map<string, NpcDomain[]>();
-    lista.forEach((npc) => {
-      const cat = npc.classificacao || 'Outros';
-      if (!mapa.has(cat)) mapa.set(cat, []);
-      mapa.get(cat)!.push(npc);
-    });
+
+    lista
+      .filter((npc) =>
+        this.abaAtiva === 'bestiais'
+          ? npc.classificacao === 'Bestial'
+          : npc.classificacao === 'Inimigo'
+      )
+      .forEach((npc) => {
+        const cat = npc.tipo || 'Comum';
+        if (!mapa.has(cat)) mapa.set(cat, []);
+        mapa.get(cat)!.push(npc);
+      });
 
     this.categorias = Array.from(mapa.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
+      // ordena na ordem fixa: Comum → Elite → Mágico → Lendário
+      .sort(([a], [b]) => this.ordemTipos(a) - this.ordemTipos(b))
       .map(([nome, itens]) => ({
         nome,
         itens,
-        expandido: estados.get(nome) ?? false, // 👈 reaproveita o estado anterior
+        expandido: estados.get(nome) ?? false,
       }));
 
     this.categoriasFiltradas = [...this.categorias];
   }
 
+  private ordemTipos(tipo: string): number {
+    const ordem = ['Comum', 'Elite', 'Mágico', 'Lendário'];
+    const idx = ordem.indexOf(tipo);
+    return idx >= 0 ? idx : 999; // tipos desconhecidos vão para o final
+  }
+
   aplicarFiltro() {
-    const termo = this.filtro.toLowerCase().trim();
+    const termo = this.normalizarTexto(this.filtro);
     if (!termo) {
       this.categoriasFiltradas = [...this.categorias];
       return;
     }
 
     this.categoriasFiltradas = this.categorias
-      .map((c) => ({
-        ...c,
-        itens: c.itens.filter(
-          (n) =>
-            n.nome?.toLowerCase().includes(termo) ||
-            n.tipo?.toLowerCase().includes(termo) ||
-            n.descricao?.toLowerCase().includes(termo) ||
-            n.alinhamento?.toLowerCase().includes(termo)
-        ),
-      }))
+      .map((c) => {
+        const itensFiltrados = c.itens.filter((n) =>
+          [n.nome, n.tipo, n.descricao, n.alinhamento, n.classificacao]
+            .map((v) => this.normalizarTexto(String(v || '')))
+            .some((texto) => texto.includes(termo))
+        );
+        return { ...c, itens: itensFiltrados, expandido: itensFiltrados.length > 0 };
+      })
       .filter((c) => c.itens.length > 0);
+  }
+
+  private normalizarTexto(texto: string): string {
+    return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  }
+
+  selecionarAba(aba: 'bestiais' | 'inimigos') {
+    this.abaAtiva = aba;
+    this.processarCategorias(this.todosNpcs); // 🔹 agora só reprocessa o cache
   }
 
   toggleCategoria(cat: CategoriaNpc) {
@@ -113,9 +130,7 @@ export class Npcs implements OnInit {
   }
 
   abrirItem(npc: NpcDomain) {
-    this.router.navigate(['/npc-detalhes', npc.id], {
-      queryParams: { returnUrl: '/npcs' },
-    });
+    this.router.navigate(['/npc-detalhes', npc.id]);
   }
 
   novoNpc() {

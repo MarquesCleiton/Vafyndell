@@ -1,7 +1,7 @@
 <div class="personagem-detalhe-wrapper d-flex flex-column min-vh-100 bg-dark text-light">
   <div class="flex-grow-1 p-3 d-flex justify-content-center">
     <div class="personagem-detalhe-container w-100">
-      
+
       <!-- Loading -->
       <div *ngIf="loading" class="text-center py-5">
         <div class="spinner-border text-light" role="status"></div>
@@ -10,7 +10,7 @@
 
       <!-- Conteúdo -->
       <div *ngIf="!loading && jogador" class="card detalhe-card shadow-lg border-0">
-        
+
         <!-- Imagem ou fallback -->
         <div class="position-relative">
           <ng-container *ngIf="jogador.imagem && jogador.imagem !== '-'; else noImagem">
@@ -18,7 +18,7 @@
           </ng-container>
           <ng-template #noImagem>
             <div class="d-flex align-items-center justify-content-center bg-secondary text-dark detalhe-img"
-                 style="height: 200px; font-size: 3rem;">
+              style="height: 200px; font-size: 3rem;">
               👤
             </div>
           </ng-template>
@@ -77,4 +77,12 @@
       </div>
     </div>
   </div>
+
+  <!-- FAB Voltar -->
+  <div class="fab-stack">
+    <button class="fab fab-primary" (click)="voltarBatalha()">
+      ⬅️
+    </button>
+  </div>
+
 </div>

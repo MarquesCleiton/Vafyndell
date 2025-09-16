@@ -38,6 +38,41 @@
 }
 
 /* ======================
+   TABS (mesmo estilo do Catálogo)
+   ====================== */
+.nav-tabs {
+  display: flex;
+  flex-wrap: nowrap;          /* não quebra linha */
+  overflow-x: auto;           /* permite rolar horizontal */
+  -webkit-overflow-scrolling: touch; /* rolagem suave no mobile */
+  border-bottom: 1px solid #444;
+  scrollbar-width: none;      /* oculta barra no Firefox */
+}
+.nav-tabs::-webkit-scrollbar {
+  display: none;              /* oculta barra no Chrome/Safari */
+}
+.nav-tabs .nav-item {
+  flex: 1 0 auto;             /* não deixa encolher demais */
+  text-align: center;
+}
+.nav-tabs .nav-link {
+  color: #aaa;
+  background: transparent;
+  border: none;
+  font-weight: 600;
+  padding: 0.5rem 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;                   /* espaço entre emoji e texto */
+  white-space: nowrap;
+}
+.nav-tabs .nav-link.active {
+  color: #fff;
+  background: #2a2a2a;
+  border-radius: 8px 8px 0 0;
+}
+
+/* ======================
    TÍTULO
    ====================== */
 .title {
@@ -61,7 +96,8 @@
   transition: background 0.2s ease;
 }
 .categoria-btn:hover {
-  background: #333;
+  background: #343a40;
+  color: #fff;
 }
 
 /* ======================
@@ -69,10 +105,16 @@
    ====================== */
 .receita-card {
   background: #1e1e1e;
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 14px;
   position: relative;
   box-shadow: 0px 2px 6px rgba(0,0,0,0.4);
+  transition: transform 0.15s ease;
+  color: #f1f1f1;
+}
+.receita-card:hover {
+  transform: scale(1.02);
+  background: #252525;
 }
 
 /* Indicador de status */
@@ -88,8 +130,8 @@
 
 /* Thumb da receita */
 .thumb {
-  width: 40px;
-  height: 40px;
+  width: 55px;
+  height: 55px;
   border-radius: 8px;
   background: #2a2a2a;
   display: flex;
@@ -196,7 +238,6 @@
   .oficina-container {
     padding: 0 2rem;
   }
-
   .receita-card {
     border-radius: 16px;
   }

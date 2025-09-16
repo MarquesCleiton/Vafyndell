@@ -26,7 +26,7 @@ export class JogadorDetalhesBatalha implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router
-  ) {}
+  ) { }
 
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -114,4 +114,9 @@ export class JogadorDetalhesBatalha implements OnInit {
       });
     }
   }
+
+  voltarBatalha() {
+    this.router.navigate(['/batalha']);
+  }
+
 }

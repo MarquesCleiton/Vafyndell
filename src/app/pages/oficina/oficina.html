@@ -1,5 +1,4 @@
 <div class="oficina-wrapper d-flex flex-column min-vh-100 bg-dark text-light">
-
   <!-- 🔔 Toast global -->
   <div *ngIf="mensagem"
        class="toast-feedback position-fixed bottom-0 end-0 m-3"
@@ -23,6 +22,26 @@
         </label>
       </div>
     </div>
+
+    <!-- 🔖 Abas -->
+    <ul class="nav nav-tabs mt-2">
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="abaAtiva === 'recursos'"
+                (click)="selecionarAba('recursos')">🌿 Recursos</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="abaAtiva === 'equipamentos'"
+                (click)="selecionarAba('equipamentos')">⚔️ Equipamentos</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="abaAtiva === 'pocoes'"
+                (click)="selecionarAba('pocoes')">🧪 Poções</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="abaAtiva === 'outros'"
+                (click)="selecionarAba('outros')">📦 Outros</button>
+      </li>
+    </ul>
   </div>
 
   <!-- Conteúdo -->
@@ -45,7 +64,9 @@
 
       <!-- Categorias -->
       <div *ngIf="!carregando">
-        <div *ngFor="let cat of categoriasFiltradas" class="mb-3">
+        <div *ngFor="let cat of categoriasFiltradas"
+             class="mb-3"
+             [hidden]="!pertenceAba(cat.nome)">
 
           <!-- Cabeçalho da categoria -->
           <button class="categoria-btn" (click)="toggleCategoria(cat)">
@@ -56,7 +77,6 @@
           <!-- Itens -->
           <div *ngIf="cat.expandido" class="mt-2 d-flex flex-column gap-3">
             <div *ngFor="let rec of cat.itens" class="receita-card">
-
               <!-- Disponibilidade -->
               <small class="status-indicador"
                      [ngClass]="rec.fabricavel ? 'status-ok' : 'status-off'">
@@ -100,7 +120,7 @@
                 </div>
               </div>
 
-              <!-- Botões (apenas se disponível) -->
+              <!-- Botões -->
               <div *ngIf="rec.fabricavel" class="acoes-bottom">
                 <button class="btn-square success"
                         [disabled]="loadingAction[rec.id]"

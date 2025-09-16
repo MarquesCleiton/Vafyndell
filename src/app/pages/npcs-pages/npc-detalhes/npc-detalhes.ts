@@ -6,7 +6,6 @@ import { BaseRepository } from '../../../repositories/BaseRepository';
 import { JogadorDomain } from '../../../domain/jogadorDomain';
 import { IdUtils } from '../../../core/utils/IdUtils';
 
-
 @Component({
   selector: 'app-npc-detalhes',
   standalone: true,
@@ -21,7 +20,6 @@ export class NpcDetalhes implements OnInit {
   processandoExcluir = false;
   processandoAdicionar = false;
 
-  // ✅ Reuso do BaseRepository
   private npcRepo = new BaseRepository<NpcDomain>('NPCs', 'NPCs');
   private jogadorRepo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
 
@@ -80,9 +78,7 @@ export class NpcDetalhes implements OnInit {
     this.processandoEditar = true;
 
     setTimeout(() => {
-      this.router.navigate(['/cadastro-npc', this.npc!.id], {
-        queryParams: { returnUrl: this.router.url },
-      });
+      this.router.navigate(['/cadastro-npc', this.npc!.id]); // 🚀 sem returnUrl
       this.processandoEditar = false;
     }, 300);
   }
@@ -105,35 +101,33 @@ export class NpcDetalhes implements OnInit {
     }
   }
 
-  /** ➕ Adicionar NPC como "jogador" no campo de batalha */
-  /** ➕ Adicionar NPC como "jogador" no campo de batalha */
   async adicionarAoCampo() {
     if (!this.npc) return;
     this.processandoAdicionar = true;
 
     try {
-      // 1. Carrega jogadores do cache (cache first)
       let jogadores = await this.jogadorRepo.getLocal();
 
-      // 2. Sincroniza em paralelo → se atualizar, substitui
       this.jogadorRepo.sync().then(async updated => {
         if (updated) {
           jogadores = await this.jogadorRepo.getLocal();
         }
       });
 
-      // 3. Calcula próximo número baseado no cache atual (rápido)
       const baseName = this.npc.nome.trim();
       const existentes = jogadores
-        .map(j => j.personagem.match(/^(\d+) - (.+)$/))
+        .map(j => {
+          const nome = String(j.personagem || '').trim();
+          return nome.match(/^(\d+) - (.+)$/);
+        })
         .filter(m => m && m[2] === baseName)
         .map(m => parseInt(m![1], 10));
 
+
       const proximoNumero = existentes.length > 0 ? Math.max(...existentes) + 1 : 1;
 
-      // 4. Cria registro de jogador NPC
       const novoNpcJogador: JogadorDomain = {
-        index: 0, // servidor define
+        index: 0,
         id: IdUtils.generateULID(),
         email: '',
         imagem: this.npc.imagem || '',
@@ -171,5 +165,4 @@ export class NpcDetalhes implements OnInit {
       this.processandoAdicionar = false;
     }
   }
-
 }
