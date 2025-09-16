@@ -1,21 +1,30 @@
 <mat-sidenav-container class="app-container bg-dark text-light" *ngIf="!isLoginPage(); else loginOutlet">
   <!-- Menu lateral (desktop) -->
-  <mat-sidenav #sidenav [mode]="isMobile ? 'over' : 'side'" [opened]="!isMobile" class="sidenav bg-dark text-light">
+  <mat-sidenav #sidenav [mode]="isDesktop ? 'side' : 'over'" class="sidenav bg-dark text-light" [opened]="isDesktop">
+    <!-- Cabeçalho -->
+    <div class="sidenav-header d-flex align-items-center gap-2 px-3 py-3 border-bottom">
+      <span class="fw-bold app-title">Vafyndell</span>
+    </div>
+
     <mat-nav-list>
-      <a mat-list-item (click)="navigateTo('/jogador'); isMobile && sidenav.close()">🧑 Jogador</a>
-      <a mat-list-item (click)="navigateTo('/skills-jogador'); isMobile && sidenav.close()">🧠 Skills</a>
-      <a mat-list-item (click)="navigateTo('/inventario-jogador'); isMobile && sidenav.close()">📦 Inventário</a>
-      <a mat-list-item (click)="navigateTo('/oficina'); isMobile && sidenav.close()">⚒️ Oficina</a>
-      <a mat-list-item (click)="navigateTo('/batalha'); isMobile && sidenav.close()">⚔️ Batalha</a>
-      <a mat-list-item (click)="navigateTo('/anotacoes'); isMobile && sidenav.close()">📝 Notas</a>
-      <a mat-list-item (click)="navigateTo('/catalogo'); isMobile && sidenav.close()">📚 Catálogo</a>
-      <a mat-list-item (click)="navigateTo('/npcs'); isMobile && sidenav.close()">👹 Feras & Vilões</a>
+      <a mat-list-item (click)="navigateWithClose('/jogador', sidenav)">🦁 Jogador</a>
+      <a mat-list-item (click)="navigateWithClose('/skills-jogador', sidenav)">🧠 Skills</a>
+      <a mat-list-item (click)="navigateWithClose('/inventario-jogador', sidenav)">📦 Inventário</a>
+      <a mat-list-item (click)="navigateWithClose('/oficina', sidenav)">⚒️ Oficina</a>
+      <a mat-list-item (click)="navigateWithClose('/batalha', sidenav)">⚔️ Batalha</a>
+      <a mat-list-item (click)="navigateWithClose('/anotacoes', sidenav)">📝 Notas</a>
+
+      <mat-divider></mat-divider>
+
+      <a mat-list-item (click)="navigateWithClose('/catalogo', sidenav)">📚 Catálogo</a>
+      <a mat-list-item (click)="navigateWithClose('/npcs', sidenav)">👹 Feras & Vilões</a>
     </mat-nav-list>
+
   </mat-sidenav>
 
   <!-- Conteúdo principal -->
   <mat-sidenav-content>
-    <!-- Topbar fixa -->
+    <!-- Topbar -->
     <mat-toolbar class="bg-dark text-light fixed-top d-flex align-items-center">
       <button mat-icon-button (click)="sidenav.toggle()" class="text-light d-lg-none">
         <mat-icon>menu</mat-icon>
@@ -33,8 +42,8 @@
     </div>
 
     <!-- Navbar inferior (só mobile) -->
-    <nav *ngIf="isMobile"
-      class="bottom-nav bg-dark border-top border-secondary d-flex justify-content-around py-2 fixed-bottom">
+    <nav
+      class="bottom-nav bg-dark border-top border-secondary d-flex justify-content-around py-2 fixed-bottom d-lg-none">
       <button mat-button (click)="navigateTo('/jogador')" class="nav-item d-flex flex-column align-items-center">
         <mat-icon>person</mat-icon>
         <small>Jogador</small>
@@ -64,7 +73,7 @@
   </mat-sidenav-content>
 </mat-sidenav-container>
 
-<!-- Template alternativo só para login -->
+<!-- Template só para login -->
 <ng-template #loginOutlet>
   <router-outlet></router-outlet>
 </ng-template>

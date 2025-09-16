@@ -9,8 +9,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
-import { AuthService } from './core/auth/AuthService';
+import { MatDividerModule } from '@angular/material/divider';
 import { CommonModule } from '@angular/common';
+import { AuthService } from './core/auth/AuthService';
 
 @Component({
   selector: 'app-root',
@@ -22,7 +23,8 @@ import { CommonModule } from '@angular/common';
     MatIconModule,
     MatButtonModule,
     MatSidenavModule,
-    MatListModule
+    MatListModule,
+    MatDividerModule
   ],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
@@ -47,10 +49,10 @@ import { CommonModule } from '@angular/common';
 })
 export class App {
   protected readonly title = signal('Vafyndell');
-  protected readonly showFab = signal(false);
   private readonly activeRoute = signal('');
   protected readonly isLogged = signal(false);
-  protected isMobile = window.innerWidth < 992;
+
+  isDesktop = window.innerWidth >= 992; // 🔑 controla se é desktop
 
   get currentRoute(): string {
     return this.activeRoute();
@@ -62,7 +64,7 @@ export class App {
 
   private titles: Record<string, string> = {
     '/jogador': 'Jogador',
-    '/edicao-jogador': 'Skills',
+    '/skills-jogador': 'Skills',
     '/inventario-jogador': 'Inventário',
     '/oficina': 'Oficina',
     '/batalha': 'Batalha',
@@ -78,14 +80,13 @@ export class App {
         const url = (event as NavigationEnd).urlAfterRedirects;
         this.activeRoute.set(url);
         this.title.set(this.titles[url] ?? 'Vafyndell');
-        this.showFab.set(url === '/jogador');
       });
 
     this.isLogged.set(AuthService.isAuthenticated());
 
-    // 🔎 Detecta redimensionamento para alternar entre mobile e desktop
+    // 🔑 Recalcular se é desktop quando a tela redimensionar
     window.addEventListener('resize', () => {
-      this.isMobile = window.innerWidth < 992;
+      this.isDesktop = window.innerWidth >= 992;
     });
   }
 
@@ -93,11 +94,15 @@ export class App {
     window.location.reload();
   }
 
-  editarJogador() {
-    this.router.navigate(['/edicao-jogador']);
-  }
-
   navigateTo(path: string) {
     this.router.navigate([path]);
   }
+
+  navigateWithClose(path: string, sidenav: any) {
+  this.navigateTo(path);
+  if (!this.isDesktop) {
+    sidenav.close();
+  }
+}
+
 }
