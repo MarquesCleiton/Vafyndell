@@ -53,7 +53,7 @@ export class ItemInventario implements OnInit {
       ]);
 
       const encontrado = inventarioLocal.find(
-        i => String(i.id) === id && i.jogador === user.email
+        (i) => String(i.id) === id && i.jogador === user.email
       );
       if (encontrado) {
         this.item = this.montarDetalhe(encontrado, catalogoLocal);
@@ -70,7 +70,7 @@ export class ItemInventario implements OnInit {
               this.inventarioRepo.getLocal(),
             ]);
             const atualizado = inventarioAtualizado.find(
-              i => String(i.id) === id && i.jogador === user.email
+              (i) => String(i.id) === id && i.jogador === user.email
             );
             if (atualizado) {
               this.item = this.montarDetalhe(atualizado, catalogoAtualizado);
@@ -91,7 +91,7 @@ export class ItemInventario implements OnInit {
         ]);
 
         const achadoOnline = inventarioOnline.find(
-          i => String(i.id) === id && i.jogador === user.email
+          (i) => String(i.id) === id && i.jogador === user.email
         );
         if (achadoOnline) {
           this.item = this.montarDetalhe(achadoOnline, catalogoOnline);
@@ -111,7 +111,7 @@ export class ItemInventario implements OnInit {
     inventario: InventarioDomain,
     catalogo: CatalogoDomain[]
   ): ItemInventarioDetalhe {
-    const detalhe = catalogo.find(c => String(c.id) === String(inventario.item_catalogo));
+    const detalhe = catalogo.find((c) => String(c.id) === String(inventario.item_catalogo));
     return { inventario, catalogo: detalhe };
   }
 
@@ -123,9 +123,7 @@ export class ItemInventario implements OnInit {
     if (!this.item) return;
     this.processandoEditar = true;
     setTimeout(() => {
-      this.router.navigate(['/cadastro-inventario', this.item!.inventario.id], {
-        queryParams: { returnUrl: this.router.url },
-      });
+      this.router.navigate(['/cadastro-inventario', this.item!.inventario.id]);
       this.processandoEditar = false;
     }, 400);
   }

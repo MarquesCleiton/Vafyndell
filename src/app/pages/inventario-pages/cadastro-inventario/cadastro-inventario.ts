@@ -10,14 +10,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatOptionModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+
 import { CatalogoDomain } from '../../../domain/CatalogoDomain';
 import { InventarioDomain } from '../../../domain/InventarioDomain';
 import { BaseRepository } from '../../../repositories/BaseRepository';
 import { AuthService } from '../../../core/auth/AuthService';
 import { IdUtils } from '../../../core/utils/IdUtils';
-
-// Domínios e utilitários
-
 
 @Component({
   selector: 'app-cadastro-inventario',
@@ -45,7 +43,6 @@ export class CadastroInventario implements OnInit {
   salvando = false;
   editando = false;
   inventarioAtual: InventarioDomain | null = null;
-  returnUrl: string | null = null;
 
   // ✅ Repositories genéricos
   private catalogoRepo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
@@ -54,14 +51,11 @@ export class CadastroInventario implements OnInit {
   constructor(
     private router: Router,
     private route: ActivatedRoute
-  ) {}
+  ) { }
 
   async ngOnInit() {
     try {
       console.log('[CadastroInventario] Iniciando carregamento...');
-
-      // 🔑 pega returnUrl
-      this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
 
       // 1️⃣ Catálogo local primeiro
       this.catalogoItens = await this.catalogoRepo.getLocal();
@@ -86,7 +80,9 @@ export class CadastroInventario implements OnInit {
 
         // Inventário local do jogador
         const inventarioLocal = await this.inventarioRepo.getLocal();
-        this.inventarioAtual = inventarioLocal.find((i) => String(i.id) === idParam) || null;
+        this.inventarioAtual = inventarioLocal.find(
+          (i) => String(i.id) === idParam && i.jogador === user.email
+        ) || null;
 
         if (this.inventarioAtual) {
           await this.carregarItemSelecionado(this.inventarioAtual);
@@ -97,7 +93,9 @@ export class CadastroInventario implements OnInit {
           if (updated) {
             console.log('[CadastroInventario] Inventário atualizado. Recarregando item...');
             const atualizado = await this.inventarioRepo.getLocal();
-            const inventarioRecarregado = atualizado.find((i) => String(i.id) === idParam);
+            const inventarioRecarregado = atualizado.find(
+              (i) => String(i.id) === idParam && i.jogador === user.email
+            );
             if (inventarioRecarregado) {
               this.inventarioAtual = inventarioRecarregado;
               await this.carregarItemSelecionado(this.inventarioAtual);
@@ -108,7 +106,10 @@ export class CadastroInventario implements OnInit {
         // Fallback: força fetch se não tinha nada
         if (!this.inventarioAtual) {
           const inventarioOnline = await this.inventarioRepo.forceFetch();
-          this.inventarioAtual = inventarioOnline.find((i) => String(i.id) === idParam) || null;
+          this.inventarioAtual = inventarioOnline.find(
+            (i) => String(i.id) === idParam && i.jogador === user.email
+          ) || null;
+
           if (this.inventarioAtual) {
             await this.carregarItemSelecionado(this.inventarioAtual);
           }
@@ -125,7 +126,7 @@ export class CadastroInventario implements OnInit {
       this.catalogoFiltrado = this.catalogoItens;
     }
 
-    this.selecionado = this.catalogoItens.find((c) => c.id === inventario.item_catalogo) || null;
+    this.selecionado = this.catalogoItens.find((c) => String(c.id) === String(inventario.item_catalogo)) || null;
     this.quantidade = inventario.quantidade;
     this.filtro = this.selecionado?.nome || '';
   }
@@ -163,13 +164,11 @@ export class CadastroInventario implements OnInit {
   }
 
   cancelar() {
-    this.router.navigate([this.returnUrl || '/inventario-jogador']);
+    this.router.navigate(['/inventario-jogador']);
   }
 
   novoItem() {
-    this.router.navigate(['/cadastro-item-catalogo'], {
-      queryParams: { returnUrl: '/cadastro-inventario' },
-    });
+    this.router.navigate(['/cadastro-item-catalogo']);
   }
 
   async salvar(form: NgForm) {
@@ -203,7 +202,7 @@ export class CadastroInventario implements OnInit {
       }
 
       alert('✅ Item salvo no inventário!');
-      this.router.navigate([this.returnUrl || '/inventario-jogador']);
+      this.router.navigate(['/inventario-jogador']);
     } catch (err) {
       console.error('[CadastroInventario] Erro ao salvar:', err);
       alert('❌ Erro ao salvar item. Veja o console.');
@@ -211,4 +210,9 @@ export class CadastroInventario implements OnInit {
       this.salvando = false;
     }
   }
+
+  displayFn(item?: CatalogoDomain): string {
+    return item ? item.nome : '';
+  }
+
 }

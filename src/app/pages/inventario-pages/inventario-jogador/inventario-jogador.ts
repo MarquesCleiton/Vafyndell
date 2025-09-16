@@ -40,7 +40,7 @@ export class InventarioJogador implements OnInit {
   private catalogoRepo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
   private inventarioRepo = new BaseRepository<InventarioDomain>('Inventario', 'Inventario');
 
-  constructor(private router: Router) { }
+  constructor(private router: Router) {}
 
   async ngOnInit() {
     try {
@@ -68,9 +68,11 @@ export class InventarioJogador implements OnInit {
       this.inventarioRepo.getLocal(),
     ]);
 
-    console.log(`[InventarioJogador] Cache local → catálogo: ${catalogoLocal.length}, inventário: ${inventarioLocal.length}`);
+    console.log(
+      `[InventarioJogador] Cache local → catálogo: ${catalogoLocal.length}, inventário: ${inventarioLocal.length}`
+    );
 
-    const meusItens = inventarioLocal.filter(i => i.jogador === email);
+    const meusItens = inventarioLocal.filter((i) => i.jogador === email);
     this.processarInventario(meusItens, catalogoLocal);
 
     (async () => {
@@ -83,7 +85,7 @@ export class InventarioJogador implements OnInit {
           this.catalogoRepo.getLocal(),
           this.inventarioRepo.getLocal(),
         ]);
-        const meusAtualizados = invAtualizado.filter(i => i.jogador === email);
+        const meusAtualizados = invAtualizado.filter((i) => i.jogador === email);
         this.processarInventario(meusAtualizados, catAtualizado);
       }
     })();
@@ -97,25 +99,28 @@ export class InventarioJogador implements OnInit {
         this.catalogoRepo.getLocal(),
         this.inventarioRepo.getLocal(),
       ]);
-      const meusOnline = inventarioOnline.filter(i => i.jogador === email);
+      const meusOnline = inventarioOnline.filter((i) => i.jogador === email);
       this.processarInventario(meusOnline, catalogoOnline);
     }
   }
 
   /** 🔧 Monta categorias e resumo */
-  private processarInventario(inventarioBruto: InventarioDomain[], catalogo: CatalogoDomain[]) {
-    const inventarioDetalhado: InventarioDetalhado[] = inventarioBruto.map(inv => {
-      const detalhe = catalogo.find(c => String(c.id) === String(inv.item_catalogo));
+  private processarInventario(
+    inventarioBruto: InventarioDomain[],
+    catalogo: CatalogoDomain[]
+  ) {
+    const inventarioDetalhado: InventarioDetalhado[] = inventarioBruto.map((inv) => {
+      const detalhe = catalogo.find((c) => String(c.id) === String(inv.item_catalogo));
       if (!detalhe) {
         console.warn('[InventarioJogador] ❗ Item de inventário sem detalhe no catálogo:', inv);
       }
       return { ...inv, itemDetalhe: detalhe };
     });
 
-    const estados = new Map(this.categorias.map(c => [c.nome, c.expandido]));
+    const estados = new Map(this.categorias.map((c) => [c.nome, c.expandido]));
     const mapa = new Map<string, InventarioDetalhado[]>();
 
-    inventarioDetalhado.forEach(i => {
+    inventarioDetalhado.forEach((i) => {
       const cat = i.itemDetalhe?.categoria || 'Outros';
       if (!mapa.has(cat)) mapa.set(cat, []);
       mapa.get(cat)!.push(i);
@@ -135,14 +140,13 @@ export class InventarioJogador implements OnInit {
     console.log('[InventarioJogador] ✅ Resumo →', this.resumo);
   }
 
-
   private calcularResumo() {
-    const todosItens = this.categorias.flatMap(c => c.itens);
+    const todosItens = this.categorias.flatMap((c) => c.itens);
 
     this.resumo.tipos = todosItens.length;
     this.resumo.unidades = todosItens.reduce((sum, i) => sum + (i.quantidade || 0), 0);
     this.resumo.pesoTotal = todosItens.reduce(
-      (sum, i) => sum + ((i.quantidade || 0) * (i.itemDetalhe?.peso || 0)),
+      (sum, i) => sum + (i.quantidade || 0) * (i.itemDetalhe?.peso || 0),
       0
     );
     this.resumo.categorias = this.categorias.length;
@@ -156,15 +160,16 @@ export class InventarioJogador implements OnInit {
     }
 
     this.categoriasFiltradas = this.categorias
-      .map(c => ({
+      .map((c) => ({
         ...c,
-        itens: c.itens.filter(i =>
-          String(i.itemDetalhe?.nome || '').toLowerCase().includes(termo) ||
-          String(i.itemDetalhe?.raridade || '').toLowerCase().includes(termo) ||
-          String(i.itemDetalhe?.categoria || '').toLowerCase().includes(termo)
+        itens: c.itens.filter(
+          (i) =>
+            String(i.itemDetalhe?.nome || '').toLowerCase().includes(termo) ||
+            String(i.itemDetalhe?.raridade || '').toLowerCase().includes(termo) ||
+            String(i.itemDetalhe?.categoria || '').toLowerCase().includes(termo)
         ),
       }))
-      .filter(c => c.itens.length > 0);
+      .filter((c) => c.itens.length > 0);
   }
 
   toggleCategoria(cat: CategoriaInventario) {
@@ -172,9 +177,7 @@ export class InventarioJogador implements OnInit {
   }
 
   abrirItem(itemId: string) {
-    this.router.navigate(['/item-inventario', itemId], {
-      queryParams: { returnUrl: '/inventario-jogador' },
-    });
+    this.router.navigate(['/item-inventario', itemId]);
   }
 
   novoItemInventario() {
