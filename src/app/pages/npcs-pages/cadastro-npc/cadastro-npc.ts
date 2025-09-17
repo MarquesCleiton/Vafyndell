@@ -42,6 +42,7 @@ export class CadastroNpc implements OnInit, AfterViewInit {
     energia: 0,
     ataques: '',
     xp: 0,
+    visivel_jogadores: false,
     email: '',
   };
 

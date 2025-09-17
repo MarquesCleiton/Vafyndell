@@ -49,6 +49,7 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
     colateral: '',
     descricao: '',
     imagem: '-',
+    visivel_jogadores: true,
     email: '',
   };
 

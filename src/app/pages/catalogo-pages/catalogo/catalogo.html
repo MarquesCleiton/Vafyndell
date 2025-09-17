@@ -2,30 +2,27 @@
 
   <!-- Barra de pesquisa -->
   <div class="p-3 bg-black border-bottom position-sticky top-0" style="z-index: 10;">
-    <input type="text"
-           class="form-control search-bar rounded-pill px-3"
-           placeholder="🔍 Pesquisar no catálogo..."
-           [(ngModel)]="filtro"
-           (input)="aplicarFiltro()" />
+    <input type="text" class="form-control search-bar rounded-pill px-3" placeholder="🔍 Pesquisar no catálogo..."
+      [(ngModel)]="filtro" (input)="aplicarFiltro()" />
   </div>
 
   <!-- Tabs -->
   <ul class="nav nav-tabs bg-dark px-3" role="tablist">
     <li class="nav-item" role="presentation">
-      <button class="nav-link" [class.active]="abaAtiva === 'recursos'"
-              (click)="selecionarAba('recursos')">🌿 Recursos</button>
+      <button class="nav-link" [class.active]="abaAtiva === 'recursos'" (click)="selecionarAba('recursos')">🌿
+        Recursos</button>
     </li>
     <li class="nav-item" role="presentation">
-      <button class="nav-link" [class.active]="abaAtiva === 'equipamentos'"
-              (click)="selecionarAba('equipamentos')">⚔️ Equipamentos</button>
+      <button class="nav-link" [class.active]="abaAtiva === 'equipamentos'" (click)="selecionarAba('equipamentos')">⚔️
+        Equipamentos</button>
     </li>
     <li class="nav-item" role="presentation">
-      <button class="nav-link" [class.active]="abaAtiva === 'pocoes'"
-              (click)="selecionarAba('pocoes')">🧪 Poções</button>
+      <button class="nav-link" [class.active]="abaAtiva === 'pocoes'" (click)="selecionarAba('pocoes')">🧪
+        Poções</button>
     </li>
     <li class="nav-item" role="presentation">
-      <button class="nav-link" [class.active]="abaAtiva === 'outros'"
-              (click)="selecionarAba('outros')">📦 Outros</button>
+      <button class="nav-link" [class.active]="abaAtiva === 'outros'" (click)="selecionarAba('outros')">📦
+        Outros</button>
     </li>
   </ul>
 
@@ -40,8 +37,7 @@
       </div>
 
       <!-- Vazio -->
-      <div *ngIf="!carregando && categoriasFiltradas.length === 0"
-           class="text-center text-muted py-5">
+      <div *ngIf="!carregando && categoriasFiltradas.length === 0" class="text-center text-muted py-5">
         Nenhum item encontrado.
       </div>
 
@@ -51,7 +47,7 @@
 
           <!-- Cabeçalho da categoria -->
           <button class="btn btn-categoria w-100 d-flex justify-content-between align-items-center"
-                  (click)="toggleCategoria(cat)">
+            (click)="toggleCategoria(cat)">
             <span>{{ cat.nome || 'Outros' }}</span>
             <span>{{ cat.expandido ? '−' : '+' }}</span>
           </button>
@@ -60,14 +56,13 @@
           <div *ngIf="cat.expandido" class="mt-2">
             <div class="row row-cols-1 g-2">
               <div class="col" *ngFor="let item of cat.itens">
-                <div class="card catalogo-card shadow-sm h-100 p-3"
-                     (click)="abrirItem(item)"
-                     style="cursor: pointer;">
+                <div class="card catalogo-card shadow-sm h-100 p-3 position-relative" (click)="abrirItem(item)">
+
 
                   <div class="d-flex align-items-center mb-2">
                     <div class="item-thumb me-3">
-                      <img *ngIf="item.imagem && item.imagem !== '-'"
-                           [src]="item.imagem" alt="{{ item.nome || 'Item' }}" />
+                      <img *ngIf="item.imagem && item.imagem !== '-'" [src]="item.imagem"
+                        alt="{{ item.nome || 'Item' }}" />
                       <span *ngIf="!item.imagem || item.imagem === '-'" class="text-muted fs-4">📦</span>
                     </div>
 
@@ -82,6 +77,18 @@
                   <p *ngIf="item.efeito" class="small mt-2 text-info">✨ {{ item.efeito }}</p>
                   <p *ngIf="item.colateral" class="small text-danger">⚠️ {{ item.colateral }}</p>
                   <p *ngIf="item.descricao" class="small descricao-text fst-italic">📝 {{ item.descricao }}</p>
+
+                  <!-- Botão só para mestres -->
+                  <button *ngIf="ehMestre"
+                    class="btn btn-sm btn-outline-warning position-absolute bottom-0 end-0 m-2 d-flex align-items-center gap-1"
+                    (click)="toggleVisibilidade($event, item)" [disabled]="loadingVisibilidade[item.id]">
+                    <span *ngIf="!loadingVisibilidade[item.id]">
+                      {{ item.visivel_jogadores ? '🙈 Ocultar' : '🙉 Mostrar' }}
+                    </span>
+                    <span *ngIf="loadingVisibilidade[item.id]" class="spinner-border spinner-border-sm"></span>
+                  </button>
+
+
                 </div>
               </div>
             </div>

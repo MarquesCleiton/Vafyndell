@@ -17,5 +17,6 @@ export interface NpcDomain {
   energia: number;
   ataques: string;
   xp: number;
-  email?: string; // quem cadastrou
+  visivel_jogadores: boolean;
+  email?: string; // quem cadastrou;
 }

@@ -4,7 +4,7 @@ export class ScriptClient {
   private static ENDPOINT =
     'https://script.google.com/macros/s/AKfycby-ec_h6sljntLAgoWhpeyBFGTkWygqS7Xx1Yvkx8RKDKiXDHPxtHZ8hhh6vrN91JEL/exec';
   private static SHEET_ID =
-    '1Pu5a8AasG813zPkMuzBOGtZtvYMTy7jQSwcO2pGKJDI';
+    '19B2aMGrajvhPJfOvYXt059-fECytaN38iFsP8GInD_g';
 
   /** Método interno genérico */
   private static async call<T>(action: string, payload: any, retry = true): Promise<T> {

@@ -2,20 +2,19 @@
 
   <!-- Barra de pesquisa -->
   <div class="p-3 bg-black border-bottom position-sticky top-0" style="z-index: 10;">
-    <input type="text"
-           class="form-control search-bar rounded-pill px-3"
-           placeholder="🔍 Pesquisar NPCs..."
-           [(ngModel)]="filtro"
-           (input)="aplicarFiltro()" />
+    <input type="text" class="form-control search-bar rounded-pill px-3" placeholder="🔍 Pesquisar NPCs..."
+      [(ngModel)]="filtro" (input)="aplicarFiltro()" />
   </div>
 
   <!-- Tabs -->
   <ul class="nav nav-tabs bg-dark px-3" role="tablist">
     <li class="nav-item">
-      <button class="nav-link" [class.active]="abaAtiva === 'bestiais'" (click)="selecionarAba('bestiais')">🐾 Bestiais</button>
+      <button class="nav-link" [class.active]="abaAtiva === 'bestiais'" (click)="selecionarAba('bestiais')">🐾
+        Bestiais</button>
     </li>
     <li class="nav-item">
-      <button class="nav-link" [class.active]="abaAtiva === 'inimigos'" (click)="selecionarAba('inimigos')">⚔️ Inimigos</button>
+      <button class="nav-link" [class.active]="abaAtiva === 'inimigos'" (click)="selecionarAba('inimigos')">⚔️
+        Inimigos</button>
     </li>
   </ul>
 
@@ -32,8 +31,7 @@
       </div>
 
       <!-- Vazio -->
-      <div *ngIf="!carregando && categoriasFiltradas.length === 0"
-           class="text-center text-muted py-5">
+      <div *ngIf="!carregando && categoriasFiltradas.length === 0" class="text-center text-muted py-5">
         Nenhum NPC encontrado.
       </div>
 
@@ -44,7 +42,7 @@
 
             <!-- Cabeçalho da categoria -->
             <button class="btn btn-categoria w-100 d-flex justify-content-between align-items-center"
-                    (click)="toggleCategoria(cat)">
+              (click)="toggleCategoria(cat)">
               <span class="fw-bold">{{ cat.nome }}</span>
               <span>{{ cat.expandido ? '−' : '+' }}</span>
             </button>
@@ -53,16 +51,12 @@
             <div *ngIf="cat.expandido" class="mt-2">
               <div class="row row-cols-1 g-2">
                 <div class="col" *ngFor="let npc of cat.itens">
-                  <div class="card npc-card shadow-sm p-3"
-                       (click)="abrirItem(npc)"
-                       style="cursor: pointer;">
+                  <div class="card npc-card shadow-sm p-3" (click)="abrirItem(npc)" style="cursor: pointer;">
 
                     <!-- Cabeçalho do NPC -->
                     <div class="d-flex align-items-center mb-2">
                       <div class="item-thumb me-3">
-                        <img *ngIf="npc.imagem && npc.imagem !== '-'"
-                             [src]="npc.imagem"
-                             alt="{{ npc.nome }}" />
+                        <img *ngIf="npc.imagem && npc.imagem !== '-'" [src]="npc.imagem" alt="{{ npc.nome }}" />
                         <span *ngIf="!npc.imagem || npc.imagem === '-'">👹</span>
                       </div>
 
@@ -85,6 +79,16 @@
                     <p *ngIf="npc.descricao" class="text-white small descricao-text fst-italic">
                       {{ npc.descricao }}
                     </p>
+
+                    <!-- 🔒 Botão só para o mestre -->
+                    <button *ngIf="ehMestre"
+                      class="btn btn-sm btn-outline-warning position-absolute bottom-0 end-0 m-2 d-flex align-items-center gap-1"
+                      (click)="toggleVisibilidade($event, npc)" [disabled]="loadingVisibilidade[npc.id]">
+                      <span *ngIf="!loadingVisibilidade[npc.id]">
+                        {{ npc.visivel_jogadores ? '🙈 Ocultar' : '🙉 Mostrar' }}
+                      </span>
+                      <span *ngIf="loadingVisibilidade[npc.id]" class="spinner-border spinner-border-sm"></span>
+                    </button>
                   </div>
                 </div>
               </div>

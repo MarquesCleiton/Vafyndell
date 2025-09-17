@@ -2,8 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+
 import { CatalogoDomain } from '../../../domain/CatalogoDomain';
 import { BaseRepository } from '../../../repositories/BaseRepository';
+import { JogadorDomain } from '../../../domain/jogadorDomain';
+import { AuthService } from '../../../core/auth/AuthService';
+import { VisibilidadeService } from '../../../services/VisibilidadeService';
 
 interface CategoriaCatalogo {
   nome: string;
@@ -27,6 +31,11 @@ export class Catalogo implements OnInit {
   abaAtiva: 'recursos' | 'equipamentos' | 'pocoes' | 'outros' = 'recursos';
 
   private repo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
+  private jogadorRepo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
+  private visibilidadeService = new VisibilidadeService<CatalogoDomain>(this.repo);
+
+  ehMestre = false;
+  loadingVisibilidade: Record<string, boolean> = {};
 
   // mapeamento: categorias → abas
   private mapaAbas: Record<string, string[]> = {
@@ -49,11 +58,22 @@ export class Catalogo implements OnInit {
   async ngOnInit() {
     this.carregando = true;
     try {
+      await this.definirSeEhMestre();
       await this.loadLocalAndSync();
     } catch (err) {
       console.error('[Catalogo] Erro ao carregar itens:', err);
     } finally {
       this.carregando = false;
+    }
+  }
+
+  /** Define se o usuário atual é Mestre */
+  private async definirSeEhMestre() {
+    const user = AuthService.getUser();
+    if (user?.email) {
+      const jogadores = await this.jogadorRepo.getLocal();
+      const jogadorAtual = jogadores.find((j) => j.email === user.email);
+      this.ehMestre = jogadorAtual?.tipo_jogador === 'Mestre';
     }
   }
 
@@ -75,14 +95,16 @@ export class Catalogo implements OnInit {
   }
 
   private processarItens(lista: CatalogoDomain[]) {
-    const estados = new Map(this.categorias.map(c => [c.nome, c.expandido]));
+    const estados = new Map(this.categorias.map((c) => [c.nome, c.expandido]));
     const mapa = new Map<string, CatalogoDomain[]>();
 
-    lista.forEach((item) => {
-      const cat = item.categoria || 'Outros';
-      if (!mapa.has(cat)) mapa.set(cat, []);
-      mapa.get(cat)!.push(item);
-    });
+    lista
+      .filter((item) => this.ehMestre ? true : item.visivel_jogadores) // 🔑 filtro por visibilidade
+      .forEach((item) => {
+        const cat = item.categoria || 'Outros';
+        if (!mapa.has(cat)) mapa.set(cat, []);
+        mapa.get(cat)!.push(item);
+      });
 
     this.categorias = Array.from(mapa.entries())
       .sort(([a], [b]) => a.localeCompare(b))
@@ -99,7 +121,6 @@ export class Catalogo implements OnInit {
     const termo = this.normalizarTexto(this.filtro);
 
     if (!termo) {
-      // 🔙 sem filtro → volta estado normal (não força expandido)
       this.categoriasFiltradas = [...this.categorias];
       return;
     }
@@ -107,13 +128,7 @@ export class Catalogo implements OnInit {
     this.categoriasFiltradas = this.categorias
       .map((c) => {
         const itensFiltrados = c.itens.filter((i) =>
-          [
-            i.nome,
-            i.raridade,
-            i.efeito,
-            i.colateral,
-            i.categoria,
-          ]
+          [i.nome, i.raridade, i.efeito, i.colateral, i.categoria]
             .map((v) => this.normalizarTexto(String(v || '')))
             .some((texto) => texto.includes(termo))
         );
@@ -121,7 +136,7 @@ export class Catalogo implements OnInit {
         return {
           ...c,
           itens: itensFiltrados,
-          expandido: itensFiltrados.length > 0, // 🔥 auto-expande se achou algo
+          expandido: itensFiltrados.length > 0,
         };
       })
       .filter((c) => c.itens.length > 0);
@@ -130,12 +145,11 @@ export class Catalogo implements OnInit {
   /** 🔠 Remove acentuação e normaliza para minúsculo */
   private normalizarTexto(texto: string): string {
     return texto
-      .normalize('NFD')               // separa letras de acentos
-      .replace(/[\u0300-\u036f]/g, '') // remove acentos
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
       .trim();
   }
-
 
   selecionarAba(aba: 'recursos' | 'equipamentos' | 'pocoes' | 'outros') {
     this.abaAtiva = aba;
@@ -160,5 +174,23 @@ export class Catalogo implements OnInit {
   getRaridadeClass(raridade: any): string {
     if (!raridade) return 'comum';
     return String(raridade).toLowerCase();
+  }
+
+  /** 👑 Apenas mestre pode alternar visibilidade */
+  async toggleVisibilidade(event: Event, item: CatalogoDomain) {
+    event.stopPropagation();
+    if (!this.ehMestre) return;
+
+    this.loadingVisibilidade[item.id] = true;
+    try {
+      const atualizado = await this.visibilidadeService.toggleVisibilidade(item.index);
+      if (atualizado) {
+        item.visivel_jogadores = atualizado.visivel_jogadores;
+      }
+    } catch (err) {
+      console.error('[Catalogo] Erro ao alternar visibilidade:', err);
+    } finally {
+      this.loadingVisibilidade[item.id] = false;
+    }
   }
 }

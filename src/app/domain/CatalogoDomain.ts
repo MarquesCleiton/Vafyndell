@@ -4,7 +4,7 @@ export interface CatalogoDomain {
   index: number;                // índice incremental na planilha
   id: string;                   
   nome: string;                 // nome do item
-   quantidade_fabricavel: number; // 🔑 novo campo
+  quantidade_fabricavel: number; // 🔑 novo campo
   unidade_medida: string;       // g, kg, ml, l, cm, m, unidade...
   peso: number;                 // peso em unidade escolhida
   categoria: string;            // categoria do item
@@ -14,6 +14,7 @@ export interface CatalogoDomain {
   colateral: string;            // efeito colateral
   descricao: string;            // descrição livre
   imagem?: string;              // URL ou base64 da imagem
+  visivel_jogadores: boolean;
   email?: string;               // usuário que cadastrou
 
   // 🔗 Associações (OO)

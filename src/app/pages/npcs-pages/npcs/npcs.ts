@@ -2,8 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+
 import { BaseRepository } from '../../../repositories/BaseRepository';
 import { NpcDomain } from '../../../domain/NpcDomain';
+import { JogadorDomain } from '../../../domain/jogadorDomain';
+import { AuthService } from '../../../core/auth/AuthService';
+import { VisibilidadeService } from '../../../services/VisibilidadeService';
 
 interface CategoriaNpc {
   nome: string; // tipo (Comum, Elite, Mágico, Lendário)
@@ -27,18 +31,36 @@ export class Npcs implements OnInit {
   abaAtiva: 'bestiais' | 'inimigos' = 'bestiais';
 
   private repo = new BaseRepository<NpcDomain>('NPCs', 'NPCs');
+  private jogadorRepo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
   private todosNpcs: NpcDomain[] = []; // 🔹 cache local em memória
+  private visibilidadeService = new VisibilidadeService<NpcDomain>(this.repo);
+  
+  /** 🔄 controla loading de visibilidade por NPC */
+  loadingVisibilidade: Record<string, boolean> = {};
+  
+  ehMestre = false;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   async ngOnInit() {
     this.carregando = true;
     try {
+      await this.definirSeEhMestre();
       await this.loadLocalAndSync();
     } catch (err) {
       console.error('[Npcs] Erro ao carregar NPCs:', err);
     } finally {
       this.carregando = false;
+    }
+  }
+
+  /** Define se o usuário atual é Mestre */
+  private async definirSeEhMestre() {
+    const user = AuthService.getUser();
+    if (user?.email) {
+      const jogadores = await this.jogadorRepo.getLocal();
+      const jogadorAtual = jogadores.find((j) => j.email === user.email);
+      this.ehMestre = jogadorAtual?.tipo_jogador === 'Mestre';
     }
   }
 
@@ -64,15 +86,22 @@ export class Npcs implements OnInit {
 
   /** 🔧 Agrupa NPCs pelo campo `tipo`, filtrando por aba (classificacao) */
   private processarCategorias(lista: NpcDomain[]) {
-    const estados = new Map(this.categorias.map(c => [c.nome, c.expandido]));
+    const estados = new Map(this.categorias.map((c) => [c.nome, c.expandido]));
     const mapa = new Map<string, NpcDomain[]>();
 
     lista
-      .filter((npc) =>
-        this.abaAtiva === 'bestiais'
-          ? npc.classificacao === 'Bestial'
-          : npc.classificacao === 'Inimigo'
-      )
+      .filter((npc) => {
+        // filtro por aba
+        const porClassificacao =
+          this.abaAtiva === 'bestiais'
+            ? npc.classificacao === 'Bestial'
+            : npc.classificacao === 'Inimigo';
+
+        // jogadores comuns só veem NPCs visíveis
+        const porVisibilidade = this.ehMestre ? true : npc.visivel_jogadores;
+
+        return porClassificacao && porVisibilidade;
+      })
       .forEach((npc) => {
         const cat = npc.tipo || 'Comum';
         if (!mapa.has(cat)) mapa.set(cat, []);
@@ -135,5 +164,23 @@ export class Npcs implements OnInit {
 
   novoNpc() {
     this.router.navigate(['/cadastro-npc']);
+  }
+
+  /** 👑 Apenas mestre pode alternar visibilidade */
+  async toggleVisibilidade(event: Event, npc: NpcDomain) {
+    event.stopPropagation(); // impede abrir o detalhe
+    if (!this.ehMestre) return;
+
+    this.loadingVisibilidade[npc.id] = true;
+    try {
+      const atualizado = await this.visibilidadeService.toggleVisibilidade(npc.index);
+      if (atualizado) {
+        npc.visivel_jogadores = atualizado.visivel_jogadores;
+      }
+    } catch (err) {
+      console.error('[Npcs] Erro ao alternar visibilidade:', err);
+    } finally {
+      this.loadingVisibilidade[npc.id] = false;
+    }
   }
 }
