@@ -187,6 +187,7 @@ export class CadastroInventario implements OnInit {
       if (!user?.email) throw new Error('Usuário não autenticado');
 
       if (this.editando && this.inventarioAtual) {
+        // 🚀 edição normal → sobrescreve quantidade
         const atualizado: InventarioDomain = {
           ...this.inventarioAtual,
           jogador: user.email,
@@ -195,17 +196,35 @@ export class CadastroInventario implements OnInit {
         };
         await this.inventarioRepo.update(atualizado);
       } else {
+        // 🚀 criação → mas precisa checar se já existe no inventário do jogador
         const todos = await this.inventarioRepo.getLocal();
-        const maxIndex = todos.length > 0 ? Math.max(...todos.map((i) => i.index || 0)) : 0;
+        
+        const existente: InventarioDomain | undefined = todos.find(
+          (i: InventarioDomain) =>
+            i.jogador === user.email &&
+            String(i.item_catalogo) === String(this.selecionado!.id)
+        );
 
-        const novo: InventarioDomain = {
-          id: IdUtils.generateULID(),
-          index: maxIndex + 1,
-          jogador: user.email,
-          item_catalogo: this.selecionado.id,
-          quantidade: this.quantidade,
-        };
-        await this.inventarioRepo.create(novo);
+
+        if (existente) {
+          // ✅ já existe → soma quantidades
+          const atualizado: InventarioDomain = {
+            ...existente,
+            quantidade: (existente.quantidade || 0) + this.quantidade,
+          };
+          await this.inventarioRepo.update(atualizado);
+        } else {
+          // ✅ não existe → cria novo
+          const maxIndex = todos.length > 0 ? Math.max(...todos.map((i) => i.index || 0)) : 0;
+          const novo: InventarioDomain = {
+            id: IdUtils.generateULID(),
+            index: maxIndex + 1,
+            jogador: user.email,
+            item_catalogo: this.selecionado.id,
+            quantidade: this.quantidade,
+          };
+          await this.inventarioRepo.create(novo);
+        }
       }
 
       alert('✅ Item salvo no inventário!');
@@ -217,6 +236,8 @@ export class CadastroInventario implements OnInit {
       this.salvando = false;
     }
   }
+
+
 
   displayFn(item?: CatalogoDomain): string {
     return item ? item.nome : '';
