@@ -5,7 +5,7 @@ export class ScriptClientV2 {
     'https://script.google.com/macros/s/AKfycbz6KlBkfWzEFEkHOVtCyMWD83aqi3oKVXdLtCY93XCUA24BBP3BO9aINqGIj5_R1LRX/exec';
 
   private static SHEET_ID = '1Pu5a8AasG813zPkMuzBOGtZtvYMTy7jQSwcO2pGKJDI';
-  private static FOLDER_ID = '1zId11Ydti8d0FOQoQjd9lQmPo6GiJx26';
+  private static FOLDER_ID = '19B2aMGrajvhPJfOvYXt059-fECytaN38iFsP8GInD_g';
 
   /** Método interno genérico */
   private static async call<T>(action: string, bodyPayload: any, retry = true): Promise<T> {
