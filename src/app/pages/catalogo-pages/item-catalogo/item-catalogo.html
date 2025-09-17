@@ -55,6 +55,33 @@
             📝 <b>Descrição:</b> {{ item.descricao }}
           </p>
         </div>
+
+        <!-- Receita / Ingredientes -->
+        <div *ngIf="ingredientesDetalhados.length > 0" class="ingredientes-wrapper p-3 border-top">
+          <h5 class="fw-bold text-light mb-3">🥣 Receita</h5>
+
+          <div class="ingredientes-grid mb-3">
+            <div *ngFor="let ing of ingredientesDetalhados" class="ingrediente-card">
+              <div class="d-flex align-items-center gap-2">
+                <ng-container *ngIf="ing.item.imagem && ing.item?.imagem !== '-'; else noImgIng">
+                  <img [src]="ing.item.imagem" class="thumb-mini rounded">
+                </ng-container>
+                <ng-template #noImgIng><span class="fs-5">📦</span></ng-template>
+                <span class="nome">{{ ing.item.nome || 'Ingrediente' }}</span>
+              </div>
+              <span class="qtd">x{{ ing.quantidade }}</span>
+            </div>
+          </div>
+
+          <!-- Produção explícita -->
+          <div class="producao-card text-center">
+            <div class="titulo">⚒️ Produz</div>
+            <div class="quantidade">
+              {{ item.quantidade_fabricavel || 1 }}
+              {{ item.unidade_medida || 'unidade(s)' }}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -83,3 +110,4 @@
     </button>
   </div>
 </div>
+<div class="mb-5 py-5"></div>

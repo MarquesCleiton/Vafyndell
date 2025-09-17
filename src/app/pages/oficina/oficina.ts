@@ -26,18 +26,19 @@ export class Oficina implements OnInit {
 
   // Abas fixas
   abaAtiva: 'recursos' | 'equipamentos' | 'pocoes' | 'outros' = 'recursos';
+  abas: Array<'recursos' | 'equipamentos' | 'pocoes' | 'outros'> = [
+    'recursos',
+    'equipamentos',
+    'pocoes',
+    'outros',
+  ];
 
-  // controle de loading
+  // controle de loading por item
   loadingAction: { [id: string]: 'criar' | 'falha' | null } = {};
-
-  // toast global
-  mensagem: string | null = null;
-  mensagemTipo: 'sucesso' | 'erro' | null = null;
 
   private todasReceitas: ReceitaComStatus[] = [];
 
-  // mapeamento de categorias → abas
-  private mapaAbas: Record<string, string[]> = {
+  private mapaAbas: Record<'recursos' | 'equipamentos' | 'pocoes' | 'outros', string[]> = {
     recursos: ['Recursos botânicos', 'Mineral', 'Componentes bestiais e animalescos', 'Tesouro', 'Moeda'],
     equipamentos: ['Equipamento', 'Ferramentas', 'Utilitário – Bombas, armadilhas, luz, som, gás, adesivos'],
     pocoes: [
@@ -135,6 +136,53 @@ export class Oficina implements OnInit {
     return raridade.toLowerCase();
   }
 
-  async criarItem(rec: ReceitaComStatus) { /* igual ao seu código */ }
-  async forcarFalha(rec: ReceitaComStatus) { /* igual ao seu código */ }
+  // ✅ Implementação com alert()
+  async criarItem(rec: ReceitaComStatus) {
+    const qtd = rec.quantidade_fabricavel || 1;
+    const unidade = rec.unidade_medida || 'unidade(s)';
+
+    const confirmar = confirm(
+      `⚒️ Deseja realmente fabricar "${rec.nome}"?\n\n` +
+      `➡ Ingredientes serão consumidos.\n` +
+      `➡ Você receberá ${qtd} ${unidade}.`
+    );
+    if (!confirmar) return;
+
+    this.loadingAction[rec.id] = 'criar';
+    try {
+      await this.oficinaService.criarItem(rec);
+      alert(`✅ Você fabricou ${qtd} ${unidade} de "${rec.nome}"!`);
+
+      this.todasReceitas = await this.oficinaService.getPossiveisReceitas();
+      this.processarItens(this.todasReceitas);
+    } catch (err) {
+      console.error('[Oficina] Erro ao criar item:', err);
+      alert('❌ Erro ao fabricar item!');
+    } finally {
+      this.loadingAction[rec.id] = null;
+    }
+  }
+
+  async forcarFalha(rec: ReceitaComStatus) {
+    const confirmar = confirm(
+      `💥 Deseja realmente forçar a falha de "${rec.nome}"?\n\n` +
+      `➡ Todos os ingredientes serão perdidos.\n` +
+      `➡ Nenhum item será fabricado.`
+    );
+    if (!confirmar) return;
+
+    this.loadingAction[rec.id] = 'falha';
+    try {
+      await this.oficinaService.forcarFalha(rec);
+      alert(`💥 Falha forçada! Ingredientes de "${rec.nome}" foram consumidos.`);
+
+      this.todasReceitas = await this.oficinaService.getPossiveisReceitas();
+      this.processarItens(this.todasReceitas);
+    } catch (err) {
+      console.error('[Oficina] Erro ao forçar falha:', err);
+      alert('❌ Erro ao processar falha!');
+    } finally {
+      this.loadingAction[rec.id] = null;
+    }
+  }
 }

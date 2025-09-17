@@ -242,3 +242,14 @@
     border-radius: 16px;
   }
 }
+
+
+.producao-info {
+  font-size: 0.9rem;
+  color: #0dcaf0;
+  font-weight: 600;
+  background: #2a2a2a;
+  border-radius: 6px;
+  padding: 4px 8px;
+  display: inline-block;
+}

@@ -23,35 +23,26 @@ export class OficinaService {
   private inventarioRepo = new BaseRepository<InventarioDomain>('Inventario', 'Inventario');
   private receitasRepo = new BaseRepository<ReceitaDomain>('Receitas', 'Receitas');
 
-  /**
-   * Retorna todos os itens fabricáveis do catálogo,
-   * já marcando se o jogador pode ou não fabricar com base no inventário.
-   */
   async getPossiveisReceitas(): Promise<ReceitaComStatus[]> {
     const user = AuthService.getUser();
     if (!user?.email) throw new Error('Usuário não autenticado');
 
-    // 1️⃣ Tenta pegar cache local (3 tabelas de uma vez)
     const dbCatalogo = await this.catalogoRepo.getLocal();
     const dbInventario = (await this.inventarioRepo.getLocal()).filter(i => i.jogador === user.email);
     const dbReceitas = await this.receitasRepo.getLocal();
 
     if (dbCatalogo.length && dbInventario.length && dbReceitas.length) {
-      // dispara sync em paralelo sem travar a UI
       this.sincronizarMulti(user.email).catch(err =>
         console.error('[OficinaService] Erro ao sincronizar:', err)
       );
       return this.processar(dbCatalogo, dbReceitas, dbInventario);
     }
 
-    // 2️⃣ Fallback → força fetch em lote
     const result = await this.catalogoRepo.getAllMulti(['Catalogo', 'Receitas', 'Inventario']);
     const catalogo = result['Catalogo'];
     const receitas = result['Receitas'];
-    const inventario = (result['Inventario'] as InventarioDomain[])
-      .filter(i => i.jogador === user.email);
+    const inventario = (result['Inventario'] as InventarioDomain[]).filter(i => i.jogador === user.email);
 
-    // atualiza cache local de uma vez
     await Promise.all([
       this.catalogoRepo.bulkPutLocal(catalogo),
       this.inventarioRepo.bulkPutLocal(inventario),
@@ -67,11 +58,8 @@ export class OficinaService {
       this.inventarioRepo.sync(),
       this.receitasRepo.sync(),
     ]);
-
     if (catSync || invSync || recSync) {
       console.log('[OficinaService] Alguma tabela foi atualizada → dados locais recarregados');
-    } else {
-      console.log('[OficinaService] Nenhuma alteração nas tabelas.');
     }
   }
 
@@ -80,20 +68,16 @@ export class OficinaService {
     receitas: ReceitaDomain[],
     inventario: InventarioDomain[]
   ): ReceitaComStatus[] {
-    // 🔑 Mapeia inventário
     const estoque = new Map<string, number>();
     inventario.forEach((i) => {
       const key = String(i.item_catalogo);
       const atual = estoque.get(key) || 0;
       estoque.set(key, atual + (i.quantidade || 0));
     });
-    console.log('[OficinaService] Estoque calculado:', Array.from(estoque.entries()));
 
-    // 🔑 Itens fabricáveis (devem ter pelo menos 1 ingrediente)
     const fabricaveis = catalogo.filter((c) =>
       receitas.some((r) => String(r.fabricavel) === String(c.id))
     );
-    console.log('[OficinaService] Fabricáveis encontrados:', fabricaveis.length);
 
     return fabricaveis
       .map((item) => {
@@ -102,14 +86,6 @@ export class OficinaService {
           .map((ing) => {
             const qtdInventario = estoque.get(String(ing.catalogo)) || 0;
             const ref = catalogo.find((c) => String(c.id) === String(ing.catalogo));
-
-            if (!ref) {
-              console.warn(
-                '[OficinaService] ❗ Ingrediente não encontrado no catálogo:',
-                ing.catalogo
-              );
-            }
-
             return {
               ...ing,
               quantidadeInventario: qtdInventario,
@@ -118,12 +94,9 @@ export class OficinaService {
             };
           });
 
-        // Verifica se pode fabricar (todos ingredientes suficientes)
         const podeFabricar = ingredientes.every(
           (ing) => ing.quantidadeInventario >= ing.quantidade
         );
-
-        // Se não possui nenhum ingrediente, descarta
         const possuiAlgum = ingredientes.some((ing) => ing.quantidadeInventario > 0);
         if (!possuiAlgum) return null;
 
@@ -140,14 +113,16 @@ export class OficinaService {
     const user = AuthService.getUser();
     if (!user?.email) throw new Error('Usuário não autenticado');
 
-    // remove ingredientes
     for (const ing of receita.ingredientes) {
       await this.subtrairQuantidade(user.email, ing.catalogo, ing.quantidade);
     }
 
-    // adiciona produto final
-    await this.adicionarOuIncrementar(user.email, receita.id, 1);
-    console.log(`[OficinaService] Item criado: ${receita.nome}`);
+    const qtdFinal = receita.quantidade_fabricavel || 1;
+    await this.adicionarOuIncrementar(user.email, receita.id, qtdFinal);
+
+    console.log(
+      `[OficinaService] Item criado: ${receita.nome} (x${qtdFinal} ${receita.unidade_medida || 'unidade(s)'})`
+    );
   }
 
   async forcarFalha(receita: ReceitaComStatus): Promise<void> {
@@ -160,7 +135,6 @@ export class OficinaService {
     console.log(`[OficinaService] Falha forçada: ${receita.nome}`);
   }
 
-  // === Helpers ===
   private async subtrairQuantidade(jogador: string, itemCatalogo: string, qtd: number) {
     const todos = (await this.inventarioRepo.getLocal()).filter((i) => i.jogador === jogador);
     const encontrado = todos.find((i) => i.item_catalogo === itemCatalogo);
