@@ -1,5 +1,5 @@
 <div class="catalogo-detalhe-wrapper d-flex flex-column min-vh-100 bg-dark text-light pb-5 mb-5">
-  <div class="flex-grow-1 p-3 d-flex justify-content-center">
+  <div class="flex-grow-1 p-3 d-flex justify-content-center pb-5 mb-5">
     <div class="catalogo-detalhe-container w-100">
 
       <form #form="ngForm" (ngSubmit)="salvar(form)" id="formCatalogo">
@@ -98,106 +98,97 @@
                 name="colateral"></textarea>
             </div>
 
-            <!-- Ingredientes da Receita -->
-            <div class="mb-3 border-top pt-3 pb-5">
+            <!-- ======================
+                 RECEITA / INGREDIENTES
+                 ====================== -->
+            <div class="receita-wrapper">
               <div class="d-flex align-items-center justify-content-between mb-2">
-                <h5 class="fw-bold text-light mb-0">🥣 Ingredientes da Receita</h5>
-                <span class="badge bg-secondary">{{ ingredientes.length }} ingredientes</span>
+                <h5 class="fw-bold text-light mb-0">🥣 Receita</h5>
+                <span class="badge bg-secondary">{{ ingredientes.length }}</span>
               </div>
 
-              <!-- Lista de ingredientes -->
-              <div *ngFor="let ing of ingredientes; let i = index"
-                class="ingrediente-item d-flex align-items-center justify-content-between mb-2 p-2 rounded bg-dark border">
-                <div class="d-flex align-items-center gap-2 text-light">
-                  <ng-container *ngIf="ing.item?.imagem && ing.item?.imagem !== '-'; else noImg">
-                    <img [src]="ing.item?.imagem" class="thumb-img rounded">
-                  </ng-container>
-                  <ng-template #noImg><span class="fs-4">📦</span></ng-template>
-                  <span class="ingrediente-nome">{{ ing.item?.nome }}</span>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                  <span class="ingrediente-qtd">x{{ ing.quantidade }}</span>
-                  <button type="button" class="btn btn-sm btn-danger" (click)="removerIngrediente(i)">✖</button>
+              <!-- Ingredientes -->
+              <div class="ingredientes-grid mb-3" *ngIf="ingredientes.length > 0">
+                <div *ngFor="let ing of ingredientes; let i = index" class="ingrediente-card">
+                  <div class="d-flex align-items-center gap-2">
+                    <ng-container *ngIf="ing.item?.imagem && ing.item?.imagem !== '-'; else noImg">
+                      <img [src]="ing.item?.imagem" class="thumb-mini rounded">
+                    </ng-container>
+                    <ng-template #noImg><span class="fs-5">📦</span></ng-template>
+                    <span class="nome">{{ ing.item?.nome }}</span>
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="qtd">x{{ ing.quantidade }}</span>
+                    <button type="button" class="btn btn-sm btn-danger px-2 py-1"
+                      (click)="removerIngrediente(i)">✖</button>
+                  </div>
                 </div>
               </div>
 
               <!-- Novo ingrediente -->
-              <mat-form-field appearance="fill" class="w-100 input-dark compact-select dropdown-field mb-3">
-                <input type="text" matInput placeholder="Selecione ou pesquise ingrediente..."
-                  [(ngModel)]="filtroIngrediente" name="filtroIngrediente" [matAutocomplete]="autoIng"
-                  (input)="filtrarCatalogoIngredientes()" />
-                <button mat-icon-button matSuffix disabled class="dropdown-arrow">
-                  <mat-icon>arrow_drop_down</mat-icon>
-                </button>
-                <mat-autocomplete #autoIng="matAutocomplete"
-                  (optionSelected)="selecionarIngrediente($event.option.value)">
-                  <mat-option *ngFor="let c of catalogoFiltradoIng" [value]="c" class="bg-dark text-light">
-                    <div class="d-flex align-items-center gap-2">
-                      <ng-container *ngIf="c.imagem && c.imagem !== '-'; else noPreview">
-                        <img [src]="c.imagem" class="thumb-img rounded">
-                      </ng-container>
-                      <ng-template #noPreview><span>📦</span></ng-template>
-                      <span>{{ c.nome }}</span>
-                    </div>
-                  </mat-option>
-                </mat-autocomplete>
-              </mat-form-field>
+              <div class="novo-ingrediente bg-dark rounded p-2 mb-3">
+                <mat-form-field appearance="fill" class="w-100 input-dark compact-select dropdown-field mb-2">
+                  <input type="text" matInput placeholder="Pesquisar ingrediente..." [(ngModel)]="filtroIngrediente"
+                    name="filtroIngrediente" [matAutocomplete]="autoIng" (input)="filtrarCatalogoIngredientes()" />
 
-              <!-- Quantidade -->
-              <div *ngIf="ingredienteSelecionado" class="d-flex align-items-center justify-content-between mb-3">
-                <label class="form-label text-light fw-bold mb-0 me-3">🔢 Quantidade</label>
-                <div class="quantidade-box">
-                  <button type="button" class="btn btn-sm btn-outline-light"
-                    (click)="decrementarIngrediente()">−</button>
-                  <input type="number" class="quantidade-input" [(ngModel)]="novoIngrediente.quantidade"
-                    name="novoIngredienteQtd" min="1" />
-                  <button type="button" class="btn btn-sm btn-outline-light"
-                    (click)="incrementarIngrediente()">+</button>
-                </div>
-                <button type="button" class="btn btn-success ms-3" (click)="adicionarIngrediente()">➕ Adicionar</button>
-              </div>
+                  <button mat-icon-button matSuffix disabled class="dropdown-arrow">
+                    <mat-icon>arrow_drop_down</mat-icon>
+                  </button>
 
-              <!-- Quantidade Produzida (só se houver ingredientes) -->
-              <div *ngIf="ingredientes.length > 0" class="mb-3">
-                <label class="form-label text-light fw-bold">⚒️ Quantidade Produzida</label>
-                <input type="number" class="form-control input-dark" [(ngModel)]="item.quantidade_fabricavel"
-                  name="quantidadeFabricavel" min="1" />
-              </div>
-
-              <!-- Resumo Visual -->
-              <div *ngIf="ingredientes.length > 0" class="resumo-visual mt-3 p-3 rounded">
-                <div class="d-flex align-items-center justify-content-between">
-
-                  <!-- Ingredientes -->
-                  <div class="ingredientes-col d-flex flex-column gap-2 flex-grow-1 me-3">
-                    <div *ngFor="let ing of ingredientes"
-                      class="d-flex align-items-center justify-content-between resumo-item">
-                      <div class="d-flex align-items-center gap-2">
-                        <ng-container *ngIf="ing.item?.imagem && ing.item?.imagem !== '-'; else noImgIng">
-                          <img [src]="ing.item?.imagem" class="thumb-mini rounded">
+                  <mat-autocomplete #autoIng="matAutocomplete"
+                    (optionSelected)="selecionarIngrediente($event.option.value)">
+                    <mat-option *ngFor="let c of catalogoFiltradoIng" [value]="c" class="bg-dark text-light">
+                      <div class="d-flex align-items-center">
+                        <ng-container *ngIf="c.imagem && c.imagem !== '-'; else noPreview">
+                          <img [src]="c.imagem" class="me-2 rounded thumb-mini">
                         </ng-container>
-                        <ng-template #noImgIng><span class="fs-5">📦</span></ng-template>
-                        <span class="nome">{{ ing.item?.nome }}</span>
+                        <ng-template #noPreview><span class="me-2">📦</span></ng-template>
+                        <span>{{ c.nome }}</span>
                       </div>
-                      <span class="qtd">x{{ ing.quantidade }}</span>
-                    </div>
+                    </mat-option>
+                  </mat-autocomplete>
+                </mat-form-field>
+
+                <!-- Quantidade + Botão -->
+                <div *ngIf="ingredienteSelecionado" class="d-flex align-items-center justify-content-between">
+                  <div class="quantidade-box">
+                    <button type="button" class="btn btn-sm btn-outline-light"
+                      (click)="decrementarIngrediente()">−</button>
+                    <input type="number" class="quantidade-input" [(ngModel)]="novoIngrediente.quantidade"
+                      name="novoIngredienteQtd" min="1" />
+                    <button type="button" class="btn btn-sm btn-outline-light"
+                      (click)="incrementarIngrediente()">+</button>
                   </div>
-
-                  <!-- Seta -->
-                  <div class="seta flex-shrink-0 mx-2">➡️</div>
-
-                  <!-- Resultado -->
-                  <div class="resultado-col d-flex align-items-center gap-2 flex-shrink-0">
-                    <ng-container *ngIf="item.imagem && item.imagem !== '-'; else noImgRes">
-                      <img [src]="item.imagem" class="thumb-mini rounded">
-                    </ng-container>
-                    <ng-template #noImgRes><span class="fs-5">✨</span></ng-template>
-                    <span class="resultado-nome fw-bold">{{ item.nome || 'Item' }}</span>
-                    <span class="resultado-qtd text-success">x{{ item.quantidade_fabricavel || 1 }}</span>
-                  </div>
-
+                  <button type="button" class="btn btn-success ms-2" (click)="adicionarIngrediente()">➕</button>
                 </div>
               </div>
+
+              <!-- Produção -->
+              <div *ngIf="ingredientes.length > 0" class="producao-wrapper mt-3">
+
+                <!-- Linha Produz + Input + Unidade -->
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <label class="form-label text-light fw-bold mb-0">⚒️Produz</label>
+                  <input type="number" class="form-control input-dark quantidade-fabricavel"
+                    [(ngModel)]="item.quantidade_fabricavel" name="quantidadeFabricavel" min="1" />
+                  <span class="text-light">{{ item.unidade_medida || 'unidade' }}</span>
+                </div>
+
+                <!-- Resultado -->
+                <div class="resultado-card">
+                  <ng-container *ngIf="item.imagem && item.imagem !== '-'; else noImgRes">
+                    <img [src]="item.imagem" class="thumb-result rounded mb-1">
+                  </ng-container>
+                  <ng-template #noImgRes><span class="fs-3">✨</span></ng-template>
+
+                  <div class="nome">{{ item.nome || 'Item' }}</div>
+                  <div class="qtd ">
+                    {{ item.quantidade_fabricavel || 1 }}
+                    {{ item.unidade_medida || 'unidade' }}
+                  </div>
+                </div>
+              </div>
+
 
             </div>
 
