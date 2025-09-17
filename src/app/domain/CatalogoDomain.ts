@@ -4,7 +4,7 @@ export interface CatalogoDomain {
   index: number;                // índice incremental na planilha
   id: string;                   
   nome: string;                 // nome do item
-  quantidade_por_item?: number;  // quanto é gerado em uma fabricação (default = 1)
+   quantidade_fabricavel: number; // 🔑 novo campo
   unidade_medida: string;       // g, kg, ml, l, cm, m, unidade...
   peso: number;                 // peso em unidade escolhida
   categoria: string;            // categoria do item

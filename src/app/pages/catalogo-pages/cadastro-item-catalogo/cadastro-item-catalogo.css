@@ -1,10 +1,9 @@
 .catalogo-detalhe-container {
   width: 100%;
-  max-width: 900px; /* 🔑 largura máxima padronizada */
+  max-width: 900px;
   margin: 0 auto;
 }
 
-/* Card e imagem */
 .detalhe-card {
   background: #1e1e1e;
   border-radius: 12px;
@@ -16,7 +15,6 @@
   border-radius: 8px;
 }
 
-/* Upload */
 .upload-box {
   display: flex;
   align-items: center;
@@ -30,12 +28,8 @@
   cursor: pointer;
   transition: border 0.2s ease, color 0.2s ease;
 }
-.upload-box:hover {
-  border-color: #0d6efd;
-  color: #0d6efd;
-}
+.upload-box:hover { border-color: #0d6efd; color: #0d6efd; }
 
-/* Inputs */
 .input-dark {
   background: #1e1e1e !important;
   border: 1px solid #444 !important;
@@ -47,7 +41,6 @@
   outline: none !important;
 }
 
-/* Textareas */
 textarea.auto-expand {
   min-height: 80px;
   resize: vertical;
@@ -63,17 +56,61 @@ textarea.auto-expand:focus {
   box-shadow: 0 0 0 0.2rem rgba(13,110,253,.25);
 }
 
+/* Ingredientes */
+.thumb-img {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border: 1px solid #555;
+}
+
+.resumo-receita {
+  font-weight: bold;
+  font-size: 0.9rem;
+  border: 1px dashed #666;
+}
+
+/* Quantidade */
+.quantidade-box {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.quantidade-input {
+  width: 60px;
+  text-align: center;
+  font-weight: bold;
+  border: 1px solid #6c757d;
+  border-radius: 0.4rem;
+  background: #212529;
+  color: #f8f9fa;
+  padding: 0.2rem;
+  font-size: 0.85rem;
+}
+
+/* Autocomplete seta */
+.dropdown-field .mat-mdc-form-field-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.dropdown-arrow {
+  pointer-events: none;
+  color: #bbb !important;
+  margin-left: auto;
+}
+.dropdown-arrow mat-icon { font-size: 1.4rem; }
+
 /* FABs */
 .fab-stack {
   position: fixed;
   bottom: 70px;
-  right: 20px; /* padrão mobile */
+  right: 20px;
   display: flex;
   flex-direction: column;
   gap: 15px;
   z-index: 1000;
 }
-
 .fab {
   width: 60px;
   height: 60px;
@@ -84,34 +121,105 @@ textarea.auto-expand:focus {
   justify-content: center;
   box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s ease;
-  border: none;
-  cursor: pointer;
 }
-.fab:hover {
-  transform: scale(1.08);
-}
-
-/* Desktop → alinhado ao card central */
-@media (min-width: 992px) {
-  .fab-stack {
-    right: 50%;
-    transform: translateX(450px); /* mesmo padrão do inventário */
-  }
-}
-
+.fab:hover { transform: scale(1.08); }
 .fab-success {
   background: linear-gradient(135deg, #28a745, #218838);
   color: #fff;
-}
-.fab-success:disabled {
-  background: #444 !important;
-  color: #bbb !important;
-  cursor: not-allowed;
 }
 .fab-warning {
   background: #ffc107;
   color: #000;
 }
-.fab-warning:hover {
-  background: #e0a800;
+
+
+.ingrediente-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ingrediente-nome {
+  color: #f8f9fa;
+  font-weight: 500;
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ingrediente-qtd {
+  font-weight: bold;
+  color: #0dcaf0; /* azul claro para contraste */
+}
+
+.thumb-img {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border: 1px solid #555;
+}
+
+.resumo-receita {
+  border: 1px dashed #666;
+  font-size: 0.9rem;
+}
+
+.resumo-item {
+  padding: 4px 8px;
+  background: #1e1e1e;
+  border-radius: 6px;
+}
+
+
+.resumo-visual {
+  background: #111;
+  border: 1px dashed #444;
+  font-size: 0.9rem;
+}
+
+.resumo-item {
+  padding: 2px 0;
+}
+
+.thumb-mini {
+  width: 22px;
+  height: 22px;
+  object-fit: cover;
+  border: 1px solid #555;
+}
+
+.nome {
+  color: #f8f9fa;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.qtd {
+  font-weight: bold;
+  color: #0dcaf0;
+  margin-left: 8px;
+}
+
+.seta {
+  font-size: 1.4rem;
+  color: #aaa;
+}
+
+.resultado-col {
+  background: #1e1e1e;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.resultado-nome {
+  color: #fff;
+}
+
+.resultado-qtd {
+  font-weight: bold;
+  margin-left: 4px;
 }
