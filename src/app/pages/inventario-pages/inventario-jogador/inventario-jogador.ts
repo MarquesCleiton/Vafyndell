@@ -52,7 +52,7 @@ export class InventarioJogador implements OnInit {
     outros: ['Outros'],
   };
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   async ngOnInit() {
     try {
@@ -188,4 +188,14 @@ export class InventarioJogador implements OnInit {
   novoItemInventario() {
     this.router.navigate(['/cadastro-inventario']);
   }
+
+  abrirTroca() {
+    this.router.navigate(['/troca-de-itens']);
+  }
+
+  trocarItem(itemId: string, event: Event) {
+    event.stopPropagation(); // evita abrir detalhes
+    this.router.navigate(['/troca-de-itens', itemId]);
+  }
+
 }

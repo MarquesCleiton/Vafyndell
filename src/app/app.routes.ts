@@ -31,6 +31,8 @@ export const routes: Routes = [
   { path: 'criar-anotacao/:id', loadComponent: () => import('./pages/anotacoes-pages/criar-anotacao/criar-anotacao').then((m) => m.CriarAnotacao) },
   { path: 'oficina', loadComponent: () => import('./pages/oficina/oficina').then((m) => m.Oficina) },
   { path: 'skills-jogador', loadComponent: () => import('./pages/skilltree-pages/skills-jogador/skills-jogador').then((m) => m.SkillsJogador) },
+  { path: 'troca-de-itens', loadComponent: () => import('./pages/troca-de-itens/troca-de-itens').then((m) => m.TrocaDeItens) },
+  { path: 'troca-de-itens/:id', loadComponent: () => import('./pages/troca-de-itens/troca-de-itens').then((m) => m.TrocaDeItens) },
 
   // 🔑 aqui está o ajuste → rota com parâmetro :id
   { path: 'item-catalogo/:id', loadComponent: () => import('./pages/catalogo-pages/item-catalogo/item-catalogo').then((m) => m.ItemCatalogo) },

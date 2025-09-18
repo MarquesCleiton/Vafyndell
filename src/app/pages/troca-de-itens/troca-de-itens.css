@@ -1,0 +1,73 @@
+.troca-container {
+  width: 100%;
+  max-width: 800px;
+}
+
+.detalhe-card {
+  background: #1e1e1e;
+  border-radius: 12px;
+}
+
+.input-dark {
+  background: #1e1e1e !important;
+  color: #f8f9fa !important;
+}
+
+.quantidade-input {
+  width: 80px;
+  text-align: center;
+  font-weight: bold;
+  background: #1e1e1e;
+  border: 1px solid #444;
+  color: #f8f9fa;
+}
+
+.itens-selecionados {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.item-card {
+  background: #2a2a2a;
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.preview-item {
+  color: #f8f9fa;   /* 🔑 texto bem claro */
+  font-weight: 500;
+}
+
+.fab-stack {
+  position: fixed;
+  bottom: 70px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.fab {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+}
+
+.fab-success {
+  background: linear-gradient(135deg, #28a745, #218838);
+  color: #fff;
+}
+
+.fab:hover {
+  transform: scale(1.08);
+}
