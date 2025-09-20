@@ -3,7 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { AnotacaoDomain } from '../../../domain/AnotacaoDomain';
-import { BaseRepository } from '../../../repositories/BaseRepository';
+import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { ImageUtils } from '../../../core/utils/ImageUtils';
 import { AuthService } from '../../../core/auth/AuthService';
 import { IdUtils } from '../../../core/utils/IdUtils';
@@ -18,7 +18,6 @@ import { IdUtils } from '../../../core/utils/IdUtils';
 export class CriarAnotacao implements OnInit, AfterViewInit {
   anotacao: AnotacaoDomain = {
     id: '',
-    index: 0,
     jogador: '',
     autor: '',
     titulo: '',
@@ -35,7 +34,7 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
   excluindo = false;
   editMode = false;
 
-  private repo = new BaseRepository<AnotacaoDomain>('Anotacoes', 'Anotacoes');
+  private repo = new BaseRepositoryV2<AnotacaoDomain>('Anotacoes');
 
   constructor(
     private router: Router,
@@ -44,45 +43,38 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
     private zone: NgZone
   ) { }
 
+  // CriarAnotacao.ngOnInit
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.editMode = true;
       try {
-        // 1. Busca local
-        const locais = await this.repo.getLocal();
-        const existente = locais.find((a) => String(a.id) === id);
+        // 1. Busca local apenas
+        const existente = await this.repo.getById(id, true);
         if (existente) {
           this.anotacao = { ...existente };
           this.scheduleAutoExpand();
         }
 
-        // 2. Sync em paralelo
+        // 2. Não faz forceFetch imediato!
+        // Apenas agenda sync em paralelo
         this.repo.sync().then(async (updated) => {
           if (updated) {
-            const atualizadas = await this.repo.getLocal();
-            const atualizado = atualizadas.find((a) => String(a.id) === id);
+            const atualizado = await this.repo.getById(id, true);
             if (atualizado) {
               this.anotacao = { ...atualizado };
               this.scheduleAutoExpand();
             }
           }
         });
-
-        // 3. Se não tinha local → força online
-        if (!existente) {
-          const online = await this.repo.forceFetch();
-          const achada = online.find((a) => String(a.id) === id);
-          if (achada) {
-            this.anotacao = { ...achada };
-            this.scheduleAutoExpand();
-          }
-        }
       } catch (err) {
         console.error('[CriarAnotacao] Erro ao carregar anotação:', err);
       }
     }
   }
+
+
+
 
   ngAfterViewInit() {
     this.scheduleAutoExpand();
@@ -152,11 +144,6 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
         window.alert('✅ Anotação atualizada!');
       } else {
         this.anotacao.id = IdUtils.generateULID();
-
-        const locais = await this.repo.getLocal();
-        const maxIndex = locais.length > 0 ? Math.max(...locais.map((a) => a.index || 0)) : 0;
-        this.anotacao.index = maxIndex + 1;
-
         const created = await this.repo.create(payload);
         this.anotacao = { ...created };
         window.alert('✅ Anotação criada!');
@@ -172,7 +159,6 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
     }
   }
 
-
   cancelar() {
     this.router.navigate(['/anotacoes']);
   }
@@ -184,7 +170,7 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
 
     try {
       this.excluindo = true;
-      await this.repo.delete(this.anotacao.index);
+      await this.repo.delete(this.anotacao.id);
       window.alert('✅ Anotação excluída com sucesso!');
       this.router.navigate(['/anotacoes']);
     } catch (err) {

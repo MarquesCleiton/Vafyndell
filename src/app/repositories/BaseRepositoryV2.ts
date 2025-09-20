@@ -16,6 +16,13 @@ export class BaseRepositoryV2<T extends { id: string }> {
   }
 
   // =========================================================
+  // 📌 Helper: normalizar ID sempre para string
+  // =========================================================
+  private normalizeId<U extends { id: any }>(item: U): U {
+    return { ...item, id: String(item.id) } as U;
+  }
+
+  // =========================================================
   // 📌 CRUD por ID
   // =========================================================
   async create(item: Omit<T, 'id'>): Promise<T> {
@@ -27,7 +34,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
     const created = (result?.create?.[this.tab] || [])[0];
     if (!created?.ok) throw new Error(`[${this.tab}] Erro ao criar: ${created?.erro || 'desconhecido'}`);
 
-    const entity = { ...(item as any), ...created } as T;
+    const entity = this.normalizeId({ ...(item as any), ...created }) as T;
     await (await this.getDb()).put(this.store, entity);
 
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 create persistido localmente →`, entity);
@@ -43,7 +50,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
     const updated = (result?.updateById?.[this.tab] || [])[0];
     if (!updated?.ok) throw new Error(`[${this.tab}] Erro ao atualizar: ${updated?.erro || 'desconhecido'}`);
 
-    const entity = { ...item, ...updated } as T;
+    const entity = this.normalizeId({ ...item, ...updated }) as T;
     await (await this.getDb()).put(this.store, entity);
 
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 update persistido localmente →`, entity);
@@ -62,7 +69,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
       return false;
     }
 
-    await (await this.getDb()).delete(this.store, id);
+    await (await this.getDb()).delete(this.store, String(id));
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 delete persistido localmente → id=${id}`);
     return true;
   }
@@ -77,8 +84,10 @@ export class BaseRepositoryV2<T extends { id: string }> {
     console.log(`[BaseRepositoryV2:${this.tab}] ◀️ createBatch result`, result);
 
     const arr = result?.create?.[this.tab] || [];
-    const map = new Map(arr.map((r: any) => [r.id, r]));
-    const entities = items.map(it => ({ ...(it as any), ...(map.get((it as any).id) || {}) })) as T[];
+    const map = new Map(arr.map((r: any) => [String(r.id), r]));
+    const entities = items.map(it =>
+      this.normalizeId({ ...(it as any), ...(map.get(String((it as any).id)) || {}) })
+    ) as T[];
 
     await (await this.getDb()).bulkPut(this.store, entities);
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 createBatch persistiu ${entities.length} registros`);
@@ -92,8 +101,10 @@ export class BaseRepositoryV2<T extends { id: string }> {
     console.log(`[BaseRepositoryV2:${this.tab}] ◀️ updateBatch result`, result);
 
     const arr = result?.updateById?.[this.tab] || [];
-    const map = new Map(arr.map((r: any) => [r.id, r]));
-    const entities = items.map(it => ({ ...it, ...(map.get(it.id) || {}) })) as T[];
+    const map = new Map(arr.map((r: any) => [String(r.id), r]));
+    const entities = items.map(it =>
+      this.normalizeId({ ...it, ...(map.get(String(it.id)) || {}) })
+    ) as T[];
 
     await (await this.getDb()).bulkPut(this.store, entities);
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 updateBatch persistiu ${entities.length} registros`);
@@ -104,7 +115,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
     console.log(`[BaseRepositoryV2:${this.tab}] ▶️ deleteBatch →`, ids);
 
     const result = await ScriptClientV3.deleteById({
-      [this.tab]: ids.map((id) => ({ id })),
+      [this.tab]: ids.map((id) => ({ id: String(id) })),
     });
     console.log(`[BaseRepositoryV2:${this.tab}] ◀️ deleteBatch result`, result);
 
@@ -112,7 +123,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
     const ok = arr.every((r: any) => r.ok);
 
     const db = await this.getDb();
-    await Promise.all(ids.map((id) => db.delete(this.store, id)));
+    await Promise.all(ids.map((id) => db.delete(this.store, String(id))));
 
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 deleteBatch persistido localmente → ${ids.length} registros`);
     return ok;
@@ -124,25 +135,28 @@ export class BaseRepositoryV2<T extends { id: string }> {
   async getLocal(): Promise<T[]> {
     const db = await this.getDb();
     const list = await db.getAll<T>(this.store);
-    console.log(`[BaseRepositoryV2:${this.tab}] 📂 getLocal →`, list);
-    return list;
+    const normalized = list.map(it => this.normalizeId(it));
+    console.log(`[BaseRepositoryV2:${this.tab}] 📂 getLocal →`, normalized);
+    return normalized;
   }
 
   async getById(id: string, preferLocal = true): Promise<T | null> {
     console.log(`[BaseRepositoryV2:${this.tab}] ▶️ getById → id=${id} preferLocal=${preferLocal}`);
 
     if (preferLocal) {
-      const local = await (await this.getDb()).get<T>(this.store, id);
+      const local = await (await this.getDb()).get<T>(this.store, String(id));
       if (local) {
-        console.log(`[BaseRepositoryV2:${this.tab}] 📂 getById encontrado localmente →`, local);
-        return local;
+        const normalized = this.normalizeId(local);
+        console.log(`[BaseRepositoryV2:${this.tab}] 📂 getById encontrado localmente →`, normalized);
+        return normalized;
       }
+      return null; // 🚨 não vai online quando preferLocal = true
     }
 
-    const result = await ScriptClientV3.getById({ [this.tab]: [{ id }] });
+    const result = await ScriptClientV3.getById({ [this.tab]: [{ id: String(id) }] });
     console.log(`[BaseRepositoryV2:${this.tab}] ◀️ getById result`, result);
-
-    return result?.[this.tab]?.[0] || null;
+    const achado = result?.[this.tab]?.[0] || null;
+    return achado ? this.normalizeId(achado) : null;
   }
 
   async getAllOnline(): Promise<T[]> {
@@ -150,7 +164,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
     const result = await ScriptClientV3.getAll(this.tab);
     console.log(`[BaseRepositoryV2:${this.tab}] ◀️ getAllOnline result`, result);
 
-    return result?.[this.tab] || [];
+    return (result?.[this.tab] || []).map((it: any) => this.normalizeId(it));
   }
 
   async forceFetch(): Promise<T[]> {
@@ -158,7 +172,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
     const result = await ScriptClientV3.getAll([this.tab, 'Metadados']);
     console.log(`[BaseRepositoryV2:${this.tab}] ◀️ forceFetch result`, result);
 
-    const list = result?.[this.tab] || [];
+    const list = (result?.[this.tab] || []).map((it: any) => this.normalizeId(it));
     const db = await this.getDb();
     await db.clear(this.store);
     await db.bulkPut(this.store, list);
