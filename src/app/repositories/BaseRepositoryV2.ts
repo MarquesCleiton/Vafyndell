@@ -245,4 +245,48 @@ export class BaseRepositoryV2<T extends { id: string }> {
     console.log(`[BaseRepositoryV2:${this.tab}] ✅ Nada para atualizar`);
     return false;
   }
+
+  // =========================================================
+  // 📌 Batch multioperações em múltiplas abas
+  // =========================================================
+  static async batch(payload: {
+    create?: Record<string, any[]>,
+    updateById?: Record<string, any[]>,
+    deleteById?: Record<string, { id: string }[]>
+  }): Promise<any> {
+    console.log(`[BaseRepositoryV2] ▶️ batch iniciado →`, payload);
+
+    const result = await ScriptClientV3.batch(payload);
+    console.log(`[BaseRepositoryV2] ◀️ batch result`, result);
+
+    const db = await IndexedDBClientV2.create();
+
+    // Persistir localmente tudo que for possível
+    if (payload.create) {
+      for (const tab of Object.keys(payload.create)) {
+        const list = (result?.create?.[tab] || []).map((it: any) => ({ ...it, id: String(it.id) }));
+        await db.bulkPut(tab, list);
+        console.log(`[BaseRepositoryV2] 💾 batch/create persistiu ${list.length} em ${tab}`);
+      }
+    }
+
+    if (payload.updateById) {
+      for (const tab of Object.keys(payload.updateById)) {
+        const list = (result?.updateById?.[tab] || []).map((it: any) => ({ ...it, id: String(it.id) }));
+        await db.bulkPut(tab, list);
+        console.log(`[BaseRepositoryV2] 💾 batch/update persistiu ${list.length} em ${tab}`);
+      }
+    }
+
+    if (payload.deleteById) {
+      for (const tab of Object.keys(payload.deleteById)) {
+        const ids = (result?.deleteById?.[tab] || []).map((r: any) => r.id);
+        for (const id of ids) await db.delete(tab, String(id));
+        console.log(`[BaseRepositoryV2] 💾 batch/delete removeu ${ids.length} de ${tab}`);
+      }
+    }
+
+    return result;
+  }
+
 }

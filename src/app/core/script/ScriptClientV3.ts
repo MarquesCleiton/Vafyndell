@@ -57,6 +57,17 @@ export class ScriptClientV3 {
   // ========================
   // OPERAÇÕES EM LOTE POR ID
   // ========================
+  
+  /** Operações em lote (create/update/delete de múltiplas abas em 1 chamada) */
+  static async batch<T = any>(payloads: {
+    create?: Record<string, any[]>;
+    updateById?: Record<string, any[]>;
+    deleteById?: Record<string, { id: string }[]>;
+  }) {
+    const res = await this.call<any>({ payloads });
+    return res || {};
+  }
+
 
   /** Criação em lote (não duplica IDs já existentes) */
   static create<T = any>(payloads: Record<string, any[]>) {

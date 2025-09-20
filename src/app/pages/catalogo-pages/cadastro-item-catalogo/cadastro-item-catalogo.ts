@@ -77,7 +77,7 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
     private route: ActivatedRoute,
     private zone: NgZone,
     private location: Location
-  ) {}
+  ) { }
 
   // =========================================================
   // 📌 Ciclo de vida
@@ -209,7 +209,7 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
   }
 
   // =========================================================
-  // 📌 Salvar
+  // 📌 Salvar (Catálogo + Receitas em 1 batch)
   // =========================================================
   async salvar(form: NgForm) {
     if (form.invalid) return;
@@ -221,52 +221,48 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
       if (!user?.email) throw new Error('Usuário não autenticado');
       this.item.email = user.email;
 
-      let itemSalvo: CatalogoDomain;
-
-      if (this.editMode) {
-        const payload: any = { ...this.item };
-        if (this.imagemBase64Temp) payload.imagem = this.imagemBase64Temp;
-        const [updated] = await this.repoCatalogo.updateBatch([payload]);
-        itemSalvo = updated;
-      } else {
+      // Garante ID para item novo
+      if (!this.editMode && !this.item.id) {
         this.item.id = IdUtils.generateULID();
-        const payload: any = { ...this.item };
-        if (this.imagemBase64Temp) payload.imagem = this.imagemBase64Temp;
-        const [created] = await this.repoCatalogo.createBatch([payload]);
-        itemSalvo = created;
       }
 
-      // 🔑 Receitas
-      const receitasExistentes = await this.repoReceitas.getLocal();
-      const antigas = receitasExistentes.filter((r) => String(r.fabricavel) === String(itemSalvo.id));
-      const deletes = antigas.map((r) => r.id);
+      // payload do catálogo
+      const payloadCatalogo: any = { ...this.item };
+      if (this.imagemBase64Temp) payloadCatalogo.imagem = this.imagemBase64Temp;
 
-      const novos = this.ingredientes.map((ing) => ({
+      // 🔑 Receitas antigas → excluir todas
+      const receitasExistentes = await this.repoReceitas.getLocal();
+      const antigas = receitasExistentes.filter(r => String(r.fabricavel) === String(this.item.id));
+      const deletes = antigas.map(r => ({ id: r.id }));
+
+      // 🔑 Novos ingredientes
+      const novos = this.ingredientes.map(ing => ({
         id: IdUtils.generateULID(),
-        fabricavel: String(itemSalvo.id),
+        fabricavel: String(this.item.id),
         catalogo: String(ing.catalogo),
         quantidade: ing.quantidade,
       }));
 
-      if (deletes.length > 0) {
-        await this.repoReceitas.deleteBatch(deletes);
-        console.log('[CadastroItemCatalogo] ✅ Receitas antigas apagadas');
-      }
-      if (novos.length > 0) {
-        await this.repoReceitas.createBatch(novos);
-        console.log('[CadastroItemCatalogo] ✅ Novas receitas criadas', novos);
-      }
+      // ✅ Tudo em 1 batch
+      const result = await BaseRepositoryV2.batch({
+        updateById: this.editMode ? { Catalogo: [payloadCatalogo] } : undefined,
+        create: !this.editMode ? { Catalogo: [payloadCatalogo], Receitas: novos } : (novos.length ? { Receitas: novos } : undefined),
+        deleteById: deletes.length ? { Receitas: deletes } : undefined,
+      });
 
-      alert('✅ Item e receita salvos com sucesso!');
+      console.log('[CadastroItemCatalogo] ◀️ batch result', result);
+
+      alert('✅ Item e receitas salvos com sucesso!');
       this.cancelar();
     } catch (err) {
-      console.error('[CadastroItemCatalogo] Erro ao salvar:', err);
+      console.error('[CadastroItemCatalogo] ❌ Erro ao salvar:', err);
       alert('❌ Erro ao salvar');
     } finally {
       this.salvando = false;
       this.imagemBase64Temp = null;
     }
   }
+
 
   cancelar() {
     this.location.back();
