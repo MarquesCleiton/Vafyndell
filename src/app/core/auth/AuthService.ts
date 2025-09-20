@@ -1,4 +1,4 @@
-import { IndexedDBClient } from "../db/IndexedDBClient";
+import { IndexedDBClientV2 } from "../db/IndexedDBClientV2";
 
 export interface User {
   name: string;
@@ -30,7 +30,7 @@ export class AuthService {
       if (!btn) {
         btn = document.createElement('div');
         btn.id = 'gsi-hidden-btn';
-        btn.style.display = 'none'; // não aparece na tela
+        btn.style.display = 'none';
         document.body.appendChild(btn);
 
         google.accounts.id.initialize({
@@ -63,7 +63,7 @@ export class AuthService {
         });
       }
 
-      // força o clique → abre popup tradicional do Google
+      // força o clique → abre popup do Google
       (btn.querySelector('div[role=button]') as HTMLDivElement)?.click();
     });
   }
@@ -80,14 +80,14 @@ export class AuthService {
   static logout(): void {
     localStorage.removeItem(this.STORAGE_KEY);
   }
+
   static async logoutHard(): Promise<void> {
     console.log('[AuthService] logoutHard → limpando user + banco');
     localStorage.removeItem(this.STORAGE_KEY);
 
-    const db = await IndexedDBClient.create();
+    const db = await IndexedDBClientV2.create(); // 🔄 agora usa V2
     await db.deleteDatabase();
   }
-
 
   static isAuthenticated(): boolean {
     const user = this.getUser();

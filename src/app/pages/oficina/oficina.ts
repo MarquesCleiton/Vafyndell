@@ -136,7 +136,6 @@ export class Oficina implements OnInit {
     return raridade.toLowerCase();
   }
 
-  // ✅ Implementação com alert()
   async criarItem(rec: ReceitaComStatus) {
     const qtd = rec.quantidade_fabricavel || 1;
     const unidade = rec.unidade_medida || 'unidade(s)';

@@ -13,9 +13,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { CatalogoDomain } from '../../domain/CatalogoDomain';
 import { InventarioDomain } from '../../domain/InventarioDomain';
 import { JogadorDomain } from '../../domain/jogadorDomain';
-import { BaseRepository } from '../../repositories/BaseRepository';
 import { AuthService } from '../../core/auth/AuthService';
 import { IdUtils } from '../../core/utils/IdUtils';
+import { BaseRepositoryV2 } from '../../repositories/BaseRepositoryV2';
 
 interface InventarioDetalhado extends InventarioDomain {
   itemDetalhe?: CatalogoDomain;
@@ -53,15 +53,15 @@ export class TrocaDeItens implements OnInit {
   processando = false;
   private emailLogado: string = '';
 
-  private jogadoresRepo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
-  private inventarioRepo = new BaseRepository<InventarioDomain>('Inventario', 'Inventario');
-  private catalogoRepo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
+  private jogadoresRepo = new BaseRepositoryV2<JogadorDomain>('Personagem');
+  private inventarioRepo = new BaseRepositoryV2<InventarioDomain>('Inventario');
+  private catalogoRepo = new BaseRepositoryV2<CatalogoDomain>('Catalogo');
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
     private location: Location
-  ) {}
+  ) { }
 
   async ngOnInit() {
     const user = AuthService.getUser();
@@ -118,45 +118,45 @@ export class TrocaDeItens implements OnInit {
   // =========================================================
   // Inventário
   // =========================================================
-filtrarItensInventario() {
-  const termo = this.filtroItem.toLowerCase().trim();
+  filtrarItensInventario() {
+    const termo = this.filtroItem.toLowerCase().trim();
 
-  this.inventarioFiltrado = this.inventario
-    .map(i => {
-      // calcula quanto ainda sobra considerando o que já foi escolhido
-      const jaAdicionado = this.itensTroca
-        .filter(t => t.item.id === i.id)
-        .reduce((sum, t) => sum + t.quantidade, 0);
+    this.inventarioFiltrado = this.inventario
+      .map(i => {
+        // calcula quanto ainda sobra considerando o que já foi escolhido
+        const jaAdicionado = this.itensTroca
+          .filter(t => t.item.id === i.id)
+          .reduce((sum, t) => sum + t.quantidade, 0);
 
-      const restante = i.quantidade - jaAdicionado;
+        const restante = i.quantidade - jaAdicionado;
 
-      // 🔑 se já foi todo para a troca, não retorna mais
-      return restante > 0 ? { ...i, quantidade: restante } : null;
-    })
-    .filter((i): i is InventarioDetalhado => i !== null) // remove os null
-    .filter(i => (termo ? i.itemDetalhe?.nome?.toLowerCase().includes(termo) : true));
-}
-
-adicionarItem() {
-  if (!this.itemSelecionado) return;
-
-  const existente = this.itensTroca.find(t => t.item.id === this.itemSelecionado!.id);
-  if (existente) {
-    existente.quantidade = Math.min(
-      existente.quantidade + this.quantidade,
-      this.itemSelecionado.quantidade + existente.quantidade // 🔑 soma corretamente
-    );
-  } else {
-    this.itensTroca.push({ item: this.itemSelecionado, quantidade: this.quantidade });
+        // 🔑 se já foi todo para a troca, não retorna mais
+        return restante > 0 ? { ...i, quantidade: restante } : null;
+      })
+      .filter((i): i is InventarioDetalhado => i !== null) // remove os null
+      .filter(i => (termo ? i.itemDetalhe?.nome?.toLowerCase().includes(termo) : true));
   }
 
-  this.itemSelecionado = null;
-  this.filtroItem = '';
-  this.quantidade = 1;
+  adicionarItem() {
+    if (!this.itemSelecionado) return;
 
-  // 🔑 Recalcula a lista disponível corretamente
-  this.filtrarItensInventario();
-}
+    const existente = this.itensTroca.find(t => t.item.id === this.itemSelecionado!.id);
+    if (existente) {
+      existente.quantidade = Math.min(
+        existente.quantidade + this.quantidade,
+        this.itemSelecionado.quantidade + existente.quantidade // 🔑 soma corretamente
+      );
+    } else {
+      this.itensTroca.push({ item: this.itemSelecionado, quantidade: this.quantidade });
+    }
+
+    this.itemSelecionado = null;
+    this.filtroItem = '';
+    this.quantidade = 1;
+
+    // 🔑 Recalcula a lista disponível corretamente
+    this.filtrarItensInventario();
+  }
 
 
   selecionarItem(i: InventarioDetalhado) {
@@ -208,7 +208,7 @@ adicionarItem() {
 
       const updates: InventarioDomain[] = [];
       const creates: InventarioDomain[] = [];
-      const deletes: number[] = [];
+      const deletes: string[] = []; // 🔑 agora é por id
 
       for (const troca of this.itensTroca) {
         const remetente = troca.item;
@@ -219,11 +219,14 @@ adicionarItem() {
         }
 
         // 🔽 Subtrai do remetente
-        const atualizadoRem = { ...remetente, quantidade: remetente.quantidade - quantidade };
+        const atualizadoRem = {
+          ...remetente,
+          quantidade: remetente.quantidade - quantidade,
+        };
         if (atualizadoRem.quantidade > 0) {
           updates.push(atualizadoRem);
         } else {
-          deletes.push(remetente.index);
+          deletes.push(remetente.id); // 🔑 id em vez de index
         }
 
         // 🔼 Adiciona ao destinatário
@@ -237,10 +240,9 @@ adicionarItem() {
             quantidade: existenteDest.quantidade + quantidade,
           });
         } else {
-          const maxIndex = todos.length > 0 ? Math.max(...todos.map(i => i.index || 0)) : 0;
           creates.push({
-            id: IdUtils.generateULID(),      // ✅ agora gera o ID
-            index: maxIndex + 1,             // ✅ garante index único
+            id: IdUtils.generateULID(),
+            index: Date.now(), // se ainda quiser manter index incremental
             jogador: destinatario,
             item_catalogo: remetente.item_catalogo,
             quantidade,
@@ -251,27 +253,19 @@ adicionarItem() {
       if (updates.length) {
         const updated = await this.inventarioRepo.updateBatch(updates);
         todos = [
-          ...todos.filter(i => !updates.some(u => u.index === i.index)),
+          ...todos.filter(i => !updates.some(u => u.id === i.id)),
           ...updated,
         ];
       }
 
       if (creates.length) {
-        const created = await this.inventarioRepo.createBatch(
-          creates.map(c => ({
-            jogador: c.jogador,
-            item_catalogo: c.item_catalogo,
-            quantidade: c.quantidade,
-            id: c.id,
-            index: c.index,
-          }))
-        );
+        const created = await this.inventarioRepo.createBatch(creates);
         todos = [...todos, ...created];
       }
 
       if (deletes.length) {
         await this.inventarioRepo.deleteBatch(deletes);
-        todos = todos.filter(i => !deletes.includes(i.index));
+        todos = todos.filter(i => !deletes.includes(i.id));
       }
 
       alert('✅ Troca realizada com sucesso!');
@@ -283,6 +277,7 @@ adicionarItem() {
       this.processando = false;
     }
   }
+
 
   cancelar() {
     this.location.back();

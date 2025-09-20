@@ -12,11 +12,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
 import { CatalogoDomain } from '../../../domain/CatalogoDomain';
-import { BaseRepository } from '../../../repositories/BaseRepository';
+import { ReceitaDomain } from '../../../domain/ReceitaDomain';
+import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { ImageUtils } from '../../../core/utils/ImageUtils';
 import { IdUtils } from '../../../core/utils/IdUtils';
 import { AuthService } from '../../../core/auth/AuthService';
-
 
 @Component({
   selector: 'app-cadastro-item-catalogo',
@@ -37,7 +37,6 @@ import { AuthService } from '../../../core/auth/AuthService';
 export class CadastroItemCatalogo implements OnInit, AfterViewInit {
   item: CatalogoDomain = {
     id: '',
-    index: 0,
     nome: '',
     quantidade_fabricavel: 1,
     unidade_medida: '',
@@ -62,8 +61,8 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
   raridades = ['Comum', 'Incomum', 'Raro', 'Épico', 'Lendário'];
   categorias = ['Recursos botânicos', 'Mineral', 'Equipamento', 'Moeda', 'Tesouro', 'Outros'];
 
-  private repoCatalogo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
-  private repoReceitas = new BaseRepository<any>('Receitas', 'Receitas');
+  private repoCatalogo = new BaseRepositoryV2<CatalogoDomain>('Catalogo');
+  private repoReceitas = new BaseRepositoryV2<ReceitaDomain>('Receitas');
 
   catalogoItens: CatalogoDomain[] = [];
   ingredientes: any[] = [];
@@ -78,7 +77,7 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
     private route: ActivatedRoute,
     private zone: NgZone,
     private location: Location
-  ) { }
+  ) {}
 
   // =========================================================
   // 📌 Ciclo de vida
@@ -91,7 +90,7 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
     if (id) {
       this.editMode = true;
 
-      const existente = this.catalogoItens.find(i => String(i.id) === id);
+      const existente = await this.repoCatalogo.getById(id, true);
       if (existente) this.item = { ...existente };
 
       const recsLocais = await this.repoReceitas.getLocal();
@@ -100,7 +99,7 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
       this.repoCatalogo.sync().then(async (updated) => {
         if (updated) {
           this.catalogoItens = await this.repoCatalogo.getLocal();
-          const atualizado = this.catalogoItens.find(i => String(i.id) === id);
+          const atualizado = await this.repoCatalogo.getById(id, true);
           if (atualizado) this.item = atualizado;
         }
       });
@@ -116,7 +115,7 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
       if (!existente) {
         const onlineCatalogo = await this.repoCatalogo.forceFetch();
         this.catalogoItens = onlineCatalogo;
-        const achado = onlineCatalogo.find(i => String(i.id) === id);
+        const achado = onlineCatalogo.find((i) => String(i.id) === id);
         if (achado) this.item = achado;
 
         const onlineReceitas = await this.repoReceitas.forceFetch();
@@ -125,8 +124,12 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
     }
   }
 
-  ngAfterViewInit() { this.scheduleAutoExpand(); }
-  private scheduleAutoExpand() { setTimeout(() => this.applyAutoExpand(), 0); }
+  ngAfterViewInit() {
+    this.scheduleAutoExpand();
+  }
+  private scheduleAutoExpand() {
+    setTimeout(() => this.applyAutoExpand(), 0);
+  }
   private applyAutoExpand() {
     const textareas = this.el.nativeElement.querySelectorAll('textarea.auto-expand');
     textareas.forEach((ta: HTMLTextAreaElement) => {
@@ -149,24 +152,27 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
       this.imagemBase64Temp = await ImageUtils.toOptimizedBase64(file, 0.72, 800);
     }
   }
-  removerImagem() { this.item.imagem = '-'; this.imagemBase64Temp = null; }
+  removerImagem() {
+    this.item.imagem = '-';
+    this.imagemBase64Temp = null;
+  }
 
   // =========================================================
   // 📌 Ingredientes
   // =========================================================
   private mapIngredientes(recs: any[], fabricavelId: string) {
     return recs
-      .filter(r => String(r.fabricavel) === String(fabricavelId))
-      .map(r => ({
+      .filter((r) => String(r.fabricavel) === String(fabricavelId))
+      .map((r) => ({
         ...r,
-        item: this.catalogoItens.find(c => String(c.id) === String(r.catalogo)) || null,
+        item: this.catalogoItens.find((c) => String(c.id) === String(r.catalogo)) || null,
       }));
   }
 
   filtrarCatalogoIngredientes() {
     const termo = (this.filtroIngrediente || '').toLowerCase().trim();
     this.catalogoFiltradoIng = termo
-      ? this.catalogoItens.filter(c => c.nome.toLowerCase().includes(termo))
+      ? this.catalogoItens.filter((c) => c.nome.toLowerCase().includes(termo))
       : [...this.catalogoItens];
   }
 
@@ -176,14 +182,17 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
     this.filtroIngrediente = item.nome;
   }
 
-  incrementarIngrediente() { this.novoIngrediente.quantidade++; }
-  decrementarIngrediente() { this.novoIngrediente.quantidade = Math.max(1, this.novoIngrediente.quantidade - 1); }
+  incrementarIngrediente() {
+    this.novoIngrediente.quantidade++;
+  }
+  decrementarIngrediente() {
+    this.novoIngrediente.quantidade = Math.max(1, this.novoIngrediente.quantidade - 1);
+  }
 
   adicionarIngrediente() {
     if (!this.ingredienteSelecionado || !this.novoIngrediente.catalogo) return;
     const ing = {
       id: IdUtils.generateULID(),
-      index: Date.now(),
       fabricavel: String(this.item.id),
       catalogo: String(this.novoIngrediente.catalogo),
       quantidade: this.novoIngrediente.quantidade,
@@ -195,7 +204,9 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
     this.novoIngrediente = { catalogo: null, quantidade: 1 };
   }
 
-  removerIngrediente(index: number) { this.ingredientes.splice(index, 1); }
+  removerIngrediente(index: number) {
+    this.ingredientes.splice(index, 1);
+  }
 
   // =========================================================
   // 📌 Salvar
@@ -218,11 +229,7 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
         const [updated] = await this.repoCatalogo.updateBatch([payload]);
         itemSalvo = updated;
       } else {
-        const locais = await this.repoCatalogo.getLocal();
-        const maxIndex = locais.length > 0 ? Math.max(...locais.map(i => i.index || 0)) : 0;
-
         this.item.id = IdUtils.generateULID();
-        this.item.index = maxIndex + 1;
         const payload: any = { ...this.item };
         if (this.imagemBase64Temp) payload.imagem = this.imagemBase64Temp;
         const [created] = await this.repoCatalogo.createBatch([payload]);
@@ -231,24 +238,18 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
 
       // 🔑 Receitas
       const receitasExistentes = await this.repoReceitas.getLocal();
-      const antigas = receitasExistentes.filter(
-        r => String(r.fabricavel) === String(itemSalvo.id)
-      );
-      const deletes = antigas.map(r => r.index);
+      const antigas = receitasExistentes.filter((r) => String(r.fabricavel) === String(itemSalvo.id));
+      const deletes = antigas.map((r) => r.id);
 
-      console.log('[CadastroItemCatalogo] Receitas antigas →', antigas);
-      console.log('[CadastroItemCatalogo] Index para apagar →', deletes);
-
-      const novos = this.ingredientes.map((ing, i) => ({
+      const novos = this.ingredientes.map((ing) => ({
         id: IdUtils.generateULID(),
-        index: Date.now() + i,
         fabricavel: String(itemSalvo.id),
         catalogo: String(ing.catalogo),
         quantidade: ing.quantidade,
       }));
 
       if (deletes.length > 0) {
-        await this.repoReceitas.deleteBatch(deletes as any);
+        await this.repoReceitas.deleteBatch(deletes);
         console.log('[CadastroItemCatalogo] ✅ Receitas antigas apagadas');
       }
       if (novos.length > 0) {
@@ -267,12 +268,14 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
     }
   }
 
-  cancelar() { this.location.back(); }
+  cancelar() {
+    this.location.back();
+  }
 
   getResumo(): string {
     if (!this.ingredientes.length) return '';
     const insumos = this.ingredientes
-      .map(i => `${i.quantidade}x ${i.item?.nome || '???'}`)
+      .map((i) => `${i.quantidade}x ${i.item?.nome || '???'}`)
       .join(' + ');
     return `${insumos} = ${this.item.quantidade_fabricavel || 1}x ${this.item.nome || 'Item'}`;
   }

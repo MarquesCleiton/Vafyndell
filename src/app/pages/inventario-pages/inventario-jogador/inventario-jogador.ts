@@ -2,9 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+
 import { InventarioDomain } from '../../../domain/InventarioDomain';
 import { CatalogoDomain } from '../../../domain/CatalogoDomain';
-import { BaseRepository } from '../../../repositories/BaseRepository';
+import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { AuthService } from '../../../core/auth/AuthService';
 
 interface InventarioDetalhado extends InventarioDomain {
@@ -34,8 +35,8 @@ export class InventarioJogador implements OnInit {
 
   resumo = { tipos: 0, unidades: 0, pesoTotal: 0, categorias: 0 };
 
-  private catalogoRepo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
-  private inventarioRepo = new BaseRepository<InventarioDomain>('Inventario', 'Inventario');
+  private catalogoRepo = new BaseRepositoryV2<CatalogoDomain>('Catalogo');
+  private inventarioRepo = new BaseRepositoryV2<InventarioDomain>('Inventario');
 
   private mapaAbas: Record<string, string[]> = {
     recursos: ['Recursos botânicos', 'Mineral', 'Componentes bestiais e animalescos', 'Tesouro', 'Moeda'],
@@ -52,7 +53,7 @@ export class InventarioJogador implements OnInit {
     outros: ['Outros'],
   };
 
-  constructor(private router: Router) { }
+  constructor(private router: Router) {}
 
   async ngOnInit() {
     try {
@@ -68,6 +69,7 @@ export class InventarioJogador implements OnInit {
   }
 
   private async loadLocalAndSync(email: string) {
+    // 1️⃣ Local
     const [catalogoLocal, inventarioLocal] = await Promise.all([
       this.catalogoRepo.getLocal(),
       this.inventarioRepo.getLocal(),
@@ -76,9 +78,13 @@ export class InventarioJogador implements OnInit {
     const meusItens = inventarioLocal.filter((i) => i.jogador === email);
     this.processarInventario(meusItens, catalogoLocal);
 
+    // 2️⃣ Sync em paralelo
     (async () => {
-      const catSync = await this.catalogoRepo.sync();
-      const invSync = await this.inventarioRepo.sync();
+      const [catSync, invSync] = await Promise.all([
+        this.catalogoRepo.sync(),
+        this.inventarioRepo.sync(),
+      ]);
+
       if (catSync || invSync) {
         const [catAtualizado, invAtualizado] = await Promise.all([
           this.catalogoRepo.getLocal(),
@@ -89,12 +95,11 @@ export class InventarioJogador implements OnInit {
       }
     })();
 
+    // 3️⃣ Fallback online
     if (!meusItens.length) {
-      await this.catalogoRepo.forceFetch();
-      await this.inventarioRepo.forceFetch();
       const [catalogoOnline, inventarioOnline] = await Promise.all([
-        this.catalogoRepo.getLocal(),
-        this.inventarioRepo.getLocal(),
+        this.catalogoRepo.forceFetch(),
+        this.inventarioRepo.forceFetch(),
       ]);
       const meusOnline = inventarioOnline.filter((i) => i.jogador === email);
       this.processarInventario(meusOnline, catalogoOnline);
@@ -103,7 +108,7 @@ export class InventarioJogador implements OnInit {
 
   private processarInventario(inventarioBruto: InventarioDomain[], catalogo: CatalogoDomain[]) {
     const inventarioDetalhado: InventarioDetalhado[] = inventarioBruto.map((inv) => {
-      const detalhe = catalogo.find((c) => String(c.id) === String(inv.item_catalogo));
+      const detalhe = catalogo.find((c) => c.id === inv.item_catalogo);
       return { ...inv, itemDetalhe: detalhe };
     });
 
@@ -194,8 +199,7 @@ export class InventarioJogador implements OnInit {
   }
 
   trocarItem(itemId: string, event: Event) {
-    event.stopPropagation(); // evita abrir detalhes
+    event.stopPropagation();
     this.router.navigate(['/troca-de-itens', itemId]);
   }
-
 }

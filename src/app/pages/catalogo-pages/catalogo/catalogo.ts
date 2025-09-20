@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { CatalogoDomain } from '../../../domain/CatalogoDomain';
-import { BaseRepository } from '../../../repositories/BaseRepository';
+import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { JogadorDomain } from '../../../domain/jogadorDomain';
 import { AuthService } from '../../../core/auth/AuthService';
 import { VisibilidadeService } from '../../../services/VisibilidadeService';
@@ -30,8 +30,8 @@ export class Catalogo implements OnInit {
 
   abaAtiva: 'recursos' | 'equipamentos' | 'pocoes' | 'outros' = 'recursos';
 
-  private repo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
-  private jogadorRepo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
+  private repo = new BaseRepositoryV2<CatalogoDomain>('Catalogo');
+  private jogadorRepo = new BaseRepositoryV2<JogadorDomain>('Personagem');
   private visibilidadeService = new VisibilidadeService<CatalogoDomain>(this.repo);
 
   ehMestre = false;
@@ -53,7 +53,7 @@ export class Catalogo implements OnInit {
     outros: ['Outros'],
   };
 
-  constructor(private router: Router) { }
+  constructor(private router: Router) {}
 
   async ngOnInit() {
     this.carregando = true;
@@ -74,32 +74,39 @@ export class Catalogo implements OnInit {
       const jogadores = await this.jogadorRepo.getLocal();
       const jogadorAtual = jogadores.find((j) => j.email === user.email);
       this.ehMestre = jogadorAtual?.tipo_jogador === 'Mestre';
+      console.log(`[Catalogo] 👑 Usuário é mestre? ${this.ehMestre}`);
     }
   }
 
   private async loadLocalAndSync() {
+    console.log('[Catalogo] 📂 Carregando itens locais...');
     const locais = await this.repo.getLocal();
     this.processarItens(locais);
 
+    // sync em paralelo
     this.repo.sync().then(async (updated) => {
       if (updated) {
+        console.log('[Catalogo] 🔄 Itens atualizados no servidor, recarregando...');
         const atualizados = await this.repo.getLocal();
         this.processarItens(atualizados);
       }
     });
 
+    // se vazio local → força online
     if (locais.length === 0) {
+      console.log('[Catalogo] 🌐 Nenhum item local, forçando fetch online...');
       const online = await this.repo.forceFetch();
       this.processarItens(online);
     }
   }
 
   private processarItens(lista: CatalogoDomain[]) {
+    console.log(`[Catalogo] Processando ${lista.length} itens...`);
     const estados = new Map(this.categorias.map((c) => [c.nome, c.expandido]));
     const mapa = new Map<string, CatalogoDomain[]>();
 
     lista
-      .filter((item) => this.ehMestre ? true : item.visivel_jogadores) // 🔑 filtro por visibilidade
+      .filter((item) => (this.ehMestre ? true : item.visivel_jogadores))
       .forEach((item) => {
         const cat = item.categoria || 'Outros';
         if (!mapa.has(cat)) mapa.set(cat, []);
@@ -164,7 +171,7 @@ export class Catalogo implements OnInit {
   }
 
   abrirItem(item: CatalogoDomain) {
-    this.router.navigate(['/item-catalogo', item.id]);
+    this.router.navigate(['/item-catalogo', String(item.id)]);
   }
 
   novoItem() {
@@ -183,7 +190,8 @@ export class Catalogo implements OnInit {
 
     this.loadingVisibilidade[item.id] = true;
     try {
-      const atualizado = await this.visibilidadeService.toggleVisibilidade(item.index);
+      // ⚠️ Ajustar VisibilidadeService para BaseRepositoryV2 (usar id, não index)
+      const atualizado = await this.visibilidadeService.toggleVisibilidade(item.id);
       if (atualizado) {
         item.visivel_jogadores = atualizado.visivel_jogadores;
       }

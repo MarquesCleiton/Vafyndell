@@ -1,15 +1,16 @@
+// pages/login/login.ts
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/AuthService';
-import { IndexedDBClient } from '../../core/db/IndexedDBClient';
 import { CommonModule } from '@angular/common';
 import { BootstrapService } from '../../services/BootstrapService';
+import { IndexedDBClientV2 } from '../../core/db/IndexedDBClientV2';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   templateUrl: './login.html',
-  styleUrl: './login.css',
+  styleUrls: ['./login.css'],
   imports: [CommonModule],
 })
 export class Login implements OnInit {
@@ -19,7 +20,7 @@ export class Login implements OnInit {
   constructor(
     private router: Router,
     private bootstrap: BootstrapService
-  ) { }
+  ) {}
 
   async ngOnInit() {
     const user = AuthService.getUser();
@@ -28,18 +29,19 @@ export class Login implements OnInit {
     if (user && !AuthService.isAuthenticated()) {
       console.warn('[Login] Token expirado → limpando credenciais e banco');
       await AuthService.logoutHard();
+      const db = await IndexedDBClientV2.create();
+      await db.deleteDatabase();
       return;
     }
 
     // 🚨 Caso 2: Não tem user mas ainda existe banco local → reset banco
     if (!user) {
-      const db = await IndexedDBClient.create();
+      const db = await IndexedDBClientV2.create();
       await db.deleteDatabase();
       console.warn('[Login] Nenhum usuário → banco local limpo');
     }
 
-    // ✅ Caso 3: User válido → agora não redireciona de cara,
-    // mas dispara o preload das tabelas antes
+    // ✅ Caso 3: User válido → dispara preload
     if (AuthService.isAuthenticated()) {
       this.inicializarApp();
     }
@@ -73,7 +75,7 @@ export class Login implements OnInit {
     this.mensagem = 'Carregando tomos antigos...';
 
     try {
-      await this.bootstrap.preloadAll((msg) => this.mensagem = msg);
+      await this.bootstrap.preloadAll((msg) => (this.mensagem = msg));
       console.log('[Login] Preload concluído!');
       this.router.navigate(['/jogador']);
     } catch (err) {

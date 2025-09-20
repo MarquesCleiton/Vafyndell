@@ -2,9 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
+
 import { InventarioDomain } from '../../../domain/InventarioDomain';
 import { CatalogoDomain } from '../../../domain/CatalogoDomain';
-import { BaseRepository } from '../../../repositories/BaseRepository';
+import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { AuthService } from '../../../core/auth/AuthService';
 
 interface ItemInventarioDetalhe {
@@ -25,9 +26,8 @@ export class ItemInventario implements OnInit {
   processandoEditar = false;
   processandoExcluir = false;
 
-  // ✅ Reuso do BaseRepository
-  private inventarioRepo = new BaseRepository<InventarioDomain>('Inventario', 'Inventario');
-  private catalogoRepo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
+  private inventarioRepo = new BaseRepositoryV2<InventarioDomain>('Inventario');
+  private catalogoRepo = new BaseRepositoryV2<CatalogoDomain>('Catalogo');
 
   constructor(
     private route: ActivatedRoute,
@@ -46,21 +46,21 @@ export class ItemInventario implements OnInit {
       const user = AuthService.getUser();
       if (!user?.email) throw new Error('Usuário não autenticado.');
 
-      // 1️⃣ Cache first
+      // 1️⃣ Local
       const [catalogoLocal, inventarioLocal] = await Promise.all([
         this.catalogoRepo.getLocal(),
         this.inventarioRepo.getLocal(),
       ]);
 
       const encontrado = inventarioLocal.find(
-        (i) => String(i.id) === id && i.jogador === user.email
+        (i) => i.id === id && i.jogador === user.email
       );
       if (encontrado) {
         this.item = this.montarDetalhe(encontrado, catalogoLocal);
         this.carregando = false;
       }
 
-      // 2️⃣ Sync paralelo
+      // 2️⃣ Sync em paralelo
       Promise.all([this.catalogoRepo.sync(), this.inventarioRepo.sync()]).then(
         async ([catSync, invSync]) => {
           if (catSync || invSync) {
@@ -70,7 +70,7 @@ export class ItemInventario implements OnInit {
               this.inventarioRepo.getLocal(),
             ]);
             const atualizado = inventarioAtualizado.find(
-              (i) => String(i.id) === id && i.jogador === user.email
+              (i) => i.id === id && i.jogador === user.email
             );
             if (atualizado) {
               this.item = this.montarDetalhe(atualizado, catalogoAtualizado);
@@ -91,7 +91,7 @@ export class ItemInventario implements OnInit {
         ]);
 
         const achadoOnline = inventarioOnline.find(
-          (i) => String(i.id) === id && i.jogador === user.email
+          (i) => i.id === id && i.jogador === user.email
         );
         if (achadoOnline) {
           this.item = this.montarDetalhe(achadoOnline, catalogoOnline);
@@ -106,18 +106,17 @@ export class ItemInventario implements OnInit {
     }
   }
 
-  /** 🔧 Monta detalhe juntando catálogo */
+  /** 🔧 Junta inventário + catálogo */
   private montarDetalhe(
     inventario: InventarioDomain,
     catalogo: CatalogoDomain[]
   ): ItemInventarioDetalhe {
-    const detalhe = catalogo.find((c) => String(c.id) === String(inventario.item_catalogo));
+    const detalhe = catalogo.find((c) => c.id === inventario.item_catalogo);
     return { inventario, catalogo: detalhe };
   }
 
   cancelar() {
-      // Se não está editando, volta para a lista geral
-      this.router.navigate(['/inventario-jogador']);
+    this.router.navigate(['/inventario-jogador']);
   }
 
   editarItem() {
@@ -138,7 +137,7 @@ export class ItemInventario implements OnInit {
 
     this.processandoExcluir = true;
     try {
-      await this.inventarioRepo.delete(this.item.inventario.index);
+      await this.inventarioRepo.delete(this.item.inventario.id); // 🔑 agora usa id
       alert('✅ Item removido do inventário!');
       this.router.navigate(['/inventario-jogador']);
     } catch (err) {

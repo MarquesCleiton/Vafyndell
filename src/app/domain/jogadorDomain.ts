@@ -1,5 +1,4 @@
 export interface JogadorDomain {
-  index: number;
   id: string;
   email: string;
   imagem: string;

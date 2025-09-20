@@ -3,8 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { JogadorDomain, JogadorUtils } from '../../../domain/jogadorDomain';
-import { BaseRepository } from '../../../repositories/BaseRepository';
-
+import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 
 @Component({
   selector: 'app-batalha',
@@ -24,8 +23,8 @@ export class Batalha implements OnInit {
 
   JogadorUtils = JogadorUtils; // 👈 expõe no template
 
-  // 🔗 Repositório genérico
-  private repo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
+  // 🔗 Repositório genérico usando V2 (id = chave)
+  private repo = new BaseRepositoryV2<JogadorDomain>('Personagem');
 
   constructor(private router: Router) {}
 
@@ -108,7 +107,7 @@ export class Batalha implements OnInit {
 
     this.processando[j.id] = 'excluir';
     try {
-      await this.repo.delete(j.index); // 👈 usando BaseRepository
+      await this.repo.delete(j.id); // ✅ agora exclui pelo id (ULID)
       this.jogadores = this.jogadores.filter(x => x.id !== j.id);
       this.aplicarFiltro();
       alert('✅ NPC removido da batalha!');

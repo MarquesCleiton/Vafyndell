@@ -2,17 +2,18 @@ import { Component, OnInit, AfterViewInit, ElementRef, NgZone } from '@angular/c
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
+
 import { NpcDomain } from '../../../domain/NpcDomain';
-import { BaseRepository } from '../../../repositories/BaseRepository';
+import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { ImageUtils } from '../../../core/utils/ImageUtils';
 import { AuthService } from '../../../core/auth/AuthService';
 import { IdUtils } from '../../../core/utils/IdUtils';
 
 type AtributoChave = keyof Pick<
   NpcDomain,
-  'forca' | 'constituicao' | 'destreza' |
-  'sabedoria' | 'inteligencia' | 'energia' |
-  'classe_armadura' | 'pontos_de_vida' | 'xp'
+  | 'forca' | 'constituicao' | 'destreza'
+  | 'sabedoria' | 'inteligencia' | 'energia'
+  | 'classe_armadura' | 'pontos_de_vida' | 'xp'
 >;
 
 @Component({
@@ -25,8 +26,7 @@ type AtributoChave = keyof Pick<
 export class CadastroNpc implements OnInit, AfterViewInit {
   npc: NpcDomain = {
     id: '',
-    index: 0,
-    imagem: '', // sempre URL final
+    imagem: '',
     nome: '',
     classificacao: 'Inimigo',
     tipo: 'Comum',
@@ -46,8 +46,9 @@ export class CadastroNpc implements OnInit, AfterViewInit {
     email: '',
   };
 
-  /** base64 temporário até salvar */
   imagemBase64Temp: string | null = null;
+  salvando = false;
+  editMode = false;
 
   atributosNumericos = [
     { key: 'xp' as AtributoChave, label: 'XP', icon: '⭐' },
@@ -64,10 +65,7 @@ export class CadastroNpc implements OnInit, AfterViewInit {
   classificacoes = ['Inimigo', 'Bestial'];
   tipos = ['Comum', 'Elite', 'Mágico', 'Lendário'];
 
-  salvando = false;
-  editMode = false;
-
-  private repo = new BaseRepository<NpcDomain>('NPCs', 'NPCs');
+  private repo = new BaseRepositoryV2<NpcDomain>('NPCs');
 
   constructor(
     private router: Router,
@@ -81,6 +79,7 @@ export class CadastroNpc implements OnInit, AfterViewInit {
     if (id) {
       this.editMode = true;
       try {
+        // 1️⃣ Local
         const locais = await this.repo.getLocal();
         const existente = locais.find(n => String(n.id) === id);
         if (existente) {
@@ -88,6 +87,7 @@ export class CadastroNpc implements OnInit, AfterViewInit {
           this.scheduleAutoExpand();
         }
 
+        // 2️⃣ Sync paralelo
         this.repo.sync().then(async updated => {
           if (updated) {
             const atualizados = await this.repo.getLocal();
@@ -99,6 +99,7 @@ export class CadastroNpc implements OnInit, AfterViewInit {
           }
         });
 
+        // 3️⃣ Fallback online
         if (!existente) {
           const online = await this.repo.forceFetch();
           const achadoOnline = online.find(n => String(n.id) === id);
@@ -117,12 +118,12 @@ export class CadastroNpc implements OnInit, AfterViewInit {
     this.scheduleAutoExpand();
   }
 
+  // Autoexpand textareas
   private scheduleAutoExpand() {
     this.zone.runOutsideAngular(() => {
       setTimeout(() => this.applyAutoExpand(), 0);
     });
   }
-
   private applyAutoExpand() {
     const textareas = this.el.nativeElement.querySelectorAll('textarea.auto-expand');
     textareas.forEach((ta: HTMLTextAreaElement) => {
@@ -137,6 +138,7 @@ export class CadastroNpc implements OnInit, AfterViewInit {
     });
   }
 
+  // Helpers atributos
   getValor(campo: AtributoChave): number {
     return this.npc[campo] as number;
   }
@@ -147,6 +149,7 @@ export class CadastroNpc implements OnInit, AfterViewInit {
     this.setValor(campo, this.getValor(campo) + delta);
   }
 
+  // Upload
   async onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files?.length) {
@@ -158,12 +161,12 @@ export class CadastroNpc implements OnInit, AfterViewInit {
       }
     }
   }
-
   removerImagem() {
     this.npc.imagem = '-';
     this.imagemBase64Temp = null;
   }
 
+  // Salvar
   async salvar(form: NgForm) {
     if (form.invalid) return;
     try {
@@ -172,33 +175,26 @@ export class CadastroNpc implements OnInit, AfterViewInit {
       if (!user?.email) throw new Error('Usuário não autenticado');
       this.npc.email = user.email;
 
-      await this.repo.sync();
-
-      const payload: any = { ...this.npc };
+      const payload: NpcDomain = { ...this.npc };
       if (this.imagemBase64Temp) {
-        payload.imagem = this.imagemBase64Temp; // envia base64 → Script faz upload
+        payload.imagem = this.imagemBase64Temp;
       }
 
       if (this.editMode) {
         const updated = await this.repo.update(payload);
-        this.npc = { ...updated }; // volta com URL
-        window.alert('✅ NPC atualizado com sucesso!');
+        this.npc = { ...updated };
+        alert('✅ NPC atualizado com sucesso!');
       } else {
-        const locais = await this.repo.getLocal();
-        const maxIndex = locais.length > 0 ? Math.max(...locais.map(n => n.index || 0)) : 0;
-
-        this.npc.index = maxIndex + 1;
-        this.npc.id = IdUtils.generateULID();
-
+        payload.id = IdUtils.generateULID();
         const created = await this.repo.create(payload);
         this.npc = { ...created };
-        window.alert('✅ NPC criado com sucesso!');
+        alert('✅ NPC criado com sucesso!');
       }
 
       this.router.navigate(['/npcs']);
     } catch (err) {
       console.error('[CadastroNpc] Erro ao salvar NPC:', err);
-      window.alert('❌ Erro ao salvar NPC. Veja o console.');
+      alert('❌ Erro ao salvar NPC. Veja o console.');
     } finally {
       this.salvando = false;
       this.imagemBase64Temp = null;
@@ -207,12 +203,9 @@ export class CadastroNpc implements OnInit, AfterViewInit {
 
   cancelar() {
     if (this.editMode && this.npc?.id) {
-      // Se está editando → volta pros detalhes do NPC
       this.router.navigate(['/npc-detalhes', this.npc.id]);
     } else {
-      // Se está cadastrando novo → volta pra lista
       this.router.navigate(['/npcs']);
     }
   }
-
 }

@@ -192,6 +192,29 @@ export class BaseRepositoryV2<T extends { id: string }> {
     return list;
   }
 
+  // Dentro de BaseRepositoryV2<T>
+  static async multiFetch(tabs: string[]): Promise<Record<string, any[]>> {
+    console.log(`[BaseRepositoryV2] 🌐 multiFetch iniciado →`, tabs);
+
+    const result = await ScriptClientV3.getAll(tabs);
+    console.log(`[BaseRepositoryV2] ◀️ multiFetch result`, result);
+
+    const db = await IndexedDBClientV2.create();
+    const map: Record<string, any[]> = {};
+
+    for (const tab of tabs) {
+      const list = (result?.[tab] || []).map((it: any) => ({ ...it, id: String(it.id) }));
+      map[tab] = list;
+      await db.clear(tab);
+      await db.bulkPut(tab, list);
+
+      console.log(`[BaseRepositoryV2] 💾 multiFetch persistiu ${list.length} registros em ${tab}`);
+    }
+
+    return map;
+  }
+
+
   async sync(): Promise<boolean> {
     console.log(`[BaseRepositoryV2:${this.tab}] 🔄 sync iniciado`);
     const result = await ScriptClientV3.getAll('Metadados');
