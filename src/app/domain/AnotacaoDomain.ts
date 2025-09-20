@@ -1,5 +1,4 @@
 export interface AnotacaoDomain {
-  index: number;
   id: string;       // 🔑 agora ULID
   jogador: string;  // email do jogador dono da anotação
   autor: string;    // email do autor da anotação

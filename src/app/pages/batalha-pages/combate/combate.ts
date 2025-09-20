@@ -10,8 +10,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatOptionModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+
 import { JogadorDomain } from '../../../domain/jogadorDomain';
-import { BaseRepository } from '../../../repositories/BaseRepository';
+import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { AuthService } from '../../../core/auth/AuthService';
 
 @Component({
@@ -41,7 +42,8 @@ export class Combate implements OnInit {
   efeitos = '';
   salvando = false;
 
-  private repo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
+  // ✅ agora com BaseRepositoryV2 (id é a chave)
+  private repo = new BaseRepositoryV2<JogadorDomain>('Personagem');
 
   constructor(private router: Router, private route: ActivatedRoute) {}
 
@@ -134,8 +136,8 @@ export class Combate implements OnInit {
         this.vitimaSelecionada.dano_tomado = danoTomadoAtual + danoAplicado;
       }
 
-      // Atualiza no repositório
-      await this.repo.update(this.vitimaSelecionada);
+      // ✅ Atualiza no repositório (clone limpo)
+      await this.repo.update({ ...this.vitimaSelecionada });
 
       console.log('⚔️ Combate registrado:', {
         ofensor: this.ofensorSelecionado,

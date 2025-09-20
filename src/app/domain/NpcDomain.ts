@@ -1,6 +1,5 @@
 export interface NpcDomain {
   id: string;
-  index: number;
   imagem: string;
   nome: string;
   classificacao: 'Inimigo' | 'Bestial';

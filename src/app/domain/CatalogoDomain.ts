@@ -1,7 +1,6 @@
 import { ReceitaDomain } from "./ReceitaDomain";
 
 export interface CatalogoDomain {
-  index: number;                // índice incremental na planilha
   id: string;                   
   nome: string;                 // nome do item
   quantidade_fabricavel: number; // 🔑 novo campo

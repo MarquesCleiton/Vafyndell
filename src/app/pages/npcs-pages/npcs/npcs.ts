@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
-import { BaseRepository } from '../../../repositories/BaseRepository';
+import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { NpcDomain } from '../../../domain/NpcDomain';
 import { JogadorDomain } from '../../../domain/jogadorDomain';
 import { AuthService } from '../../../core/auth/AuthService';
@@ -30,17 +30,17 @@ export class Npcs implements OnInit {
 
   abaAtiva: 'bestiais' | 'inimigos' = 'bestiais';
 
-  private repo = new BaseRepository<NpcDomain>('NPCs', 'NPCs');
-  private jogadorRepo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
+  private repo = new BaseRepositoryV2<NpcDomain>('NPCs');
+  private jogadorRepo = new BaseRepositoryV2<JogadorDomain>('Personagem');
   private todosNpcs: NpcDomain[] = []; // 🔹 cache local em memória
   private visibilidadeService = new VisibilidadeService<NpcDomain>(this.repo);
-  
+
   /** 🔄 controla loading de visibilidade por NPC */
   loadingVisibilidade: Record<string, boolean> = {};
-  
+
   ehMestre = false;
 
-  constructor(private router: Router) { }
+  constructor(private router: Router) {}
 
   async ngOnInit() {
     this.carregando = true;
@@ -151,7 +151,7 @@ export class Npcs implements OnInit {
 
   selecionarAba(aba: 'bestiais' | 'inimigos') {
     this.abaAtiva = aba;
-    this.processarCategorias(this.todosNpcs); // 🔹 agora só reprocessa o cache
+    this.processarCategorias(this.todosNpcs); // 🔹 reprocessa cache
   }
 
   toggleCategoria(cat: CategoriaNpc) {
@@ -173,7 +173,7 @@ export class Npcs implements OnInit {
 
     this.loadingVisibilidade[npc.id] = true;
     try {
-      const atualizado = await this.visibilidadeService.toggleVisibilidade(npc.index);
+      const atualizado = await this.visibilidadeService.toggleVisibilidade(npc.id);
       if (atualizado) {
         npc.visivel_jogadores = atualizado.visivel_jogadores;
       }

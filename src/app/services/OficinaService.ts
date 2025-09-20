@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BaseRepository } from '../repositories/BaseRepository';
+import { BaseRepositoryV2 } from '../repositories/BaseRepositoryV2';
 import { CatalogoDomain } from '../domain/CatalogoDomain';
 import { ReceitaDomain } from '../domain/ReceitaDomain';
 import { InventarioDomain } from '../domain/InventarioDomain';
@@ -19,49 +19,55 @@ export type ReceitaComStatus = CatalogoDomain & {
 
 @Injectable({ providedIn: 'root' })
 export class OficinaService {
-  private catalogoRepo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
-  private inventarioRepo = new BaseRepository<InventarioDomain>('Inventario', 'Inventario');
-  private receitasRepo = new BaseRepository<ReceitaDomain>('Receitas', 'Receitas');
+  private catalogoRepo = new BaseRepositoryV2<CatalogoDomain>('Catalogo');
+  private inventarioRepo = new BaseRepositoryV2<InventarioDomain>('Inventario');
+  private receitasRepo = new BaseRepositoryV2<ReceitaDomain>('Receitas');
 
   async getPossiveisReceitas(): Promise<ReceitaComStatus[]> {
     const user = AuthService.getUser();
     if (!user?.email) throw new Error('Usuário não autenticado');
 
-    const dbCatalogo = await this.catalogoRepo.getLocal();
-    const dbInventario = (await this.inventarioRepo.getLocal()).filter(i => i.jogador === user.email);
-    const dbReceitas = await this.receitasRepo.getLocal();
+    // 1️⃣ pega dados locais primeiro
+    const [catalogoLocal, inventarioLocal, receitasLocal] = await Promise.all([
+      this.catalogoRepo.getLocal(),
+      this.inventarioRepo.getLocal(),
+      this.receitasRepo.getLocal(),
+    ]);
+    const inventarioUser = inventarioLocal.filter(i => i.jogador === user.email);
+    let receitasProcessadas = this.processar(catalogoLocal, receitasLocal, inventarioUser);
 
-    if (dbCatalogo.length && dbInventario.length && dbReceitas.length) {
-      this.sincronizarMulti(user.email).catch(err =>
-        console.error('[OficinaService] Erro ao sincronizar:', err)
-      );
-      return this.processar(dbCatalogo, dbReceitas, dbInventario);
+    // 2️⃣ dispara sync em paralelo (não trava a tela)
+    (async () => {
+      const [catSync, invSync, recSync] = await Promise.all([
+        this.catalogoRepo.sync(),
+        this.inventarioRepo.sync(),
+        this.receitasRepo.sync(),
+      ]);
+      if (catSync || invSync || recSync) {
+        const [catAtualizado, invAtualizado, recAtualizado] = await Promise.all([
+          this.catalogoRepo.getLocal(),
+          this.inventarioRepo.getLocal(),
+          this.receitasRepo.getLocal(),
+        ]);
+        const meusAtualizados = invAtualizado.filter(i => i.jogador === user.email);
+        receitasProcessadas = this.processar(catAtualizado, recAtualizado, meusAtualizados);
+      }
+    })();
+
+    // 3️⃣ se não tiver nada local → força fetch online
+    if (!receitasProcessadas.length) {
+      const [catalogoOnline, inventarioOnline, receitasOnline] = await Promise.all([
+        this.catalogoRepo.forceFetch(),
+        this.inventarioRepo.forceFetch(),
+        this.receitasRepo.forceFetch(),
+      ]);
+      const meusOnline = inventarioOnline.filter(i => i.jogador === user.email);
+      receitasProcessadas = this.processar(catalogoOnline, receitasOnline, meusOnline);
     }
 
-    const result = await this.catalogoRepo.getAllMulti(['Catalogo', 'Receitas', 'Inventario']);
-    const catalogo = result['Catalogo'];
-    const receitas = result['Receitas'];
-    const inventario = (result['Inventario'] as InventarioDomain[]).filter(i => i.jogador === user.email);
-
-    await Promise.all([
-      this.catalogoRepo.bulkPutLocal(catalogo),
-      this.inventarioRepo.bulkPutLocal(inventario),
-      this.receitasRepo.bulkPutLocal(receitas),
-    ]);
-
-    return this.processar(catalogo, receitas, inventario);
+    return receitasProcessadas;
   }
 
-  private async sincronizarMulti(email: string) {
-    const [catSync, invSync, recSync] = await Promise.all([
-      this.catalogoRepo.sync(),
-      this.inventarioRepo.sync(),
-      this.receitasRepo.sync(),
-    ]);
-    if (catSync || invSync || recSync) {
-      console.log('[OficinaService] Alguma tabela foi atualizada → dados locais recarregados');
-    }
-  }
 
   private processar(
     catalogo: CatalogoDomain[],
@@ -142,9 +148,9 @@ export class OficinaService {
 
     encontrado.quantidade = Math.max(0, (encontrado.quantidade || 0) - qtd);
     if (encontrado.quantidade === 0) {
-      await this.inventarioRepo.delete(encontrado.index);
+      await this.inventarioRepo.delete(encontrado.id); // 🔑 agora por id
     } else {
-      await this.inventarioRepo.update(encontrado);
+      await this.inventarioRepo.update(encontrado);   // 🔑 update também por id
     }
   }
 
@@ -156,13 +162,14 @@ export class OficinaService {
       existente.quantidade += qtd;
       await this.inventarioRepo.update(existente);
     } else {
-      await this.inventarioRepo.create({
+      const novo: InventarioDomain = {
         id: IdUtils.generateULID(),
-        index: todos.length + 1,
+        index: Date.now(), // só para ordenação
         jogador,
         item_catalogo: itemCatalogo,
         quantidade: qtd,
-      } as InventarioDomain);
+      };
+      await this.inventarioRepo.create(novo);
     }
   }
 }

@@ -2,8 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
+
 import { JogadorDomain } from '../../../domain/jogadorDomain';
-import { BaseRepository } from '../../../repositories/BaseRepository';
+import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { AuthService } from '../../../core/auth/AuthService';
 import { ImageUtils } from '../../../core/utils/ImageUtils';
 
@@ -25,7 +26,7 @@ export class EdicaoJogador implements OnInit {
   jogador: JogadorDomain | null = null;
   salvando = false;
 
-  private repo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
+  private repo = new BaseRepositoryV2<JogadorDomain>('Personagem');
 
   atributosNumericos = [
     { key: 'nivel' as AtributoChave, label: 'Nível', icon: '🏅' },
@@ -41,19 +42,19 @@ export class EdicaoJogador implements OnInit {
   ];
 
   // 🔢 Atributos calculados
-  get vida() { return this.jogador ? this.jogador.energia + this.jogador.constituicao : 0; }
-  get vidaTotal() { return this.jogador ? this.vida + this.jogador.classe_de_armadura : 0; }
-  get fatorCura() { return this.jogador ? Math.floor(this.jogador.energia / 3) : 0; }
-  get deslocamento() { return this.jogador ? Math.floor(this.jogador.destreza / 3) : 0; }
+  get vida() { return this.jogador ? (this.jogador.energia || 0) + (this.jogador.constituicao || 0) : 0; }
+  get vidaTotal() { return this.jogador ? this.vida + (this.jogador.classe_de_armadura || 0) : 0; }
+  get fatorCura() { return this.jogador ? Math.floor((this.jogador.energia || 0) / 3) : 0; }
+  get deslocamento() { return this.jogador ? Math.floor((this.jogador.destreza || 0) / 3) : 0; }
 
   constructor(
     private router: Router,
-    private location: Location // 👈 injetado
+    private location: Location
   ) { }
 
   // Ajustar valores
   getValor(campo: AtributoChave): number {
-    return this.jogador ? (this.jogador[campo] as number) : 0;
+    return this.jogador ? (this.jogador[campo] as number) || 0 : 0;
   }
   setValor(campo: AtributoChave, valor: number) {
     if (this.jogador) this.jogador[campo] = Math.max(0, valor) as any;
@@ -65,9 +66,9 @@ export class EdicaoJogador implements OnInit {
   // Upload imagem otimizada
   async onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0 && this.jogador) {
-      const file = input.files[0];
+    if (input.files?.length && this.jogador) {
       try {
+        const file = input.files[0];
         this.jogador.imagem = await ImageUtils.toOptimizedBase64(file, 0.72, 1024);
       } catch (err) {
         console.error('[EdicaoJogador] Erro ao otimizar imagem:', err);
@@ -88,14 +89,14 @@ export class EdicaoJogador implements OnInit {
       if (!user?.email) throw new Error('Usuário não autenticado');
       this.jogador.email = user.email;
 
-      const updated = await this.repo.update(this.jogador);
-      this.jogador = { ...updated };
+      const atualizado = await this.repo.update(this.jogador);
+      this.jogador = { ...atualizado };
 
-      window.alert('✅ Jogador atualizado com sucesso!');
+      alert('✅ Jogador atualizado com sucesso!');
       this.router.navigate(['/jogador']);
     } catch (err) {
       console.error('[EdicaoJogador] Erro ao salvar:', err);
-      window.alert('❌ Erro ao salvar jogador. Veja o console.');
+      alert('❌ Erro ao salvar jogador. Veja o console.');
     } finally {
       this.salvando = false;
     }
@@ -106,9 +107,11 @@ export class EdicaoJogador implements OnInit {
       const user = AuthService.getUser();
       if (!user?.email) throw new Error('Usuário não autenticado');
 
+      // 1️⃣ Local first
       const local = (await this.repo.getLocal()).find(j => j.email === user.email);
       if (local) this.jogador = local;
 
+      // 2️⃣ Sync paralelo
       this.repo.sync().then(async updated => {
         if (updated) {
           const atualizado = (await this.repo.getLocal()).find(j => j.email === user.email);
@@ -116,13 +119,14 @@ export class EdicaoJogador implements OnInit {
         }
       });
 
+      // 3️⃣ Fallback online
       if (!local) {
         const online = await this.repo.forceFetch();
         const encontrado = online.find(j => j.email === user.email);
         if (encontrado) {
           this.jogador = encontrado;
         } else {
-          window.alert('Nenhum jogador encontrado. Vá para o cadastro primeiro.');
+          alert('Nenhum jogador encontrado. Vá para o cadastro primeiro.');
           this.router.navigate(['/cadastro-jogador']);
         }
       }
@@ -133,6 +137,6 @@ export class EdicaoJogador implements OnInit {
   }
 
   cancelar() {
-    this.location.back(); // 👈 padronizado
+    this.location.back();
   }
 }

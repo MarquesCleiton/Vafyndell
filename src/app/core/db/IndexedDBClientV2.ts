@@ -1,10 +1,9 @@
-export class IndexedDBClient {
-  private DB_NAME = 'VafyndellDB';
+export class IndexedDBClientV2 {
+  private DB_NAME = 'VafyndellDBv2';
   private DB_VERSION = 1;
   private db: IDBDatabase | null = null;
   private storeNames: Set<string> = new Set();
 
-  /** Stores padrão do app */
   private static DEFAULT_STORES = [
     'Catalogo',
     'Inventario',
@@ -15,8 +14,8 @@ export class IndexedDBClient {
     'Metadados',
   ];
 
-  static async create(): Promise<IndexedDBClient> {
-    const client = new IndexedDBClient();
+  static async create(): Promise<IndexedDBClientV2> {
+    const client = new IndexedDBClientV2();
     await client.init();
     return client;
   }
@@ -27,7 +26,7 @@ export class IndexedDBClient {
     if (this.db) return;
 
     return new Promise((resolve, reject) => {
-      console.log(`[IndexedDBClient] Abrindo banco ${this.DB_NAME} v${this.DB_VERSION}...`);
+      console.log(`[IndexedDBClientV2] Abrindo banco ${this.DB_NAME} v${this.DB_VERSION}...`);
       const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
 
       request.onerror = () => reject(request.error);
@@ -35,18 +34,18 @@ export class IndexedDBClient {
       request.onsuccess = () => {
         this.db = request.result;
         this.storeNames = new Set(Array.from(this.db!.objectStoreNames));
-        console.log('[IndexedDBClient] Banco aberto com stores:', Array.from(this.storeNames));
+        console.log('[IndexedDBClientV2] Banco aberto com stores:', Array.from(this.storeNames));
         resolve();
       };
 
       request.onupgradeneeded = (event: any) => {
         const db = event.target.result as IDBDatabase;
-        console.log('[IndexedDBClient] Upgrade → garantindo stores...');
-        IndexedDBClient.DEFAULT_STORES.forEach((store) => {
+        console.log('[IndexedDBClientV2] Upgrade → garantindo stores...');
+        IndexedDBClientV2.DEFAULT_STORES.forEach((store) => {
           if (!db.objectStoreNames.contains(store)) {
-            // 🔑 chave padronizada = index
-            db.createObjectStore(store, { keyPath: 'index' });
-            console.log(`[IndexedDBClient] Store criada: ${store}`);
+            // 🔑 chave padronizada = id
+            db.createObjectStore(store, { keyPath: 'id' });
+            console.log(`[IndexedDBClientV2] Store criada: ${store}`);
           }
         });
       };
@@ -54,7 +53,7 @@ export class IndexedDBClient {
   }
 
   // ============ CRUD ============
-  async put<T extends { index: any }>(storeName: string, value: T): Promise<void> {
+  async put<T extends { id: any }>(storeName: string, value: T): Promise<void> {
     return new Promise((resolve, reject) => {
       const tx = this.db!.transaction(storeName, 'readwrite');
       tx.objectStore(storeName).put(value);
@@ -63,7 +62,7 @@ export class IndexedDBClient {
     });
   }
 
-  async bulkPut<T extends { index: any }>(storeName: string, values: T[]): Promise<void> {
+  async bulkPut<T extends { id: any }>(storeName: string, values: T[]): Promise<void> {
     return new Promise((resolve, reject) => {
       const tx = this.db!.transaction(storeName, 'readwrite');
       const store = tx.objectStore(storeName);
@@ -110,7 +109,7 @@ export class IndexedDBClient {
   }
 
   async deleteDatabase(): Promise<void> {
-    console.log('[IndexedDBClient] deleteDatabase → resetando banco...');
+    console.log('[IndexedDBClientV2] deleteDatabase → resetando banco...');
     if (this.db) {
       this.db.close();
       this.db = null;
@@ -120,7 +119,7 @@ export class IndexedDBClient {
       request.onsuccess = () => {
         this.storeNames.clear();
         this.DB_VERSION = 1;
-        console.log('[IndexedDBClient] Banco deletado com sucesso.');
+        console.log('[IndexedDBClientV2] Banco deletado com sucesso.');
         resolve();
       };
       request.onerror = () => reject(request.error);

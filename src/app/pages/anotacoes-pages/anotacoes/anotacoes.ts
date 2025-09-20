@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AnotacaoDomain } from '../../../domain/AnotacaoDomain';
-import { BaseRepository } from '../../../repositories/BaseRepository';
+import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { AuthService } from '../../../core/auth/AuthService';
 
 interface SecaoAnotacao {
@@ -25,7 +25,7 @@ export class Anotacoes implements OnInit {
   carregando = true;
   filtro = '';
 
-  private repo = new BaseRepository<AnotacaoDomain>('Anotacoes', 'Anotacoes');
+  private repo = new BaseRepositoryV2<AnotacaoDomain>('Anotacoes');
 
   constructor(private router: Router) { }
 
@@ -50,7 +50,7 @@ export class Anotacoes implements OnInit {
     const minhasLocais = locais.filter(a => a.jogador === user.email);
     this.processarSecoes(minhasLocais);
 
-    // 2. Sync paralelo
+    // 2. Sync paralelo (apenas se houver atualização no servidor)
     this.repo.sync().then(async (updated) => {
       if (updated) {
         const atualizadas = await this.repo.getLocal();
@@ -59,13 +59,14 @@ export class Anotacoes implements OnInit {
       }
     });
 
-    // 3. Se não havia nada local
+    // 3. Se não havia nada local → força fetch
     if (minhasLocais.length === 0) {
       const online = await this.repo.forceFetch();
       const minhasOnline = online.filter(a => a.jogador === user.email);
       this.processarSecoes(minhasOnline);
     }
   }
+
 
   /** Agrupa por data e mantém expandido */
   private processarSecoes(lista: AnotacaoDomain[]) {
@@ -113,7 +114,6 @@ export class Anotacoes implements OnInit {
       .filter((s) => s.itens.length > 0);
   }
 
-
   toggleSecao(secao: SecaoAnotacao) {
     secao.expandido = !secao.expandido;
   }
@@ -141,5 +141,4 @@ export class Anotacoes implements OnInit {
       ? txt.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim()
       : "";
   }
-
 }

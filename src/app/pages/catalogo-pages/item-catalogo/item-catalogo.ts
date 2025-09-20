@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule, Location } from '@angular/common';
 import { CatalogoDomain } from '../../../domain/CatalogoDomain';
 import { ReceitaDomain } from '../../../domain/ReceitaDomain';
-import { BaseRepository } from '../../../repositories/BaseRepository';
+import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 
 @Component({
   selector: 'app-item-catalogo',
@@ -20,8 +20,8 @@ export class ItemCatalogo implements OnInit {
   processandoEditar = false;
   processandoExcluir = false;
 
-  private repoCatalogo = new BaseRepository<CatalogoDomain>('Catalogo', 'Catalogo');
-  private repoReceitas = new BaseRepository<ReceitaDomain>('Receitas', 'Receitas');
+  private repoCatalogo = new BaseRepositoryV2<CatalogoDomain>('Catalogo');
+  private repoReceitas = new BaseRepositoryV2<ReceitaDomain>('Receitas');
 
   constructor(
     private route: ActivatedRoute,
@@ -41,33 +41,30 @@ export class ItemCatalogo implements OnInit {
       }
 
       // 1️⃣ Carrega cache local (Catálogo)
-      const locais = await this.repoCatalogo.getLocal();
-      let encontrado = locais.find((i) => String(i.id) === id) || null;
-
-      if (encontrado) {
-        this.item = encontrado;
+      const existente = await this.repoCatalogo.getById(id, true);
+      if (existente) {
+        this.item = existente;
         this.carregando = false;
-        await this.carregarReceita(id); // 🔑 carrega ingredientes em paralelo
+        await this.carregarReceita(id);
       }
 
       // 2️⃣ Sincroniza catálogo e receitas em paralelo
-      Promise.all([this.repoCatalogo.sync(), this.repoReceitas.sync()]).then(async () => {
-        const atualizados = await this.repoCatalogo.getLocal();
-        const atualizado = atualizados.find((i) => String(i.id) === id);
+      Promise.all([this.repoCatalogo.sync(), this.repoReceitas.sync()]).then(async (updated) => {
+        const atualizado = await this.repoCatalogo.getById(id, true);
         if (atualizado) {
           this.item = atualizado;
           await this.carregarReceita(id);
         }
       });
 
-      // 3️⃣ Fallback online
-      if (!encontrado) {
+      // 3️⃣ Fallback online (se não achou local)
+      if (!existente) {
         console.log('[ItemCatalogo] Não encontrado localmente → forçando fetch online');
         const online = await this.repoCatalogo.forceFetch();
         const achadoOnline = online.find((i) => String(i.id) === id);
         if (achadoOnline) {
           this.item = achadoOnline;
-          await this.carregarReceita(id, true); // força online também
+          await this.carregarReceita(id, true);
         } else {
           console.warn('[ItemCatalogo] Item não encontrado nem online');
           this.router.navigate(['/catalogo']);
@@ -128,7 +125,7 @@ export class ItemCatalogo implements OnInit {
 
     this.processandoExcluir = true;
     try {
-      await this.repoCatalogo.delete(this.item.index);
+      await this.repoCatalogo.delete(this.item.id);
       alert('✅ Item excluído com sucesso!');
       this.router.navigate(['/catalogo']);
     } catch (err) {

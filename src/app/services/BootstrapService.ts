@@ -1,11 +1,9 @@
-import { IndexedDBClient } from "../core/db/IndexedDBClient";
-import { BaseRepository } from "../repositories/BaseRepository";
+import { IndexedDBClientV2 } from "../core/db/IndexedDBClientV2";
+import { BaseRepositoryV2 } from "../repositories/BaseRepositoryV2";
 import { Injectable } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class BootstrapService {
-  private repo = new BaseRepository<any>('bootstrap'); // tab dummy, usamos multi
-
   async preloadAll(onStatus?: (msg: string) => void): Promise<void> {
     const tabs: string[] = [
       'Catalogo',
@@ -28,16 +26,15 @@ export class BootstrapService {
     const intervalId = setInterval(() => {
       onStatus?.(frasesCarregando[i % frasesCarregando.length]);
       i++;
-    }, 1300); // troca a cada 800ms
+    }, 1200);
 
-    // 🔽 essa parte demora
-    const result = await this.repo.getAllMulti(tabs);
+    // 🔽 fetch multi
+    const result = await BaseRepositoryV2.multiFetch(tabs);
 
-    // ✅ parar loop quando terminar
     clearInterval(intervalId);
 
-    // Agora frases específicas por aba
-    const db = await IndexedDBClient.create();
+    // Escreve no IndexedDB
+    const db = await IndexedDBClientV2.create();
     for (const tab of tabs) {
       const frases = [
         `📖 Estudando os pergaminhos de ${tab}...`,
@@ -45,11 +42,12 @@ export class BootstrapService {
         `🧪 Misturando poções em ${tab}...`,
         `🐉 Invocando criaturas de ${tab}...`,
       ];
-      const random = frases[Math.floor(Math.random() * frases.length)];
-      onStatus?.(random);
+      onStatus?.(frases[Math.floor(Math.random() * frases.length)]);
 
       await db.clear(tab);
-      await db.bulkPut(tab, result[tab] || []);
+      if (result[tab]?.length) {
+        await db.bulkPut(tab, result[tab]);
+      }
     }
 
     onStatus?.('✨ Mundo preparado!');

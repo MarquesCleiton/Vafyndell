@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { JogadorDomain } from '../../../domain/jogadorDomain';
-import { BaseRepository } from '../../../repositories/BaseRepository';
+import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 
 @Component({
   selector: 'app-jogador-detalhes-batalha',
@@ -16,17 +16,19 @@ export class JogadorDetalhesBatalha implements OnInit {
     fator_cura?: number;
     vida_total?: number;
     deslocamento?: number;
+    vida_atual?: number;
   }) | null = null;
 
   atributos: any[] = [];
   loading = true;
 
-  private repo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
+  // ✅ agora com BaseRepositoryV2
+  private repo = new BaseRepositoryV2<JogadorDomain>('Personagem');
 
   constructor(
     private route: ActivatedRoute,
     private router: Router
-  ) { }
+  ) {}
 
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -36,14 +38,14 @@ export class JogadorDetalhesBatalha implements OnInit {
     }
 
     try {
-      // 1️⃣ Cache first
+      // 1️⃣ Busca local primeiro
       const locais = await this.repo.getLocal();
       let encontrado = locais.find(j => String(j.id) === String(id));
 
       if (encontrado) {
         this.setJogador(encontrado);
 
-        // 2️⃣ Sync paralelo
+        // 2️⃣ Sync em paralelo (não trava UI)
         this.repo.sync().then(async updated => {
           if (updated) {
             const atualizados = await this.repo.getLocal();
@@ -52,12 +54,10 @@ export class JogadorDetalhesBatalha implements OnInit {
           }
         });
       } else {
-        // 3️⃣ Fallback online → busca todos e tenta localizar
+        // 3️⃣ Fallback online
         const onlineTodos = await this.repo.forceFetch();
         const achadoOnline = onlineTodos.find(j => String(j.id) === String(id));
-        if (achadoOnline) {
-          this.setJogador(achadoOnline);
-        }
+        if (achadoOnline) this.setJogador(achadoOnline);
       }
     } catch (err) {
       console.error('[JogadorDetalhesBatalha] Erro:', err);
@@ -118,5 +118,4 @@ export class JogadorDetalhesBatalha implements OnInit {
   voltarBatalha() {
     this.router.navigate(['/batalha']);
   }
-
 }

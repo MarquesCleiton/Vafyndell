@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 
 import { JogadorDomain } from '../../../domain/jogadorDomain';
 import { AuthService } from '../../../core/auth/AuthService';
-import { BaseRepository } from '../../../repositories/BaseRepository';
+import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 
 @Component({
   selector: 'app-jogador',
@@ -18,13 +18,14 @@ export class Jogador implements OnInit {
     fator_cura?: number;
     vida_total?: number;
     deslocamento?: number;
+    vida_atual?: number;
   }) | null = null;
 
-  atributos: any[] = [];
+  atributos: { label: string; value: number; mod: number; icon: string }[] = [];
   loading = true;
 
-  // ✅ agora usa BaseRepository
-  private repo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
+  // ✅ agora padronizado com BaseRepositoryV2
+  private repo = new BaseRepositoryV2<JogadorDomain>('Personagem');
 
   constructor(private router: Router) {}
 
@@ -36,24 +37,24 @@ export class Jogador implements OnInit {
       const user = AuthService.getUser();
       if (!user?.email) throw new Error('Usuário não autenticado.');
 
-      // 1️⃣ Primeiro tenta pegar local
+      // 1️⃣ Carrega local primeiro
       let jogadorLocal = (await this.repo.getLocal()).find(j => j.email === user.email);
 
       if (jogadorLocal) {
         console.log('[Jogador] Jogador local encontrado:', jogadorLocal);
         this.setJogador(jogadorLocal);
 
-        // dispara sync em paralelo (não bloqueia UI)
+        // 🔄 dispara sync em paralelo
         this.repo.sync().then(async updated => {
           if (updated) {
             const atualizado = (await this.repo.getLocal()).find(j => j.email === user.email);
             if (atualizado) this.setJogador(atualizado);
           }
         });
-        return; // já exibiu algo
+        return;
       }
 
-      // 2️⃣ Se não havia local → carrega síncrono (force fetch)
+      // 2️⃣ Fallback online
       console.log('[Jogador] Nenhum jogador local → carregando online...');
       const online = await this.repo.forceFetch();
       jogadorLocal = online.find(j => j.email === user.email);
@@ -73,18 +74,18 @@ export class Jogador implements OnInit {
   }
 
   private setJogador(jogador: JogadorDomain) {
-    // Vida base cadastrada ou calculada
+    // Vida base: usa o cadastro, senão calcula
     const vidaBase =
       jogador.pontos_de_vida && jogador.pontos_de_vida > 0
         ? jogador.pontos_de_vida
-        : jogador.energia + jogador.constituicao;
+        : (jogador.energia || 0) + (jogador.constituicao || 0);
 
-    const fatorCura = Math.floor(jogador.energia / 3);
-    const deslocamento = Math.floor(jogador.destreza / 3);
+    const fatorCura = Math.floor((jogador.energia || 0) / 3);
+    const deslocamento = Math.floor((jogador.destreza || 0) / 3);
 
     // Vida atual segue a regra da armadura
     const vidaAtual =
-      jogador.classe_de_armadura > 0
+      (jogador.classe_de_armadura || 0) > 0
         ? vidaBase
         : vidaBase - (jogador.dano_tomado || 0);
 
@@ -93,11 +94,11 @@ export class Jogador implements OnInit {
       pontos_de_vida: vidaBase,
       vida_atual: vidaAtual,
       fator_cura: fatorCura,
-      deslocamento: deslocamento,
+      deslocamento,
     };
 
     // função auxiliar para calcular modificador estilo D&D
-    const calcMod = (valor: number) => Math.floor((valor - 10) / 2);
+    const calcMod = (valor: number) => Math.floor(((valor || 0) - 10) / 2);
 
     this.atributos = [
       { label: 'Força', value: jogador.forca, mod: calcMod(jogador.forca), icon: '💪' },

@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule, Location } from '@angular/common';
+
 import { NpcDomain } from '../../../domain/NpcDomain';
-import { BaseRepository } from '../../../repositories/BaseRepository';
 import { JogadorDomain } from '../../../domain/jogadorDomain';
+import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { IdUtils } from '../../../core/utils/IdUtils';
 
 @Component({
@@ -16,18 +17,19 @@ import { IdUtils } from '../../../core/utils/IdUtils';
 export class NpcDetalhes implements OnInit {
   npc: NpcDomain | null = null;
   carregando = true;
+
   processandoEditar = false;
   processandoExcluir = false;
   processandoAdicionar = false;
 
-  private npcRepo = new BaseRepository<NpcDomain>('NPCs', 'NPCs');
-  private jogadorRepo = new BaseRepository<JogadorDomain>('Personagem', 'Personagem');
+  private npcRepo = new BaseRepositoryV2<NpcDomain>('NPCs');
+  private jogadorRepo = new BaseRepositoryV2<JogadorDomain>('Personagem');
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private location: Location
-  ) { }
+  ) {}
 
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -39,28 +41,23 @@ export class NpcDetalhes implements OnInit {
     try {
       this.carregando = true;
 
-      // 1. Busca local
+      // 1️⃣ cache first
       const locais = await this.npcRepo.getLocal();
-      let encontrado = locais.find(n => String(n.id) === String(id)) || null;
-      if (encontrado) this.npc = { ...encontrado };
+      this.npc = locais.find(n => String(n.id) === id) || null;
 
-      // 2. Sync em paralelo
-      this.npcRepo.sync().then(async updated => {
-        if (updated) {
-          const atualizados = await this.npcRepo.getLocal();
-          const atualizado = atualizados.find(n => String(n.id) === String(id));
-          if (atualizado) {
-            if (this.npc) Object.assign(this.npc, atualizado);
-            else this.npc = { ...atualizado };
+      if (this.npc) {
+        // 2️⃣ sync paralelo
+        this.npcRepo.sync().then(async updated => {
+          if (updated) {
+            const atualizados = await this.npcRepo.getLocal();
+            const atualizado = atualizados.find(n => String(n.id) === id);
+            if (atualizado) this.npc = { ...atualizado };
           }
-        }
-      });
-
-      // 3. Se não achou local, força fetch
-      if (!encontrado) {
+        });
+      } else {
+        // 3️⃣ fallback online
         const online = await this.npcRepo.forceFetch();
-        encontrado = online.find(n => String(n.id) === String(id)) || null;
-        if (encontrado) this.npc = { ...encontrado };
+        this.npc = online.find(n => String(n.id) === id) || null;
       }
     } catch (err) {
       console.error('[NpcDetalhes] Erro ao carregar NPC:', err);
@@ -90,7 +87,8 @@ export class NpcDetalhes implements OnInit {
 
     this.processandoExcluir = true;
     try {
-      await this.npcRepo.delete(this.npc.index);
+      // ✅ agora deleta por id
+      await this.npcRepo.delete(this.npc.id);
       alert('✅ NPC excluído com sucesso!');
       this.router.navigate(['/npcs']);
     } catch (err) {
@@ -108,26 +106,24 @@ export class NpcDetalhes implements OnInit {
     try {
       let jogadores = await this.jogadorRepo.getLocal();
 
+      // 🔄 sync em paralelo
       this.jogadorRepo.sync().then(async updated => {
-        if (updated) {
-          jogadores = await this.jogadorRepo.getLocal();
-        }
+        if (updated) jogadores = await this.jogadorRepo.getLocal();
       });
 
+      // gera nome incremental: "1 - Goblin", "2 - Goblin", etc
       const baseName = this.npc.nome.trim();
       const existentes = jogadores
         .map(j => {
           const nome = String(j.personagem || '').trim();
-          return nome.match(/^(\d+) - (.+)$/);
+          const match = nome.match(/^(\d+) - (.+)$/);
+          return match && match[2] === baseName ? parseInt(match[1], 10) : null;
         })
-        .filter(m => m && m[2] === baseName)
-        .map(m => parseInt(m![1], 10));
-
+        .filter((n): n is number => n !== null);
 
       const proximoNumero = existentes.length > 0 ? Math.max(...existentes) + 1 : 1;
 
       const novoNpcJogador: JogadorDomain = {
-        index: 0,
         id: IdUtils.generateULID(),
         email: '',
         imagem: this.npc.imagem || '',
