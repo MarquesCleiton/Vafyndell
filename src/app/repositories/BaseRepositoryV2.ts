@@ -179,15 +179,16 @@ export class BaseRepositoryV2<T extends { id: string }> {
 
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 forceFetch persistiu ${list.length} registros`);
 
-    const meta = result?.['Metadados']?.find((m: any) => m.SheetName === this.tab);
+    // --- forceFetch ---
+    const meta = result?.['Metadados']?.find((m: any) => m.id === this.tab);
     if (meta) {
       await db.put(BaseRepositoryV2.META_STORE, {
         id: this.tab,
-        SheetName: this.tab,
         UltimaModificacao: meta.UltimaModificacao,
       } as any);
       console.log(`[BaseRepositoryV2:${this.tab}] 📝 metadados atualizados →`, meta);
     }
+
 
     return list;
   }
@@ -220,11 +221,13 @@ export class BaseRepositoryV2<T extends { id: string }> {
     const result = await ScriptClientV3.getAll('Metadados');
     console.log(`[BaseRepositoryV2:${this.tab}] ◀️ sync result`, result);
 
-    const onlineMeta = result?.['Metadados']?.find((m: any) => m.SheetName === this.tab);
+    // --- sync ---
+    const onlineMeta = result?.['Metadados']?.find((m: any) => m.id === this.tab);
     if (!onlineMeta) {
       console.warn(`[BaseRepositoryV2:${this.tab}] ⚠️ Nenhum metadado encontrado online`);
       return false;
     }
+
 
     const db = await this.getDb();
     const localMeta = await db.get<{ id: string; UltimaModificacao: string }>(

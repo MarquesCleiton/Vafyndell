@@ -27,21 +27,47 @@ export class OficinaService {
     const user = AuthService.getUser();
     if (!user?.email) throw new Error('Usuário não autenticado');
 
-    await Promise.all([
-      this.catalogoRepo.sync(),
-      this.inventarioRepo.sync(),
-      this.receitasRepo.sync(),
-    ]);
-
-    const [catalogo, inventarioRaw, receitas] = await Promise.all([
+    // 1️⃣ pega dados locais primeiro
+    const [catalogoLocal, inventarioLocal, receitasLocal] = await Promise.all([
       this.catalogoRepo.getLocal(),
       this.inventarioRepo.getLocal(),
       this.receitasRepo.getLocal(),
     ]);
+    const inventarioUser = inventarioLocal.filter(i => i.jogador === user.email);
+    let receitasProcessadas = this.processar(catalogoLocal, receitasLocal, inventarioUser);
 
-    const inventario = inventarioRaw.filter(i => i.jogador === user.email);
-    return this.processar(catalogo, receitas, inventario);
+    // 2️⃣ dispara sync em paralelo (não trava a tela)
+    (async () => {
+      const [catSync, invSync, recSync] = await Promise.all([
+        this.catalogoRepo.sync(),
+        this.inventarioRepo.sync(),
+        this.receitasRepo.sync(),
+      ]);
+      if (catSync || invSync || recSync) {
+        const [catAtualizado, invAtualizado, recAtualizado] = await Promise.all([
+          this.catalogoRepo.getLocal(),
+          this.inventarioRepo.getLocal(),
+          this.receitasRepo.getLocal(),
+        ]);
+        const meusAtualizados = invAtualizado.filter(i => i.jogador === user.email);
+        receitasProcessadas = this.processar(catAtualizado, recAtualizado, meusAtualizados);
+      }
+    })();
+
+    // 3️⃣ se não tiver nada local → força fetch online
+    if (!receitasProcessadas.length) {
+      const [catalogoOnline, inventarioOnline, receitasOnline] = await Promise.all([
+        this.catalogoRepo.forceFetch(),
+        this.inventarioRepo.forceFetch(),
+        this.receitasRepo.forceFetch(),
+      ]);
+      const meusOnline = inventarioOnline.filter(i => i.jogador === user.email);
+      receitasProcessadas = this.processar(catalogoOnline, receitasOnline, meusOnline);
+    }
+
+    return receitasProcessadas;
   }
+
 
   private processar(
     catalogo: CatalogoDomain[],
