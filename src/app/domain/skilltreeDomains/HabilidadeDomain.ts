@@ -1,11 +1,10 @@
 export interface HabilidadeDomain {
   id: string;
-  caminho: string; // FK → CaminhoDomain.id
-  arvore: string;  // FK → ArvoreDomain.id
-  ramo: string;    // FK → RamoDomain.id
+  caminho: string;
+  arvore: string;
   habilidade: string;
   nivel: number;
-  dependencia?: string | null; // 👈 precisa estar aqui
+  dependencia: string | null;  // 👈 sempre presente
   requisitos?: string;
   descricao?: string;
 }

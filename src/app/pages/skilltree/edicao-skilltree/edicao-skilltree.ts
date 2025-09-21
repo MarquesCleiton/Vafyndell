@@ -7,13 +7,13 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import cytoscape, { Core, ElementDefinition } from 'cytoscape';
 import dagre from 'cytoscape-dagre';
 
 import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { CaminhoDomain } from '../../../domain/skilltreeDomains/CaminhoDomain';
 import { ArvoreDomain } from '../../../domain/skilltreeDomains/ArvoreDomain';
-import { RamoDomain } from '../../../domain/skilltreeDomains/RamoDomain';
 import { HabilidadeDomain } from '../../../domain/skilltreeDomains/HabilidadeDomain';
 import { IdUtils } from '../../../core/utils/IdUtils';
 
@@ -32,57 +32,92 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
 
   caminhos: CaminhoDomain[] = [];
   arvores: ArvoreDomain[] = [];
-  ramos: RamoDomain[] = [];
   habilidades: HabilidadeDomain[] = [];
 
   carregando = true;
   salvando = false;
+  editMode = false;
 
   caminhoSelecionado: string | null = null;
   arvoreSelecionada: string | null = null;
-  ramoSelecionado: string | null = null;
   dependenciaSelecionada: string | null = null;
 
   novaArvoreNome: string = '';
-  novoRamoNome: string = '';
 
   habilidadeEdit: HabilidadeDomain = {
     id: '',
     caminho: '',
     arvore: '',
-    ramo: '',
     habilidade: '',
     nivel: 1,
     requisitos: '',
     descricao: '',
+    dependencia: null,
   };
 
   habilidadeSelecionada: HabilidadeDomain | null = null;
 
   private repoCaminho = new BaseRepositoryV2<CaminhoDomain>('Caminhos');
   private repoArvore = new BaseRepositoryV2<ArvoreDomain>('Arvores');
-  private repoRamo = new BaseRepositoryV2<RamoDomain>('Ramos');
   private repoHab = new BaseRepositoryV2<HabilidadeDomain>('Habilidades');
+
+  constructor(private route: ActivatedRoute, public router: Router) {}
 
   async ngOnInit() {
     this.caminhos = await this.repoCaminho.getLocal();
     this.arvores = await this.repoArvore.getLocal();
-    this.ramos = await this.repoRamo.getLocal();
     this.habilidades = await this.repoHab.getLocal();
+
+    // 🔎 Verifica se tem id na rota (edição)
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      const hab = await this.repoHab.getById(id);
+      if (hab) {
+        this.habilidadeEdit = {
+          ...hab,
+          id: String(hab.id),
+          caminho: String(hab.caminho),
+          arvore: String(hab.arvore),
+          dependencia: hab.dependencia ? String(hab.dependencia) : null,
+        };
+        this.caminhoSelecionado = this.habilidadeEdit.caminho;
+        this.arvoreSelecionada = this.habilidadeEdit.arvore;
+        this.dependenciaSelecionada = this.habilidadeEdit.dependencia;
+        this.editMode = true;
+
+        // ⚡ não zera arvoreSelecionada no modo edição
+        this.onCaminhoChange(this.caminhoSelecionado, false);
+        this.onArvoreChange(this.arvoreSelecionada);
+      }
+    }
+
     this.renderPreview();
   }
 
-  arvoresDoCaminho: ArvoreDomain[] = [];
-  ramosDaArvore: RamoDomain[] = [];
-  habilidadesDoRamo: HabilidadeDomain[] = [];
-
-  onCaminhoChange(id: string | null) {
-    this.caminhoSelecionado = id;
-    this.arvoresDoCaminho = id
-      ? this.arvores.filter((a) => String(a.caminho) === String(id))
+  get arvoresDoCaminho(): ArvoreDomain[] {
+    return this.caminhoSelecionado
+      ? this.arvores.filter(
+          (a) => String(a.caminho) === String(this.caminhoSelecionado)
+        )
       : [];
-    this.arvoreSelecionada = null;
-    this.ramoSelecionado = null;
+  }
+
+  get habilidadesDaArvore(): HabilidadeDomain[] {
+    return this.arvoreSelecionada && this.arvoreSelecionada !== 'nova'
+      ? this.habilidades.filter(
+          (h) => String(h.arvore) === String(this.arvoreSelecionada)
+        )
+      : [];
+  }
+
+  onCaminhoChange(id: string | null, fromUser = true) {
+    this.caminhoSelecionado = id;
+
+    if (fromUser) {
+      // só reseta árvore se usuário mudar manualmente
+      this.arvoreSelecionada = null;
+    }
+
     this.atualizarPreview();
   }
 
@@ -90,25 +125,6 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
     this.arvoreSelecionada = id;
     if (id === 'nova') {
       this.novaArvoreNome = '';
-      this.ramosDaArvore = [];
-    } else {
-      this.ramosDaArvore = id
-        ? this.ramos.filter((r) => String(r.arvore) === String(id))
-        : [];
-    }
-    this.ramoSelecionado = null;
-    this.atualizarPreview();
-  }
-
-  onRamoChange(id: string | null) {
-    this.ramoSelecionado = id;
-    if (id === 'novo') {
-      this.novoRamoNome = '';
-      this.habilidadeEdit.habilidade = 'Nova habilidade';
-    } else {
-      this.habilidadesDoRamo = id
-        ? this.habilidades.filter((h) => String(h.ramo) === String(id))
-        : [];
     }
     this.atualizarPreview();
   }
@@ -124,17 +140,9 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
     if (!this.cyPreviewRef) return;
 
     const elements: ElementDefinition[] = [];
-    let existentes: HabilidadeDomain[] = [];
 
-    if (this.arvoreSelecionada && this.arvoreSelecionada !== 'nova') {
-      const ramosDaArvore = this.ramos.filter(
-        (r) => String(r.arvore) === String(this.arvoreSelecionada)
-      );
-      existentes = this.habilidades.filter((h) =>
-        ramosDaArvore.some((r) => String(r.id) === String(h.ramo))
-      );
-    }
-
+    // Habilidades já existentes na árvore
+    const existentes = this.habilidadesDaArvore;
     existentes.forEach((h) => {
       elements.push({
         data: { id: String(h.id), label: `${h.habilidade}\nLv ${h.nivel}` },
@@ -147,7 +155,7 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
     });
 
     // Nova habilidade (prévia)
-    if (this.habilidadeEdit.habilidade && this.ramoSelecionado) {
+    if (this.habilidadeEdit.habilidade && this.arvoreSelecionada) {
       const tempId = this.habilidadeEdit.id || 'novaHab';
       elements.push({
         data: {
@@ -221,7 +229,7 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
   }
 
   // ======================
-  // SALVAR (batch)
+  // SALVAR / EXCLUIR
   // ======================
   async salvar(form: NgForm) {
     if (form.invalid) return;
@@ -246,33 +254,18 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
         creates['Arvores'] = [novaArvore];
       }
 
-      // Novo ramo
-      if (this.ramoSelecionado === 'novo' && this.novoRamoNome.trim()) {
-        const novoRamo: RamoDomain = {
-          id: IdUtils.generateULID(),
-          arvore: this.arvoreSelecionada || '',
-          ramo: this.novoRamoNome.trim(),
-        };
-        this.ramos.push(novoRamo);
-        this.ramoSelecionado = novoRamo.id;
-
-        if (!creates['Ramos']) creates['Ramos'] = [];
-        creates['Ramos'].push(novoRamo);
-      }
-
-      // Habilidade
       // Habilidade
       if (!this.habilidadeEdit.id) {
         this.habilidadeEdit.id = IdUtils.generateULID();
         this.habilidadeEdit.caminho = this.caminhoSelecionado || '';
         this.habilidadeEdit.arvore = this.arvoreSelecionada || '';
-        this.habilidadeEdit.ramo = this.ramoSelecionado || '';
       }
 
-      // 🔑 Sempre atualizar dependência
-      this.habilidadeEdit.dependencia = this.dependenciaSelecionada || null;
+      this.habilidadeEdit.dependencia = this.dependenciaSelecionada
+        ? String(this.dependenciaSelecionada)
+        : null;
 
-      if (!this.habilidadeEdit.id || !updates['Habilidades']) {
+      if (!this.habilidades.find((h) => String(h.id) === this.habilidadeEdit.id)) {
         if (!creates['Habilidades']) creates['Habilidades'] = [];
         creates['Habilidades'].push(this.habilidadeEdit);
       } else {
@@ -280,8 +273,7 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
         updates['Habilidades'].push(this.habilidadeEdit);
       }
 
-
-      // ✅ Tudo em 1 batch
+      // ✅ Batch
       const result = await BaseRepositoryV2.batch({
         create: Object.keys(creates).length ? creates : undefined,
         updateById: Object.keys(updates).length ? updates : undefined,
@@ -290,6 +282,7 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
 
       console.log('[EdicaoSkillTree] ◀️ batch result', result);
       alert('✅ Habilidade salva com sucesso!');
+      this.router.navigate(['/skills-jogador']);
     } catch (err) {
       console.error('[EdicaoSkillTree] ❌ Erro ao salvar:', err);
       alert('❌ Erro ao salvar');
@@ -298,17 +291,27 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
     }
   }
 
-  atualizarPreview() {
-    setTimeout(() => this.renderPreview(), 0);
+  async excluir() {
+    if (!this.habilidadeEdit.id) return;
+    if (!confirm('Tem certeza que deseja excluir esta habilidade?')) return;
+
+    try {
+      this.salvando = true;
+      await BaseRepositoryV2.batch({
+        deleteById: { Habilidades: [{ id: this.habilidadeEdit.id }] },
+      });
+      alert('🗑️ Habilidade excluída com sucesso!');
+      this.router.navigate(['/skills-jogador']);
+    } catch (err) {
+      console.error('[EdicaoSkillTree] ❌ Erro ao excluir:', err);
+      alert('❌ Erro ao excluir');
+    } finally {
+      this.salvando = false;
+    }
   }
 
-  onNovoRamoInput() {
-    if (this.ramoSelecionado === 'novo') {
-      this.atualizarPreview();
-      if (!this.habilidadeEdit.habilidade) {
-        this.habilidadeEdit.habilidade = 'Nova habilidade';
-      }
-    }
+  atualizarPreview() {
+    setTimeout(() => this.renderPreview(), 0);
   }
 
   get arvoreSelecionadaNome(): string {

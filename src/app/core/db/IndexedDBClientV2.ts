@@ -14,7 +14,6 @@ export class IndexedDBClientV2 {
     'Metadados',
     'Caminhos',
     'Arvores',
-    'Ramos',
     'Habilidades',
   ];
 

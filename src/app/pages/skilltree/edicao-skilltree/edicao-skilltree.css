@@ -1,22 +1,101 @@
-.edicao-container {
-  max-width: 800px;
+/* ======================
+   CONTAINER PRINCIPAL
+   ====================== */
+.edicao-skilltree-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
+.detalhe-card {
+  background: #1e1e1e;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #333;
+}
+
+/* ======================
+   INPUTS
+   ====================== */
 .input-dark {
   background: #1e1e1e !important;
-  color: #f8f9fa !important;
+  border: 1px solid #444 !important;
   border-radius: 6px;
+  color: #f8f9fa !important;
+}
+.input-dark input {
+  color: #f8f9fa !important;
+}
+.input-dark:focus {
+  border-color: #0d6efd !important;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
+  outline: none !important;
 }
 
+textarea {
+  background: #1e1e1e;
+  border: 1px solid #444;
+  color: #f8f9fa;
+  border-radius: 6px;
+  padding: 6px 10px;
+  resize: vertical;
+}
+textarea:focus {
+  border-color: #0d6efd;
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* ======================
+   CYTOSCAPE PREVIEW
+   ====================== */
 .cy-preview {
   width: 100%;
-  height: 400px;
-  background: #0e0e0e;
+  height: 400px; /* altura fixa para visualização */
+  min-height: 300px; /* garante tamanho mínimo */
+  background: #111;
+  border: 1px solid #333;
   border-radius: 8px;
+  margin-top: 10px;
 }
 
-.preview-card {
-  background: #181818;
-  border-radius: 12px;
-  padding: 16px;
+/* ======================
+   BOTÕES FLUTUANTES (FABs)
+   ====================== */
+.fab-stack {
+  position: fixed;
+  bottom: 70px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 1000;
+}
+
+.fab {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease;
+}
+.fab:hover {
+  transform: scale(1.08);
+}
+
+.fab-success {
+  background: linear-gradient(135deg, #28a745, #218838);
+  color: #fff;
+}
+.fab-warning {
+  background: #ffc107;
+  color: #000;
+}
+.fab-danger {
+  background: linear-gradient(135deg, #dc3545, #a71d2a);
+  color: #fff;
 }

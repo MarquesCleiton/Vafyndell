@@ -13,7 +13,6 @@ import dagre from 'cytoscape-dagre';
 import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { CaminhoDomain } from '../../../domain/skilltreeDomains/CaminhoDomain';
 import { ArvoreDomain } from '../../../domain/skilltreeDomains/ArvoreDomain';
-import { RamoDomain } from '../../../domain/skilltreeDomains/RamoDomain';
 import { HabilidadeDomain } from '../../../domain/skilltreeDomains/HabilidadeDomain';
 
 cytoscape.use(dagre);
@@ -40,7 +39,6 @@ export class SkillTree implements OnInit, AfterViewInit {
 
   caminhos: CaminhoDomain[] = [];
   arvores: ArvoreDomain[] = [];
-  ramos: RamoDomain[] = [];
   habilidades: HabilidadeDomain[] = [];
 
   carregando = true;
@@ -49,7 +47,6 @@ export class SkillTree implements OnInit, AfterViewInit {
 
   private repoCaminho = new BaseRepositoryV2<CaminhoDomain>('Caminhos');
   private repoArvore = new BaseRepositoryV2<ArvoreDomain>('Arvores');
-  private repoRamo = new BaseRepositoryV2<RamoDomain>('Ramos');
   private repoHab = new BaseRepositoryV2<HabilidadeDomain>('Habilidades');
 
   async ngOnInit() {
@@ -67,7 +64,6 @@ export class SkillTree implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    // inicial render (caso já tenha dados locais)
     if (!this.carregando && this.abaAtiva) {
       this.renderizarArvores();
     }
@@ -83,7 +79,6 @@ export class SkillTree implements OnInit, AfterViewInit {
   private async loadLocalAndSync() {
     this.caminhos = await this.repoCaminho.getLocal();
     this.arvores = await this.repoArvore.getLocal();
-    this.ramos = await this.repoRamo.getLocal();
     this.habilidades = await this.repoHab.getLocal();
 
     // sync em paralelo
@@ -93,13 +88,10 @@ export class SkillTree implements OnInit, AfterViewInit {
     this.repoArvore.sync().then(async (updated) => {
       if (updated) this.arvores = await this.repoArvore.getLocal();
     });
-    this.repoRamo.sync().then(async (updated) => {
-      if (updated) this.ramos = await this.repoRamo.getLocal();
-    });
     this.repoHab.sync().then(async (updated) => {
       if (updated) {
         this.habilidades = await this.repoHab.getLocal();
-        this.renderizarArvores(); // 👉 redesenha se atualizar
+        this.renderizarArvores();
       }
     });
 
@@ -107,16 +99,13 @@ export class SkillTree implements OnInit, AfterViewInit {
       const result = await BaseRepositoryV2.multiFetch([
         'Caminhos',
         'Arvores',
-        'Ramos',
         'Habilidades',
       ]);
       this.caminhos = result['Caminhos'] as CaminhoDomain[];
       this.arvores = result['Arvores'] as ArvoreDomain[];
-      this.ramos = result['Ramos'] as RamoDomain[];
       this.habilidades = result['Habilidades'] as HabilidadeDomain[];
     }
 
-    // 👉 garantir renderização inicial
     setTimeout(() => this.renderizarArvores(), 0);
   }
 
@@ -127,11 +116,9 @@ export class SkillTree implements OnInit, AfterViewInit {
       const arvore = this.arvoresAtivas[idx];
       if (!arvore) return;
 
-      const ramosDaArvore = this.ramos.filter(
-        (r) => String(r.arvore) === String(arvore.id)
-      );
-      const habilidadesDaArvore = this.habilidades.filter((h) =>
-        ramosDaArvore.some((r) => String(r.id) === String(h.ramo))
+      // 👉 habilidades vinculadas direto à árvore
+      const habilidadesDaArvore = this.habilidades.filter(
+        (h) => String(h.arvore) === String(arvore.id)
       );
 
       const elements: ElementDefinition[] = [];
@@ -142,7 +129,6 @@ export class SkillTree implements OnInit, AfterViewInit {
             id: String(h.id),
             label: `${h.habilidade}\nLv ${h.nivel}`,
             habilidade: h.habilidade,
-            ramo: h.ramo,
             nivel: h.nivel ?? 1,
             descricao: h.descricao ?? '',
             requisitos: h.requisitos ?? '',
@@ -244,8 +230,6 @@ export class SkillTree implements OnInit, AfterViewInit {
 
   selecionarAba(caminho: CaminhoDomain) {
     this.abaAtiva = caminho.id;
-
-    // resetar scroll para a primeira árvore ao trocar aba
     setTimeout(() => {
       const scroll = document.querySelector('.arvores-scroll') as HTMLElement;
       if (scroll) scroll.scrollTo({ left: 0, behavior: 'smooth' });
