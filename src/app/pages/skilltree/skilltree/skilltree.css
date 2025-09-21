@@ -1,56 +1,106 @@
-.skilltree-container {
-  max-width: 1000px;
+/* Geral */
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: #f1f1f1;
 }
 
+/* Tabs corrigidas */
+.nav-tabs {
+  border-bottom: 1px solid #333;
+}
 .nav-tabs .nav-link {
   color: #bbb;
-  cursor: pointer;
+  background: transparent;
   border: none;
-  padding: 10px 16px;
+  font-weight: 500;
+  padding: 8px 14px;
+  transition: color 0.2s, border-bottom 0.2s;
 }
-
+.nav-tabs .nav-link:hover {
+  color: #fff;
+}
 .nav-tabs .nav-link.active {
   color: #fff;
-  background: #2a2a2a;
-  border-radius: 6px 6px 0 0;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid #007bff; /* destaque elegante */
+  font-weight: 600;
 }
 
-.ramo h6 {
-  margin-bottom: 10px;
-}
-
-.habilidades-circulos {
+/* Scroll horizontal */
+.arvores-scroll {
   display: flex;
-  flex-wrap: wrap;
   gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 14px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.arvores-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.arvores-scroll::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
 }
 
-.habilidade-circulo {
+/* Card da árvore */
+.arvore-card {
+  flex: 0 0 340px;
+  background: #181818;
+  border-radius: 12px;
+  padding: 16px;
+  scroll-snap-align: center;
+  transition: transform 0.2s ease;
+}
+.arvore-card:hover {
+  transform: translateY(-4px);
+}
+.arvore-titulo {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #eaeaea;
   text-align: center;
-  cursor: pointer;
-  transition: transform 0.2s;
-  width: 80px;
+}
+.cy-arvore {
+  width: 100%;
+  height: 320px;
+  background: #0e0e0e;
+  border-radius: 8px;
 }
 
-.habilidade-circulo:hover {
-  transform: scale(1.1);
+/* Card de detalhe */
+.detalhe-card {
+  background: #1f1f1f;
+  border-radius: 12px;
+  padding: 16px 20px;
+  color: #f1f1f1;
 }
-
-.habilidade-circulo .circulo {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #2a2a2a;
-  border: 2px solid #555;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  margin: 0 auto 5px auto;
-  color: #fff;
+.detalhe-nome {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
 }
-
-.habilidade-circulo .nome {
-  font-size: 0.8rem;
+.detalhe-nome .nivel {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-left: 6px;
+  color: #999;
+}
+.detalhe-descricao {
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+  color: #ccc;
+}
+.detalhe-extra {
+  font-size: 0.85rem;
+  color: #aaa;
+  margin-top: 4px;
+}
+.detalhe-extra span {
+  font-weight: 600;
   color: #ddd;
 }

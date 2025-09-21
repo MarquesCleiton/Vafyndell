@@ -1,14 +1,18 @@
 <div class="skilltree-wrapper d-flex flex-column min-vh-100 bg-dark text-light pb-5">
   <div class="flex-grow-1 p-3 d-flex justify-content-center">
     <div class="skilltree-container w-100">
-      <h2 class="fw-bold mb-4">🌳 Árvores de Habilidades</h2>
+
+      <!-- Título -->
+      <h2 class="page-title">🌳 Árvores de Habilidades</h2>
 
       <!-- Tabs -->
-      <ul class="nav nav-tabs mb-3">
+      <ul class="nav nav-tabs custom-tabs mb-4">
         <li class="nav-item" *ngFor="let caminho of caminhos">
-          <a class="nav-link"
-             [class.active]="abaAtiva === caminho.id"
-             (click)="selecionarAba(caminho)">
+          <a
+            class="nav-link"
+            [class.active]="abaAtiva === caminho.id"
+            (click)="selecionarAba(caminho)"
+          >
             {{ caminho.caminho }}
           </a>
         </li>
@@ -20,23 +24,28 @@
         <p class="mt-2">Carregando habilidades...</p>
       </div>
 
-      <!-- Grafo -->
-      <div *ngIf="!carregando && abaAtiva" class="caminho-body p-3">
-        <ngx-graph
-          class="chart-container"
-          [links]="links"
-          [nodes]="nodes"
-          [layout]="'dagreCluster'">
-        </ngx-graph>
+      <!-- Árvores -->
+      <div *ngIf="!carregando && abaAtiva" class="arvores-scroll">
+        <div *ngFor="let arvore of arvoresAtivas" class="arvore-card shadow-lg">
+          <h3 class="arvore-titulo">{{ arvore.arvore }}</h3>
+          <div #cyContainer class="cy-arvore"></div>
+        </div>
       </div>
 
-      <!-- Detalhes -->
-      <div *ngIf="habilidadeSelecionada" class="detalhe card bg-secondary p-3 shadow-lg">
-        <h4>{{ habilidadeSelecionada.habilidade }} (Lv {{ habilidadeSelecionada.nivel }})</h4>
-        <p>{{ habilidadeSelecionada.descricao }}</p>
-        <p *ngIf="habilidadeSelecionada.dependencia">🔗 Depende de: {{ habilidadeSelecionada.dependencia }}</p>
-        <p *ngIf="habilidadeSelecionada.requisito">📌 Requisito: {{ habilidadeSelecionada.requisito }}</p>
+      <!-- Detalhe da Habilidade -->
+      <div *ngIf="habilidadeSelecionada" class="detalhe-card shadow-lg mt-4">
+        <h4 class="detalhe-nome">
+          {{ habilidadeSelecionada.habilidade }}
+          <span class="nivel">Lv {{ habilidadeSelecionada.nivel }}</span>
+        </h4>
+
+        <p class="detalhe-descricao">{{ habilidadeSelecionada.descricao }}</p>
+
+        <div class="detalhe-extra" *ngIf="habilidadeSelecionada.requisitos">
+          <span>📌 Requisito:</span> {{ habilidadeSelecionada.requisitos }}
+        </div>
       </div>
+
     </div>
   </div>
 </div>

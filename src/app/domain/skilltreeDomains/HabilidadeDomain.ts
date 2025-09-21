@@ -6,6 +6,6 @@ export interface HabilidadeDomain {
   habilidade: string;
   nivel: number;
   dependencia?: string;
-  requisito?: string;
+  requisitos?: string;
   descricao?: string;
 }
