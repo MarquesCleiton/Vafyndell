@@ -5,7 +5,7 @@ export interface HabilidadeDomain {
   ramo: string;    // FK → RamoDomain.id
   habilidade: string;
   nivel: number;
-  dependencia?: string;
+  dependencia?: string | null; // 👈 precisa estar aqui
   requisitos?: string;
   descricao?: string;
 }

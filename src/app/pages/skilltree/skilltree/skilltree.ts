@@ -145,7 +145,7 @@ export class SkillTree implements OnInit, AfterViewInit {
             ramo: h.ramo,
             nivel: h.nivel ?? 1,
             descricao: h.descricao ?? '',
-            requisito: h.requisitos ?? '',
+            requisitos: h.requisitos ?? '',
             dependencia: h.dependencia ?? '',
           },
         });
