@@ -33,7 +33,15 @@
       </div>
 
       <!-- Detalhe da Habilidade -->
-      <div *ngIf="habilidadeSelecionada" class="detalhe-card shadow-lg mt-4">
+      <div *ngIf="habilidadeSelecionada" class="detalhe-card shadow-lg mt-4 p-3 position-relative">
+        <!-- Botão editar -->
+        <button
+          class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2"
+          (click)="editarHabilidade(habilidadeSelecionada.id)"
+        >
+          ✏️
+        </button>
+
         <h4 class="detalhe-nome">
           {{ habilidadeSelecionada.habilidade }}
           <span class="nivel">Lv {{ habilidadeSelecionada.nivel }}</span>

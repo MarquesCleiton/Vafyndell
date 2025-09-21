@@ -36,6 +36,7 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
 
   carregando = true;
   salvando = false;
+  excluindo = false;
   editMode = false;
 
   caminhoSelecionado: string | null = null;
@@ -61,14 +62,13 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
   private repoArvore = new BaseRepositoryV2<ArvoreDomain>('Arvores');
   private repoHab = new BaseRepositoryV2<HabilidadeDomain>('Habilidades');
 
-  constructor(private route: ActivatedRoute, public router: Router) {}
+  constructor(private route: ActivatedRoute, public router: Router) { }
 
   async ngOnInit() {
     this.caminhos = await this.repoCaminho.getLocal();
     this.arvores = await this.repoArvore.getLocal();
     this.habilidades = await this.repoHab.getLocal();
 
-    // 🔎 Verifica se tem id na rota (edição)
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       const hab = await this.repoHab.getById(id);
@@ -85,7 +85,6 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
         this.dependenciaSelecionada = this.habilidadeEdit.dependencia;
         this.editMode = true;
 
-        // ⚡ não zera arvoreSelecionada no modo edição
         this.onCaminhoChange(this.caminhoSelecionado, false);
         this.onArvoreChange(this.arvoreSelecionada);
       }
@@ -97,27 +96,24 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
   get arvoresDoCaminho(): ArvoreDomain[] {
     return this.caminhoSelecionado
       ? this.arvores.filter(
-          (a) => String(a.caminho) === String(this.caminhoSelecionado)
-        )
+        (a) => String(a.caminho) === String(this.caminhoSelecionado)
+      )
       : [];
   }
 
   get habilidadesDaArvore(): HabilidadeDomain[] {
     return this.arvoreSelecionada && this.arvoreSelecionada !== 'nova'
       ? this.habilidades.filter(
-          (h) => String(h.arvore) === String(this.arvoreSelecionada)
-        )
+        (h) => String(h.arvore) === String(this.arvoreSelecionada)
+      )
       : [];
   }
 
   onCaminhoChange(id: string | null, fromUser = true) {
     this.caminhoSelecionado = id;
-
     if (fromUser) {
-      // só reseta árvore se usuário mudar manualmente
       this.arvoreSelecionada = null;
     }
-
     this.atualizarPreview();
   }
 
@@ -126,6 +122,12 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
     if (id === 'nova') {
       this.novaArvoreNome = '';
     }
+    this.atualizarPreview();
+  }
+
+  onDependenciaChange(value: string | null) {
+    this.dependenciaSelecionada = value;
+    this.habilidadeEdit.dependencia = value;
     this.atualizarPreview();
   }
 
@@ -141,21 +143,25 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
 
     const elements: ElementDefinition[] = [];
 
-    // Habilidades já existentes na árvore
     const existentes = this.habilidadesDaArvore;
     existentes.forEach((h) => {
+      const isEditing =
+        this.editMode && this.habilidadeEdit.id && String(h.id) === String(this.habilidadeEdit.id);
+      const hab = isEditing ? this.habilidadeEdit : h;
+
       elements.push({
-        data: { id: String(h.id), label: `${h.habilidade}\nLv ${h.nivel}` },
+        data: { id: String(hab.id), label: `${hab.habilidade}\nLv ${hab.nivel}` },
+        classes: isEditing ? 'habilidade-edit' : '',
       });
-      if (h.dependencia) {
+
+      if (hab.dependencia) {
         elements.push({
-          data: { source: String(h.dependencia), target: String(h.id) },
+          data: { source: String(hab.dependencia), target: String(hab.id) },
         });
       }
     });
 
-    // Nova habilidade (prévia)
-    if (this.habilidadeEdit.habilidade && this.arvoreSelecionada) {
+    if (!this.editMode && this.habilidadeEdit.habilidade && this.arvoreSelecionada) {
       const tempId = this.habilidadeEdit.id || 'novaHab';
       elements.push({
         data: {
@@ -164,9 +170,9 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
         },
         classes: 'nova-habilidade',
       });
-      if (this.dependenciaSelecionada) {
+      if (this.habilidadeEdit.dependencia) {
         elements.push({
-          data: { source: String(this.dependenciaSelecionada), target: tempId },
+          data: { source: String(this.habilidadeEdit.dependencia), target: tempId },
         });
       }
     }
@@ -193,6 +199,15 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
             'text-wrap': 'wrap',
             'text-max-width': '90px',
             shape: 'ellipse',
+          },
+        },
+        {
+          selector: 'node.habilidade-edit',
+          style: {
+            'background-color': '#0056b3',
+            'border-color': '#0d6efd',
+            'border-width': 4,
+            color: '#fff',
           },
         },
         {
@@ -241,7 +256,6 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
       const updates: any = {};
       const deletes: any = {};
 
-      // Nova árvore
       if (this.arvoreSelecionada === 'nova' && this.novaArvoreNome.trim()) {
         const novaArvore: ArvoreDomain = {
           id: IdUtils.generateULID(),
@@ -254,7 +268,6 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
         creates['Arvores'] = [novaArvore];
       }
 
-      // Habilidade
       if (!this.habilidadeEdit.id) {
         this.habilidadeEdit.id = IdUtils.generateULID();
         this.habilidadeEdit.caminho = this.caminhoSelecionado || '';
@@ -273,14 +286,12 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
         updates['Habilidades'].push(this.habilidadeEdit);
       }
 
-      // ✅ Batch
-      const result = await BaseRepositoryV2.batch({
+      await BaseRepositoryV2.batch({
         create: Object.keys(creates).length ? creates : undefined,
         updateById: Object.keys(updates).length ? updates : undefined,
         deleteById: Object.keys(deletes).length ? deletes : undefined,
       });
 
-      console.log('[EdicaoSkillTree] ◀️ batch result', result);
       alert('✅ Habilidade salva com sucesso!');
       this.router.navigate(['/skills-jogador']);
     } catch (err) {
@@ -293,22 +304,71 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
 
   async excluir() {
     if (!this.habilidadeEdit.id) return;
-    if (!confirm('Tem certeza que deseja excluir esta habilidade?')) return;
+
+    // 🔎 Buscar dependentes antes
+    const dependentes = this.habilidades.filter(
+      (h) => h.dependencia === this.habilidadeEdit.id
+    );
+
+    let mensagem = `Tem certeza que deseja excluir a habilidade "${this.habilidadeEdit.habilidade}"?`;
+    if (dependentes.length > 0) {
+      const nomes = dependentes.map((h) => `• ${h.habilidade} (Lv ${h.nivel})`).join('\n');
+      mensagem += `\n\n⚠️ As seguintes habilidades perderão esta dependência:\n${nomes}`;
+    }
+
+    if (!confirm(mensagem)) return;
 
     try {
-      this.salvando = true;
+      this.excluindo = true;
+
+      const updates: any = {};
+      const deletes: any = {};
+
+      // Remover dependência dos filhos
+      if (dependentes.length > 0) {
+        dependentes.forEach((h) => {
+          h.dependencia = null;
+        });
+        updates['Habilidades'] = dependentes;
+      }
+
+      deletes['Habilidades'] = [{ id: this.habilidadeEdit.id }];
+
       await BaseRepositoryV2.batch({
-        deleteById: { Habilidades: [{ id: this.habilidadeEdit.id }] },
+        updateById: Object.keys(updates).length ? updates : undefined,
+        deleteById: deletes,
       });
+
+      // Atualizar lista local
+      this.habilidades = this.habilidades.filter(
+        (h) => String(h.id) !== String(this.habilidadeEdit.id)
+      );
+
+      this.habilidadeSelecionada = null;
+      this.habilidadeEdit = {
+        id: '',
+        caminho: '',
+        arvore: '',
+        habilidade: '',
+        nivel: 1,
+        requisitos: '',
+        descricao: '',
+        dependencia: null,
+      };
+
+      this.atualizarPreview();
+
       alert('🗑️ Habilidade excluída com sucesso!');
       this.router.navigate(['/skills-jogador']);
     } catch (err) {
       console.error('[EdicaoSkillTree] ❌ Erro ao excluir:', err);
       alert('❌ Erro ao excluir');
     } finally {
-      this.salvando = false;
+      this.excluindo = false;
     }
   }
+
+
 
   atualizarPreview() {
     setTimeout(() => this.renderPreview(), 0);

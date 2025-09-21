@@ -7,6 +7,7 @@ import {
   ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import cytoscape, { Core, ElementDefinition } from 'cytoscape';
 import dagre from 'cytoscape-dagre';
 
@@ -48,6 +49,8 @@ export class SkillTree implements OnInit, AfterViewInit {
   private repoCaminho = new BaseRepositoryV2<CaminhoDomain>('Caminhos');
   private repoArvore = new BaseRepositoryV2<ArvoreDomain>('Arvores');
   private repoHab = new BaseRepositoryV2<HabilidadeDomain>('Habilidades');
+
+  constructor(private router: Router) {}
 
   async ngOnInit() {
     this.carregando = true;
@@ -239,5 +242,10 @@ export class SkillTree implements OnInit, AfterViewInit {
 
   selecionarHab(h: HabilidadeDomain) {
     this.habilidadeSelecionada = h;
+  }
+
+  editarHabilidade(id: string) {
+    if (!id) return;
+    this.router.navigate(['/edicao-skilltree', id]);
   }
 }

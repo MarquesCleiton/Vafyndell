@@ -23,9 +23,11 @@
   border-radius: 6px;
   color: #f8f9fa !important;
 }
+
 .input-dark input {
   color: #f8f9fa !important;
 }
+
 .input-dark:focus {
   border-color: #0d6efd !important;
   box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
@@ -40,6 +42,7 @@ textarea {
   padding: 6px 10px;
   resize: vertical;
 }
+
 textarea:focus {
   border-color: #0d6efd;
   outline: none;
@@ -51,8 +54,10 @@ textarea:focus {
    ====================== */
 .cy-preview {
   width: 100%;
-  height: 400px; /* altura fixa para visualização */
-  min-height: 300px; /* garante tamanho mínimo */
+  height: 400px;
+  /* altura fixa para visualização */
+  min-height: 300px;
+  /* garante tamanho mínimo */
   background: #111;
   border: 1px solid #333;
   border-radius: 8px;
@@ -83,6 +88,7 @@ textarea:focus {
   box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s ease;
 }
+
 .fab:hover {
   transform: scale(1.08);
 }
@@ -91,11 +97,20 @@ textarea:focus {
   background: linear-gradient(135deg, #28a745, #218838);
   color: #fff;
 }
+
 .fab-warning {
   background: #ffc107;
   color: #000;
 }
+
 .fab-danger {
   background: linear-gradient(135deg, #dc3545, #a71d2a);
   color: #fff;
+}
+
+/* Nó em edição */
+node.habilidade-edit {
+  background-color: #0056b3 !important;
+  border: 3px solid #0d6efd !important;
+  color: #fff !important;
 }

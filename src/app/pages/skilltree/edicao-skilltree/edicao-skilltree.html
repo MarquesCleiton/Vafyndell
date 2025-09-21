@@ -55,12 +55,11 @@
         <div class="mb-3" *ngIf="arvoreSelecionada">
           <label class="form-label">🔗 Dependência</label>
           <select class="form-select input-dark" [(ngModel)]="dependenciaSelecionada" name="dependenciaSelecionada"
-            (ngModelChange)="atualizarPreview()">
+            (ngModelChange)="onDependenciaChange($event)">
             <option [ngValue]="null">Nenhuma</option>
             <option *ngFor="let h of habilidadesDaArvore" [ngValue]="h.id">
               {{ h.habilidade }} (Lv {{ h.nivel }})
             </option>
-
           </select>
         </div>
 
@@ -103,7 +102,15 @@
         <span class="spinner-border spinner-border-sm"></span>
       </ng-container>
     </button>
-    <button *ngIf="editMode" type="button" class="fab fab-danger" (click)="excluir()">🗑️</button>
-    <button type="button" class="fab fab-warning" (click)="router.navigate(['/skills-jogador'])">⬅️</button>
+
+    <button *ngIf="editMode" type="button" class="fab fab-danger" (click)="excluir()" [disabled]="excluindo">
+      <ng-container *ngIf="!excluindo">🗑️</ng-container>
+      <ng-container *ngIf="excluindo">
+        <span class="spinner-border spinner-border-sm"></span>
+      </ng-container>
+    </button>
+
+
+    <button type="button" class="fab fab-warning" (click)="router.navigate(['/skilltree'])">⬅️</button>
   </div>
 </div>
