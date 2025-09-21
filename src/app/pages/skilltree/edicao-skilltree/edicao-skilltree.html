@@ -1,0 +1,102 @@
+<div class="edicao-skilltree-wrapper d-flex flex-column min-vh-100 bg-dark text-light pb-5">
+  <div class="flex-grow-1 p-3 d-flex justify-content-center">
+    <div class="edicao-skilltree-container w-100">
+
+      <h2 class="page-title">🛠️ Edição da SkillTree</h2>
+
+      <form #form="ngForm" (ngSubmit)="salvar(form)" id="formSkillTree">
+
+        <!-- Seleção do Caminho -->
+        <div class="mb-3">
+          <label class="form-label">🌐 Caminho</label>
+          <select class="form-select input-dark" [(ngModel)]="caminhoSelecionado" name="caminhoSelecionado"
+            (ngModelChange)="onCaminhoChange($event)" required>
+            <option [ngValue]="null" disabled>Selecione...</option>
+            <option *ngFor="let c of caminhos" [ngValue]="c.id">{{ c.caminho }}</option>
+          </select>
+        </div>
+
+        <!-- Seleção da Árvore -->
+        <div class="mb-3" *ngIf="caminhoSelecionado">
+          <label class="form-label">🌳 Árvore</label>
+          <select class="form-select input-dark" [(ngModel)]="arvoreSelecionada" name="arvoreSelecionada"
+            (ngModelChange)="onArvoreChange($event)" required>
+            <option [ngValue]="null" disabled>Selecione...</option>
+            <option *ngFor="let a of arvoresDoCaminho" [ngValue]="a.id">{{ a.arvore }}</option>
+          </select>
+        </div>
+
+        <!-- Seleção do Ramo -->
+        <div class="mb-3" *ngIf="arvoreSelecionada">
+          <label class="form-label">🌿 Ramo</label>
+          <select class="form-select input-dark" [(ngModel)]="ramoSelecionado" name="ramoSelecionado"
+            (ngModelChange)="onRamoChange($event)" required>
+            <option [ngValue]="null" disabled>Selecione...</option>
+            <option *ngFor="let r of ramosDaArvore" [ngValue]="r.id">{{ r.ramo }}</option>
+          </select>
+        </div>
+
+        <!-- Dependência -->
+        <div class="mb-3" *ngIf="ramoSelecionado">
+          <label class="form-label">🔗 Dependência</label>
+          <select class="form-select input-dark" [(ngModel)]="dependenciaSelecionada" name="dependenciaSelecionada"
+            (ngModelChange)="atualizarPreview()">
+            <option [ngValue]="null">Nenhuma</option>
+            <option *ngFor="let h of habilidadesDoRamo" [ngValue]="h.id">
+              {{ h.habilidade }} (Lv {{ h.nivel }})
+            </option>
+          </select>
+        </div>
+
+
+        <!-- Nome da habilidade -->
+        <div class="mb-3" *ngIf="ramoSelecionado">
+          <label class="form-label">🏷️ Nome</label>
+          <input type="text" class="form-control input-dark" [(ngModel)]="habilidadeEdit.habilidade" name="habilidade"
+            (input)="atualizarPreview()" required />
+        </div>
+
+        <!-- Nível -->
+        <div class="mb-3" *ngIf="ramoSelecionado">
+          <label class="form-label">📈 Nível</label>
+          <input type="number" class="form-control input-dark" [(ngModel)]="habilidadeEdit.nivel" name="nivel"
+            (input)="atualizarPreview()" min="1" required />
+        </div>
+
+        <!-- Requisitos -->
+        <div class="mb-3" *ngIf="ramoSelecionado">
+          <label class="form-label">📌 Requisitos</label>
+          <textarea class="form-control input-dark" [(ngModel)]="habilidadeEdit.requisitos" name="requisitos"
+            (input)="atualizarPreview()"></textarea>
+        </div>
+
+        <!-- Descrição -->
+        <div class="mb-3" *ngIf="ramoSelecionado">
+          <label class="form-label">📝 Descrição</label>
+          <textarea class="form-control input-dark" [(ngModel)]="habilidadeEdit.descricao" name="descricao"
+            (input)="atualizarPreview()"></textarea>
+        </div>
+
+      </form>
+
+      <!-- Prévia -->
+      <div class="preview-wrapper mt-4">
+        <h4 class="text-light">🔎 Prévia</h4>
+        <div #cyPreview class="cy-preview"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FABs -->
+  <div class="fab-stack">
+    <button type="submit" form="formSkillTree" class="fab fab-success" [disabled]="form?.invalid || salvando">
+      <ng-container *ngIf="!salvando">💾</ng-container>
+      <!-- Substitua isso -->
+      <ng-container *ngIf="salvando">
+        <span class="spinner-border spinner-border-sm"></span>
+      </ng-container>
+
+    </button>
+  </div>
+</div>
