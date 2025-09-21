@@ -3,6 +3,8 @@ import {
   OnInit,
   AfterViewInit,
   ViewChild,
+  ViewChildren,
+  QueryList,
   ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -28,7 +30,14 @@ cytoscape.use(dagre);
 })
 export class EdicaoSkillTree implements OnInit, AfterViewInit {
   @ViewChild('cyPreview', { static: false }) cyPreviewRef!: ElementRef;
+  @ViewChildren('cyPreviewCaminho') cyPreviewCaminhoRefs!: QueryList<ElementRef>;
+  @ViewChild('cyPreviewArvore', { static: false }) cyPreviewArvoreRef!: ElementRef;
+
+  @ViewChild('formRef') formRef!: NgForm;
+
   private cyInstance: Core | null = null;
+  private cyInstancesCaminho: Core[] = [];
+  private cyInstanceArvore: Core | null = null;
 
   caminhos: CaminhoDomain[] = [];
   arvores: ArvoreDomain[] = [];
@@ -39,11 +48,17 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
   excluindo = false;
   editMode = false;
 
+  abaAtiva: 'caminhos' | 'arvores' | 'habilidades' = 'habilidades';
+
   caminhoSelecionado: string | null = null;
   arvoreSelecionada: string | null = null;
   dependenciaSelecionada: string | null = null;
 
+  caminhoEditNome: string = '';
+  arvoreEditNome: string = '';
   novaArvoreNome: string = '';
+
+  confirmarExclusao: string = '';
 
   habilidadeEdit: HabilidadeDomain = {
     id: '',
@@ -62,7 +77,7 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
   private repoArvore = new BaseRepositoryV2<ArvoreDomain>('Arvores');
   private repoHab = new BaseRepositoryV2<HabilidadeDomain>('Habilidades');
 
-  constructor(private route: ActivatedRoute, public router: Router) { }
+  constructor(private route: ActivatedRoute, public router: Router) {}
 
   async ngOnInit() {
     this.caminhos = await this.repoCaminho.getLocal();
@@ -88,24 +103,22 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
         this.onCaminhoChange(this.caminhoSelecionado, false);
         this.onArvoreChange(this.arvoreSelecionada);
       }
+    } else {
+      this.abaAtiva = 'caminhos';
     }
 
-    this.renderPreview();
+    this.renderPreviews();
   }
 
   get arvoresDoCaminho(): ArvoreDomain[] {
     return this.caminhoSelecionado
-      ? this.arvores.filter(
-        (a) => String(a.caminho) === String(this.caminhoSelecionado)
-      )
+      ? this.arvores.filter((a) => String(a.caminho) === String(this.caminhoSelecionado))
       : [];
   }
 
   get habilidadesDaArvore(): HabilidadeDomain[] {
     return this.arvoreSelecionada && this.arvoreSelecionada !== 'nova'
-      ? this.habilidades.filter(
-        (h) => String(h.arvore) === String(this.arvoreSelecionada)
-      )
+      ? this.habilidades.filter((h) => String(h.arvore) === String(this.arvoreSelecionada))
       : [];
   }
 
@@ -132,18 +145,22 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    this.renderPreview();
+    this.renderPreviews();
   }
 
-  // ======================
-  // PREVIEW
-  // ======================
-  private renderPreview() {
+  // ===== RENDERIZAÇÃO =====
+  private renderPreviews() {
+    this.renderPreviewHabilidade();
+    this.renderPreviewCaminhos();
+    this.renderPreviewArvore();
+  }
+
+  private renderPreviewHabilidade() {
     if (!this.cyPreviewRef) return;
 
     const elements: ElementDefinition[] = [];
-
     const existentes = this.habilidadesDaArvore;
+
     existentes.forEach((h) => {
       const isEditing =
         this.editMode && this.habilidadeEdit.id && String(h.id) === String(this.habilidadeEdit.id);
@@ -155,9 +172,7 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
       });
 
       if (hab.dependencia) {
-        elements.push({
-          data: { source: String(hab.dependencia), target: String(hab.id) },
-        });
+        elements.push({ data: { source: String(hab.dependencia), target: String(hab.id) } });
       }
     });
 
@@ -171,16 +186,61 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
         classes: 'nova-habilidade',
       });
       if (this.habilidadeEdit.dependencia) {
-        elements.push({
-          data: { source: String(this.habilidadeEdit.dependencia), target: tempId },
-        });
+        elements.push({ data: { source: String(this.habilidadeEdit.dependencia), target: tempId } });
       }
     }
 
     if (this.cyInstance) this.cyInstance.destroy();
+    this.cyInstance = this.buildCy(this.cyPreviewRef.nativeElement, elements);
 
-    this.cyInstance = cytoscape({
-      container: this.cyPreviewRef.nativeElement,
+    this.cyInstance.on('tap', 'node', (evt) => {
+      const id = evt.target.id();
+      this.habilidadeSelecionada =
+        this.habilidades.find((h) => String(h.id) === id) || null;
+    });
+  }
+
+  private renderPreviewCaminhos() {
+    this.cyInstancesCaminho.forEach((cy) => cy.destroy());
+    this.cyInstancesCaminho = [];
+
+    this.cyPreviewCaminhoRefs.forEach((containerRef, idx) => {
+      const arvore = this.arvoresDoCaminho[idx];
+      if (!arvore) return;
+
+      const habs = this.habilidades.filter((h) => String(h.arvore) === String(arvore.id));
+      const elements: ElementDefinition[] = [];
+
+      habs.forEach((h) => {
+        elements.push({ data: { id: String(h.id), label: `${h.habilidade}\nLv ${h.nivel}` } });
+        if (h.dependencia) {
+          elements.push({ data: { source: String(h.dependencia), target: String(h.id) } });
+        }
+      });
+
+      const cy = this.buildCy(containerRef.nativeElement, elements);
+      this.cyInstancesCaminho.push(cy);
+    });
+  }
+
+  private renderPreviewArvore() {
+    if (!this.cyPreviewArvoreRef || !this.arvoreSelecionada) return;
+
+    const elements: ElementDefinition[] = [];
+    this.habilidadesDaArvore.forEach((h) => {
+      elements.push({ data: { id: String(h.id), label: `${h.habilidade}\nLv ${h.nivel}` } });
+      if (h.dependencia) {
+        elements.push({ data: { source: String(h.dependencia), target: String(h.id) } });
+      }
+    });
+
+    if (this.cyInstanceArvore) this.cyInstanceArvore.destroy();
+    this.cyInstanceArvore = this.buildCy(this.cyPreviewArvoreRef.nativeElement, elements);
+  }
+
+  private buildCy(container: HTMLElement, elements: ElementDefinition[]): Core {
+    return cytoscape({
+      container,
       elements,
       style: [
         {
@@ -202,6 +262,16 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
           },
         },
         {
+          selector: 'edge',
+          style: {
+            width: 2,
+            'line-color': '#666',
+            'curve-style': 'unbundled-bezier',
+            'control-point-distances': [-30, 30],
+            'control-point-weights': [0.5, 0.5],
+          },
+        },
+        {
           selector: 'node.habilidade-edit',
           style: {
             'background-color': '#0056b3',
@@ -219,39 +289,19 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
             color: '#fff',
           },
         },
-        {
-          selector: 'edge',
-          style: {
-            width: 2,
-            'line-color': '#666',
-            'curve-style': 'unbundled-bezier',
-            'control-point-distances': [-30, 30],
-            'control-point-weights': [0.5, 0.5],
-          },
-        },
       ],
       layout: { name: 'dagre', rankDir: 'TB', nodeSep: 100, rankSep: 80 } as any,
       autoungrabify: true,
       userZoomingEnabled: true,
       userPanningEnabled: true,
     });
-
-    this.cyInstance.on('tap', 'node', (evt) => {
-      const id = evt.target.id();
-      this.habilidadeSelecionada =
-        this.habilidades.find((h) => String(h.id) === id) || null;
-    });
   }
 
-  // ======================
-  // SALVAR / EXCLUIR
-  // ======================
+  // ===== CRUD =====
   async salvar(form: NgForm) {
     if (form.invalid) return;
-
     try {
       this.salvando = true;
-
       const creates: any = {};
       const updates: any = {};
       const deletes: any = {};
@@ -264,7 +314,6 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
         };
         this.arvores.push(novaArvore);
         this.arvoreSelecionada = novaArvore.id;
-
         creates['Arvores'] = [novaArvore];
       }
 
@@ -304,10 +353,8 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
 
   async excluir() {
     if (!this.habilidadeEdit.id) return;
-
-    // 🔎 Buscar dependentes antes
     const dependentes = this.habilidades.filter(
-      (h) => h.dependencia === this.habilidadeEdit.id
+      (h) => String(h.dependencia) === String(this.habilidadeEdit.id)
     );
 
     let mensagem = `Tem certeza que deseja excluir a habilidade "${this.habilidadeEdit.habilidade}"?`;
@@ -315,21 +362,19 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
       const nomes = dependentes.map((h) => `• ${h.habilidade} (Lv ${h.nivel})`).join('\n');
       mensagem += `\n\n⚠️ As seguintes habilidades perderão esta dependência:\n${nomes}`;
     }
-
     if (!confirm(mensagem)) return;
 
     try {
       this.excluindo = true;
-
       const updates: any = {};
       const deletes: any = {};
 
-      // Remover dependência dos filhos
       if (dependentes.length > 0) {
-        dependentes.forEach((h) => {
-          h.dependencia = null;
-        });
-        updates['Habilidades'] = dependentes;
+        const dependentesAtualizados = dependentes.map((h) => ({ ...h, dependencia: null }));
+        updates['Habilidades'] = dependentesAtualizados;
+        this.habilidades = this.habilidades.map((h) =>
+          String(h.dependencia) === String(this.habilidadeEdit.id) ? { ...h, dependencia: null } : h
+        );
       }
 
       deletes['Habilidades'] = [{ id: this.habilidadeEdit.id }];
@@ -339,11 +384,9 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
         deleteById: deletes,
       });
 
-      // Atualizar lista local
       this.habilidades = this.habilidades.filter(
         (h) => String(h.id) !== String(this.habilidadeEdit.id)
       );
-
       this.habilidadeSelecionada = null;
       this.habilidadeEdit = {
         id: '',
@@ -355,9 +398,7 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
         descricao: '',
         dependencia: null,
       };
-
       this.atualizarPreview();
-
       alert('🗑️ Habilidade excluída com sucesso!');
       this.router.navigate(['/skills-jogador']);
     } catch (err) {
@@ -368,18 +409,57 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
     }
   }
 
+  async excluirCaminho() {
+    if (!this.caminhoSelecionado) return;
+    if (this.confirmarExclusao !== 'excluir') return;
 
+    const arvs = this.arvores.filter((a) => String(a.caminho) === String(this.caminhoSelecionado));
+    const habs = this.habilidades.filter((h) =>
+      arvs.some((a) => String(a.id) === String(h.arvore))
+    );
+
+    await BaseRepositoryV2.batch({
+      deleteById: {
+        Habilidades: habs.map((h) => ({ id: h.id })),
+        Arvores: arvs.map((a) => ({ id: a.id })),
+        Caminhos: [{ id: this.caminhoSelecionado }],
+      },
+    });
+
+    alert('🗑️ Caminho e todos os dados vinculados excluídos!');
+    this.router.navigate(['/skilltree']);
+  }
+
+  async excluirArvore() {
+    if (!this.arvoreSelecionada) return;
+    if (this.confirmarExclusao !== 'excluir') return;
+
+    const habs = this.habilidades.filter(
+      (h) => String(h.arvore) === String(this.arvoreSelecionada)
+    );
+
+    await BaseRepositoryV2.batch({
+      deleteById: {
+        Habilidades: habs.map((h) => ({ id: h.id })),
+        Arvores: [{ id: this.arvoreSelecionada }],
+      },
+    });
+
+    alert('🗑️ Árvore e todas as habilidades vinculadas excluídas!');
+    this.router.navigate(['/skilltree']);
+  }
 
   atualizarPreview() {
-    setTimeout(() => this.renderPreview(), 0);
+    setTimeout(() => this.renderPreviews(), 0);
   }
 
   get arvoreSelecionadaNome(): string {
-    if (this.arvoreSelecionada === 'nova')
-      return this.novaArvoreNome || 'Nova Árvore';
-    const arvore = this.arvores.find(
-      (a) => String(a.id) === String(this.arvoreSelecionada)
-    );
+    if (this.arvoreSelecionada === 'nova') return this.novaArvoreNome || 'Nova Árvore';
+    const arvore = this.arvores.find((a) => String(a.id) === String(this.arvoreSelecionada));
     return arvore ? arvore.arvore : 'Sem árvore';
+  }
+
+  get detalheHabilidade(): HabilidadeDomain | null {
+    return this.editMode ? this.habilidadeEdit : this.habilidadeSelecionada;
   }
 }

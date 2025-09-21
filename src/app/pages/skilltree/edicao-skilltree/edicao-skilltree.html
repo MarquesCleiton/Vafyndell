@@ -2,114 +2,192 @@
   <div class="flex-grow-1 p-3 d-flex justify-content-center">
     <div class="edicao-skilltree-container w-100">
 
-      <h2 class="page-title">🛠️ {{ editMode ? 'Editar' : 'Cadastro' }} da SkillTree</h2>
+      <!-- Título -->
+      <h2 class="page-title">🛠️ Edição da SkillTree</h2>
 
-      <!-- Prévia -->
-      <div class="preview-wrapper mt-4">
-        <h4 class="text-light">🔎 Prévia — {{ arvoreSelecionadaNome }}</h4>
-        <div #cyPreview class="cy-preview"></div>
-      </div>
+      <!-- Tabs (somente se não estiver editando uma habilidade específica) -->
+      <ul class="nav nav-tabs custom-tabs mb-4" *ngIf="!editMode">
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="abaAtiva==='caminhos'" (click)="abaAtiva='caminhos'">🌐 Caminhos</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="abaAtiva==='arvores'" (click)="abaAtiva='arvores'">🌳 Árvores</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="abaAtiva==='habilidades'" (click)="abaAtiva='habilidades'">⭐ Habilidades</a>
+        </li>
+      </ul>
 
-      <!-- Detalhe -->
-      <div *ngIf="habilidadeSelecionada" class="detalhe-card shadow-lg mt-4 p-3">
-        <h4 class="detalhe-nome">
-          {{ habilidadeSelecionada.habilidade }}
-          <span class="nivel">Lv {{ habilidadeSelecionada.nivel }}</span>
-        </h4>
-        <p class="detalhe-descricao">{{ habilidadeSelecionada.descricao }}</p>
-        <div class="detalhe-extra" *ngIf="habilidadeSelecionada.requisitos">
-          <span>📌 Requisito:</span> {{ habilidadeSelecionada.requisitos }}
-        </div>
-      </div>
+      <!-- ================= CAMINHOS ================= -->
+      <div *ngIf="abaAtiva==='caminhos'">
+        <h4 class="mt-3">🌐 Editar Caminho</h4>
 
-      <form #form="ngForm" (ngSubmit)="salvar(form)" id="formSkillTree">
-        <!-- Caminho -->
-        <div class="mb-3">
-          <label class="form-label">🌐 Caminho</label>
-          <select class="form-select input-dark" [(ngModel)]="caminhoSelecionado" name="caminhoSelecionado"
-            (ngModelChange)="onCaminhoChange($event)" required>
-            <option [ngValue]="null" disabled>Selecione...</option>
-            <option *ngFor="let c of caminhos" [ngValue]="c.id">{{ c.caminho }}</option>
-          </select>
-        </div>
+        <!-- Selecionar caminho -->
+        <select class="form-select input-dark mb-2" [(ngModel)]="caminhoSelecionado" name="caminhoSelecionado">
+          <option [ngValue]="null" disabled>Selecione...</option>
+          <option *ngFor="let c of caminhos" [ngValue]="c.id">{{ c.caminho }}</option>
+        </select>
 
-        <!-- Árvore -->
-        <div class="mb-3" *ngIf="caminhoSelecionado">
-          <label class="form-label">🌳 Árvore</label>
-          <select class="form-select input-dark" [(ngModel)]="arvoreSelecionada" name="arvoreSelecionada"
-            (ngModelChange)="onArvoreChange($event)" required>
-            <option [ngValue]="null" disabled>Selecione...</option>
-            <option *ngFor="let a of arvoresDoCaminho" [ngValue]="a.id">
-              {{ a.arvore }}
-            </option>
+        <!-- Editar nome -->
+        <input type="text" class="form-control input-dark mb-3" [(ngModel)]="caminhoEditNome"
+               placeholder="Novo nome do caminho" />
 
-            <option [ngValue]="'nova'">➕ Nova Árvore</option>
-          </select>
-          <div *ngIf="arvoreSelecionada === 'nova'" class="mt-2">
-            <input type="text" class="form-control input-dark" [(ngModel)]="novaArvoreNome" name="novaArvoreNome"
-              placeholder="Digite o nome da nova árvore" (input)="atualizarPreview()" />
+        <!-- Prévia estilo SkillTree -->
+        <div class="arvores-scroll">
+          <div *ngFor="let arvore of arvoresDoCaminho" class="arvore-card shadow-lg">
+            <h3 class="arvore-titulo">{{ arvore.arvore }}</h3>
+            <div #cyPreviewCaminho class="cy-arvore"></div>
           </div>
         </div>
 
-        <!-- Dependência -->
-        <div class="mb-3" *ngIf="arvoreSelecionada">
-          <label class="form-label">🔗 Dependência</label>
-          <select class="form-select input-dark" [(ngModel)]="dependenciaSelecionada" name="dependenciaSelecionada"
-            (ngModelChange)="onDependenciaChange($event)">
-            <option [ngValue]="null">Nenhuma</option>
-            <option *ngFor="let h of habilidadesDaArvore" [ngValue]="h.id">
-              {{ h.habilidade }} (Lv {{ h.nivel }})
-            </option>
-          </select>
+        <!-- Exclusão -->
+        <div class="mt-3">
+          <label class="form-label">⚠️ Digite "excluir" para remover este caminho (inclui TODAS as árvores e habilidades)</label>
+          <input type="text" class="form-control input-dark" [(ngModel)]="confirmarExclusao" />
+          <button class="btn btn-danger mt-2" (click)="excluirCaminho()" [disabled]="confirmarExclusao!=='excluir'">
+            Excluir Caminho
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= ÁRVORES ================= -->
+      <div *ngIf="abaAtiva==='arvores'">
+        <h4 class="mt-3">🌳 Editar Árvore</h4>
+
+        <!-- Selecionar caminho -->
+        <select class="form-select input-dark mb-2" [(ngModel)]="caminhoSelecionado" name="caminhoSelecionadoArvore" (ngModelChange)="onCaminhoChange($event)">
+          <option [ngValue]="null" disabled>Selecione Caminho...</option>
+          <option *ngFor="let c of caminhos" [ngValue]="c.id">{{ c.caminho }}</option>
+        </select>
+
+        <!-- Selecionar árvore -->
+        <select class="form-select input-dark mb-2" [(ngModel)]="arvoreSelecionada" name="arvoreSelecionada">
+          <option [ngValue]="null" disabled>Selecione Árvore...</option>
+          <option *ngFor="let a of arvoresDoCaminho" [ngValue]="a.id">{{ a.arvore }}</option>
+        </select>
+
+        <!-- Editar nome -->
+        <input type="text" class="form-control input-dark mb-3" [(ngModel)]="arvoreEditNome"
+               placeholder="Novo nome da árvore" />
+
+        <!-- Prévia -->
+        <div class="arvore-card shadow-lg" *ngIf="arvoreSelecionada">
+          <h3 class="arvore-titulo">{{ arvoreSelecionadaNome }}</h3>
+          <div #cyPreviewArvore class="cy-arvore"></div>
         </div>
 
-        <!-- Nome -->
-        <div class="mb-3" *ngIf="arvoreSelecionada">
-          <label class="form-label">🏷️ Nome</label>
-          <input type="text" class="form-control input-dark" [(ngModel)]="habilidadeEdit.habilidade" name="habilidade"
-            (input)="atualizarPreview()" required />
+        <!-- Exclusão -->
+        <div class="mt-3">
+          <label class="form-label">⚠️ Digite "excluir" para remover esta árvore (inclui TODAS as habilidades)</label>
+          <input type="text" class="form-control input-dark" [(ngModel)]="confirmarExclusao" />
+          <button class="btn btn-danger mt-2" (click)="excluirArvore()" [disabled]="confirmarExclusao!=='excluir'">
+            Excluir Árvore
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= HABILIDADES ================= -->
+      <div *ngIf="abaAtiva==='habilidades' || editMode">
+        <!-- Prévia -->
+        <div class="preview-wrapper mt-4">
+          <h4 class="text-light">🔎 Prévia — {{ arvoreSelecionadaNome }}</h4>
+          <div #cyPreview class="cy-preview"></div>
         </div>
 
-        <!-- Nível -->
-        <div class="mb-3" *ngIf="arvoreSelecionada">
-          <label class="form-label">📈 Nível</label>
-          <input type="number" class="form-control input-dark" [(ngModel)]="habilidadeEdit.nivel" name="nivel"
-            (input)="atualizarPreview()" min="1" required />
+        <!-- Detalhe -->
+        <div *ngIf="detalheHabilidade" class="detalhe-card shadow-lg mt-4 p-3">
+          <h4 class="detalhe-nome">
+            {{ detalheHabilidade.habilidade }}
+            <span class="nivel">Lv {{ detalheHabilidade.nivel }}</span>
+          </h4>
+          <p class="detalhe-descricao">{{ detalheHabilidade.descricao }}</p>
+          <div class="detalhe-extra" *ngIf="detalheHabilidade.requisitos">
+            <span>📌 Requisito:</span> {{ detalheHabilidade.requisitos }}
+          </div>
         </div>
 
-        <!-- Requisitos -->
-        <div class="mb-3" *ngIf="arvoreSelecionada">
-          <label class="form-label">📌 Requisitos</label>
-          <textarea class="form-control input-dark" [(ngModel)]="habilidadeEdit.requisitos" name="requisitos"
-            (input)="atualizarPreview()"></textarea>
-        </div>
+        <!-- Formulário de habilidade -->
+        <form #formRef="ngForm" (ngSubmit)="salvar(formRef)" id="formSkillTree">
+          <!-- Caminho -->
+          <div class="mb-3">
+            <label class="form-label">🌐 Caminho</label>
+            <select class="form-select input-dark" [(ngModel)]="caminhoSelecionado" name="caminhoSelecionado"
+              (ngModelChange)="onCaminhoChange($event)" required>
+              <option [ngValue]="null" disabled>Selecione...</option>
+              <option *ngFor="let c of caminhos" [ngValue]="c.id">{{ c.caminho }}</option>
+            </select>
+          </div>
 
-        <!-- Descrição -->
-        <div class="mb-3" *ngIf="arvoreSelecionada">
-          <label class="form-label">📝 Descrição</label>
-          <textarea class="form-control input-dark" [(ngModel)]="habilidadeEdit.descricao" name="descricao"
-            (input)="atualizarPreview()"></textarea>
-        </div>
-      </form>
+          <!-- Árvore -->
+          <div class="mb-3" *ngIf="caminhoSelecionado">
+            <label class="form-label">🌳 Árvore</label>
+            <select class="form-select input-dark" [(ngModel)]="arvoreSelecionada" name="arvoreSelecionada"
+              (ngModelChange)="onArvoreChange($event)" required>
+              <option [ngValue]="null" disabled>Selecione...</option>
+              <option *ngFor="let a of arvoresDoCaminho" [ngValue]="a.id">{{ a.arvore }}</option>
+              <option [ngValue]="'nova'">➕ Nova Árvore</option>
+            </select>
+            <div *ngIf="arvoreSelecionada === 'nova'" class="mt-2">
+              <input type="text" class="form-control input-dark" [(ngModel)]="novaArvoreNome" name="novaArvoreNome"
+                placeholder="Digite o nome da nova árvore" (input)="atualizarPreview()" />
+            </div>
+          </div>
+
+          <!-- Dependência -->
+          <div class="mb-3" *ngIf="arvoreSelecionada">
+            <label class="form-label">🔗 Dependência</label>
+            <select class="form-select input-dark" [(ngModel)]="dependenciaSelecionada" name="dependenciaSelecionada"
+              (ngModelChange)="onDependenciaChange($event)">
+              <option [ngValue]="null">Nenhuma</option>
+              <option *ngFor="let h of habilidadesDaArvore" [ngValue]="h.id">
+                {{ h.habilidade }} (Lv {{ h.nivel }})
+              </option>
+            </select>
+          </div>
+
+          <!-- Nome -->
+          <div class="mb-3" *ngIf="arvoreSelecionada">
+            <label class="form-label">🏷️ Nome</label>
+            <input type="text" class="form-control input-dark" [(ngModel)]="habilidadeEdit.habilidade" name="habilidade"
+              (input)="atualizarPreview()" required />
+          </div>
+
+          <!-- Nível -->
+          <div class="mb-3" *ngIf="arvoreSelecionada">
+            <label class="form-label">📈 Nível</label>
+            <input type="number" class="form-control input-dark" [(ngModel)]="habilidadeEdit.nivel" name="nivel"
+              (input)="atualizarPreview()" min="1" required />
+          </div>
+
+          <!-- Requisitos -->
+          <div class="mb-3" *ngIf="arvoreSelecionada">
+            <label class="form-label">📌 Requisitos</label>
+            <textarea class="form-control input-dark" [(ngModel)]="habilidadeEdit.requisitos" name="requisitos"
+              (input)="atualizarPreview()"></textarea>
+          </div>
+
+          <!-- Descrição -->
+          <div class="mb-3" *ngIf="arvoreSelecionada">
+            <label class="form-label">📝 Descrição</label>
+            <textarea class="form-control input-dark" [(ngModel)]="habilidadeEdit.descricao" name="descricao"
+              (input)="atualizarPreview()"></textarea>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
   <!-- FABs -->
   <div class="fab-stack">
-    <button type="submit" form="formSkillTree" class="fab fab-success" [disabled]="form?.invalid || salvando">
+    <button type="submit" form="formSkillTree" class="fab fab-success" [disabled]="formRef?.invalid || salvando">
       <ng-container *ngIf="!salvando">💾</ng-container>
-      <ng-container *ngIf="salvando">
-        <span class="spinner-border spinner-border-sm"></span>
-      </ng-container>
+      <ng-container *ngIf="salvando"><span class="spinner-border spinner-border-sm"></span></ng-container>
     </button>
 
     <button *ngIf="editMode" type="button" class="fab fab-danger" (click)="excluir()" [disabled]="excluindo">
       <ng-container *ngIf="!excluindo">🗑️</ng-container>
-      <ng-container *ngIf="excluindo">
-        <span class="spinner-border spinner-border-sm"></span>
-      </ng-container>
+      <ng-container *ngIf="excluindo"><span class="spinner-border spinner-border-sm"></span></ng-container>
     </button>
-
 
     <button type="button" class="fab fab-warning" (click)="router.navigate(['/skilltree'])">⬅️</button>
   </div>
