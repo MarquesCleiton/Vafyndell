@@ -64,7 +64,7 @@ export class SkillTree implements OnInit, AfterViewInit {
   private userEmail: string | null = null;
 
   constructor(private router: Router) { }
-  
+
   processando = false;
 
   async ngOnInit() {
@@ -240,9 +240,11 @@ export class SkillTree implements OnInit, AfterViewInit {
           {
             selector: 'edge',
             style: {
-              'width': 4,
-              'line-color': '#888',
-              'curve-style': 'straight',
+              width: 2,
+              'line-color': '#666',
+              'curve-style': 'unbundled-bezier',
+              'control-point-distances': [-30, 30],
+              'control-point-weights': [0.5, 0.5],
             },
           },
         ],
@@ -310,65 +312,65 @@ export class SkillTree implements OnInit, AfterViewInit {
     return remover;
   }
 
-async adicionarHabilidadeJogador(habilidade: HabilidadeDomain) {
-  if (this.temHabilidade(habilidade.id)) return;
+  async adicionarHabilidadeJogador(habilidade: HabilidadeDomain) {
+    if (this.temHabilidade(habilidade.id)) return;
 
-  const dependencias = this.coletarDependencias(habilidade);
-  const cadeia = [...dependencias, habilidade];
+    const dependencias = this.coletarDependencias(habilidade);
+    const cadeia = [...dependencias, habilidade];
 
-  // Sempre confirma, mesmo sem dependências
-  const lista = cadeia.map(d => `- ${d.habilidade} (Lv ${d.nivel})`).join('\n');
-  if (!confirm(`⚠️ Deseja realmente adicionar a habilidade?\n\n${lista}`)) return;
+    // Sempre confirma, mesmo sem dependências
+    const lista = cadeia.map(d => `- ${d.habilidade} (Lv ${d.nivel})`).join('\n');
+    if (!confirm(`⚠️ Deseja realmente adicionar a habilidade?\n\n${lista}`)) return;
 
-  this.processando = true;
-  try {
-    const toSave = cadeia.map(h => ({
-      id: IdUtils.generateULID(),
-      jogador: this.userEmail!,
-      habilidade: String(h.id),
-      data_aquisicao: new Date().toISOString(),
-    }));
+    this.processando = true;
+    try {
+      const toSave = cadeia.map(h => ({
+        id: IdUtils.generateULID(),
+        jogador: this.userEmail!,
+        habilidade: String(h.id),
+        data_aquisicao: new Date().toISOString(),
+      }));
 
-    await this.repoHabJog.createBatch(toSave);
+      await this.repoHabJog.createBatch(toSave);
 
-    this.habilidadesJogador = this.normalizeHabJog(
-      (await this.repoHabJog.getLocal()).filter(h => h.jogador === this.userEmail)
-    );
+      this.habilidadesJogador = this.normalizeHabJog(
+        (await this.repoHabJog.getLocal()).filter(h => h.jogador === this.userEmail)
+      );
 
-    this.renderizarArvores();
-  } finally {
-    this.processando = false;
+      this.renderizarArvores();
+    } finally {
+      this.processando = false;
+    }
   }
-}
 
-async removerHabilidadeJogador(habilidade: HabilidadeDomain) {
-  const dependentes = this.coletarDependentes(habilidade);
+  async removerHabilidadeJogador(habilidade: HabilidadeDomain) {
+    const dependentes = this.coletarDependentes(habilidade);
 
-  // filtra apenas os dependentes que o jogador realmente possui
-  const dependentesJogador = dependentes.filter(d => this.temHabilidade(d.id));
-  const cadeia = [habilidade, ...dependentesJogador];
+    // filtra apenas os dependentes que o jogador realmente possui
+    const dependentesJogador = dependentes.filter(d => this.temHabilidade(d.id));
+    const cadeia = [habilidade, ...dependentesJogador];
 
-  const lista = cadeia.map(d => `- ${d.habilidade} (Lv ${d.nivel})`).join('\n');
-  if (!confirm(`⚠️ Deseja realmente remover a habilidade?\n\n${lista}`)) return;
+    const lista = cadeia.map(d => `- ${d.habilidade} (Lv ${d.nivel})`).join('\n');
+    if (!confirm(`⚠️ Deseja realmente remover a habilidade?\n\n${lista}`)) return;
 
-  this.processando = true;
-  try {
-    const registrosRemover = this.habilidadesJogador.filter(
-      hj => cadeia.some(h => String(h.id) === String(hj.habilidade))
-    );
-    const idsRemover = registrosRemover.map(r => r.id);
+    this.processando = true;
+    try {
+      const registrosRemover = this.habilidadesJogador.filter(
+        hj => cadeia.some(h => String(h.id) === String(hj.habilidade))
+      );
+      const idsRemover = registrosRemover.map(r => r.id);
 
-    await this.repoHabJog.deleteBatch(idsRemover);
+      await this.repoHabJog.deleteBatch(idsRemover);
 
-    this.habilidadesJogador = this.normalizeHabJog(
-      (await this.repoHabJog.getLocal()).filter(h => h.jogador === this.userEmail)
-    );
+      this.habilidadesJogador = this.normalizeHabJog(
+        (await this.repoHabJog.getLocal()).filter(h => h.jogador === this.userEmail)
+      );
 
-    this.renderizarArvores();
-  } finally {
-    this.processando = false;
+      this.renderizarArvores();
+    } finally {
+      this.processando = false;
+    }
   }
-}
 
 
   fecharModal() {
