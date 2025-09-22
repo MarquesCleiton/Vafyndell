@@ -2,11 +2,8 @@
 
   <!-- Barra de pesquisa -->
   <div class="p-3 bg-black border-bottom position-sticky top-0" style="z-index: 10;">
-    <input type="text"
-           class="form-control search-bar rounded-pill px-3"
-           placeholder="🔍 Pesquisar anotações..."
-           [(ngModel)]="filtro"
-           (input)="aplicarFiltro()" />
+    <input type="text" class="form-control search-bar rounded-pill px-3" placeholder="🔍 Pesquisar anotações..."
+      [(ngModel)]="filtro" (input)="aplicarFiltro()" />
   </div>
 
   <!-- Conteúdo -->
@@ -22,8 +19,7 @@
       </div>
 
       <!-- Vazio -->
-      <div *ngIf="!carregando && secoesFiltradas.length === 0"
-           class="text-center text-muted py-5">
+      <div *ngIf="!carregando && secoesFiltradas.length === 0" class="text-center text-muted py-5">
         Nenhuma anotação encontrada.
       </div>
 
@@ -33,7 +29,7 @@
 
           <!-- Cabeçalho -->
           <button class="btn btn-categoria w-100 text-start d-flex justify-content-between align-items-center"
-                  (click)="toggleSecao(secao)">
+            (click)="toggleSecao(secao)">
             <span class="fw-bold">📅 {{ formatarData(secao.data) }}</span>
             <span>{{ secao.expandido ? '−' : '+' }}</span>
           </button>
@@ -42,15 +38,14 @@
           <div *ngIf="secao.expandido" class="mt-2">
             <div class="row row-cols-1 g-2">
               <div class="col" *ngFor="let anot of secao.itens">
-                <div class="card anotacao-card shadow-sm h-100 p-3"
-                     (click)="abrirAnotacao(anot)" style="cursor: pointer;">
+                <div class="card anotacao-card shadow-sm h-100 p-3">
 
                   <!-- Cabeçalho -->
-                  <div class="d-flex align-items-center mb-2">
+                  <div class="d-flex align-items-center mb-2" (click)="abrirAnotacao(anot)"
+                    style="cursor: pointer; flex:1;">
                     <div class="item-thumb me-3">
-                      <img *ngIf="anot.imagem && anot.imagem !== '-'"
-                           [src]="anot.imagem"
-                           alt="{{ anot.titulo || 'Anotação' }}" />
+                      <img *ngIf="anot.imagem && anot.imagem !== '-'" [src]="anot.imagem"
+                        alt="{{ anot.titulo || 'Anotação' }}" />
                       <span *ngIf="!anot.imagem || anot.imagem === '-'">📝</span>
                     </div>
 
@@ -64,9 +59,16 @@
                   </div>
 
                   <!-- Descrição -->
-                  <p *ngIf="anot.descricao" class="small descricao-text fst-italic">
+                  <p *ngIf="anot.descricao" class="small descricao-text fst-italic" (click)="abrirAnotacao(anot)">
                     {{ anot.descricao }}
                   </p>
+
+                  <!-- Ações -->
+                  <div class="d-flex justify-content-end mt-2">
+                    <button class="btn btn-sm btn-outline-info" (click)="abrirModalTransferir(anot)">
+                      🔄 compartilhar
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -81,5 +83,47 @@
   <!-- FAB -->
   <div class="fab-stack">
     <button class="fab fab-primary" (click)="novaAnotacao()">＋</button>
+  </div>
+</div>
+
+<!-- Modal Transferência -->
+<!-- Modal Transferência -->
+<div class="modal fade modal-backdrop-blur" id="modalTransferir" tabindex="-1" aria-hidden="true"
+  [ngClass]="{ 'show d-block': modalAberto }">
+  <div class="modal-dialog">
+    <div class="modal-content bg-dark text-light">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title">🔄 compartilhar Anotação</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="fecharModal()"></button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Prévia -->
+        <div *ngIf="anotacaoSelecionada" class="mb-3">
+          <h6 class="fw-bold">{{ anotacaoSelecionada.titulo }}</h6>
+          <!-- 🔑 aceita quebras de linha -->
+          <p class="small fst-italic descricao-text">{{ anotacaoSelecionada.descricao }}</p>
+        </div>
+
+        <!-- Seleção de jogador -->
+        <label class="form-label">🙍 Jogador Destinatário</label>
+        <select class="form-select bg-dark text-light" [(ngModel)]="jogadorDestino">
+          <option value="__all__">Todos os jogadores</option>
+          <option *ngFor="let j of jogadores" [value]="j.email">
+            🙍 {{ j.personagem }}
+          </option>
+        </select>
+
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-outline-light" (click)="fecharModal()">Cancelar</button>
+        <button type="button" class="btn btn-success" (click)="confirmarTransferencia()" [disabled]="processando">
+          <ng-container *ngIf="!processando">📤 compartilhar</ng-container>
+          <ng-container *ngIf="processando">
+            <span class="spinner-border spinner-border-sm"></span>
+          </ng-container>
+        </button>
+      </div>
+    </div>
   </div>
 </div>
