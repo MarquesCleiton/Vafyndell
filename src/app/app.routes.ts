@@ -33,9 +33,11 @@ export const routes: Routes = [
   { path: 'skills-jogador', loadComponent: () => import('./pages/skilltree-pages/skills-jogador/skills-jogador').then((m) => m.SkillsJogador) },
   { path: 'troca-de-itens', loadComponent: () => import('./pages/troca-de-itens/troca-de-itens').then((m) => m.TrocaDeItens) },
   { path: 'troca-de-itens/:id', loadComponent: () => import('./pages/troca-de-itens/troca-de-itens').then((m) => m.TrocaDeItens) },
-
   // 🔑 aqui está o ajuste → rota com parâmetro :id
   { path: 'item-catalogo/:id', loadComponent: () => import('./pages/catalogo-pages/item-catalogo/item-catalogo').then((m) => m.ItemCatalogo) },
+  { path: 'skilltree', loadComponent: () => import('./pages/skilltree/skilltree/skilltree').then((m) => m.SkillTree) },
+  { path: 'edicao-skilltree', loadComponent: () => import('./pages/skilltree/edicao-skilltree/edicao-skilltree').then((m) => m.EdicaoSkillTree) },
+  { path: 'edicao-skilltree/:id', loadComponent: () => import('./pages/skilltree/edicao-skilltree/edicao-skilltree').then((m) => m.EdicaoSkillTree) },
 
   { path: '**', redirectTo: 'login' }
 ];

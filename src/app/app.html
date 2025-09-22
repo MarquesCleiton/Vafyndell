@@ -8,7 +8,8 @@
 
     <mat-nav-list>
       <a mat-list-item (click)="navigateWithClose('/jogador', sidenav)">🦁 Jogador</a>
-      <a mat-list-item (click)="navigateWithClose('/skills-jogador', sidenav)">🧠 Skills</a>
+      <a mat-list-item (click)="navigateWithClose('/skilltree', sidenav)">🧠 Skills</a>
+      <a mat-list-item (click)="navigateWithClose('/edicao-skilltree', sidenav)">➕ editarskilltree</a>
       <a mat-list-item (click)="navigateWithClose('/inventario-jogador', sidenav)">📦 Inventário</a>
       <a mat-list-item (click)="navigateWithClose('/oficina', sidenav)">⚒️ Oficina</a>
       <a mat-list-item (click)="navigateWithClose('/batalha', sidenav)">⚔️ Batalha</a>
@@ -48,7 +49,7 @@
         <mat-icon>person</mat-icon>
         <small>Jogador</small>
       </button>
-      <button mat-button (click)="navigateTo('/skills-jogador')" class="nav-item d-flex flex-column align-items-center">
+      <button mat-button (click)="navigateTo('/skilltree')" class="nav-item d-flex flex-column align-items-center">
         <mat-icon>psychology</mat-icon>
         <small>Skills</small>
       </button>

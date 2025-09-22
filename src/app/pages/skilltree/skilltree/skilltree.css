@@ -1,0 +1,168 @@
+/* Geral */
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: #f1f1f1;
+}
+
+/* Tabs */
+.nav-tabs {
+  border-bottom: 1px solid #333;
+}
+.nav-tabs .nav-link {
+  color: #bbb;
+  background: transparent;
+  border: none;
+  font-weight: 500;
+  padding: 8px 14px;
+  transition: color 0.2s, border-bottom 0.2s;
+}
+.nav-tabs .nav-link:hover {
+  color: #fff;
+}
+.nav-tabs .nav-link.active {
+  color: #fff;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid #007bff;
+  font-weight: 600;
+}
+
+/* Scroll horizontal */
+.arvores-scroll {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 14px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.arvores-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.arvores-scroll::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+
+/* Card da árvore */
+.arvore-card {
+  flex: 0 0 340px;
+  background: #181818;
+  border-radius: 12px;
+  padding: 16px;
+  scroll-snap-align: center;
+  transition: transform 0.2s ease;
+}
+.arvore-card:hover {
+  transform: translateY(-4px);
+}
+.arvore-titulo {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #eaeaea;
+  text-align: center;
+}
+
+/* Grafo ocupa mais espaço */
+.cy-arvore {
+  width: 100%;
+  height: 65vh;
+  background: #0e0e0e;
+  border-radius: 8px;
+}
+
+/* Modal */
+.modal-content {
+  background: #1f1f1f;
+  color: #f1f1f1;
+}
+.modal-header .modal-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.modal-body p {
+  font-size: 0.95rem;
+  color: #ccc;
+}
+.modal-footer {
+  gap: 8px;
+}
+
+/* Backdrop com blur */
+.modal-backdrop-blur {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 15, 15, 0.6);
+  backdrop-filter: blur(6px);
+  z-index: 1040;
+}
+#habilidadeModal {
+  z-index: 1050;
+}
+
+/* Modal escuro */
+.detalhe-card {
+  background: #1e1e1e;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #f1f1f1;
+  white-space: pre-line;
+}
+.detalhe-extra {
+  font-size: 0.9rem;
+  color: #aaa;
+}
+.detalhe-extra span {
+  font-weight: 600;
+  color: #ddd;
+}
+.modal-header .modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* Botões minimalistas no estilo batalha */
+.modal-footer .btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+/* Warning */
+.modal-footer .btn-outline-warning {
+  border-color: #ffc107;
+  color: #ffc107;
+}
+.modal-footer .btn-outline-warning:hover {
+  background: #ffc107;
+  color: #000;
+}
+
+/* Danger */
+.modal-footer .btn-outline-danger {
+  border-color: #ff4d6d;
+  color: #ff4d6d;
+}
+.modal-footer .btn-outline-danger:hover {
+  background: #ff4d6d;
+  color: #fff;
+}
+
+/* Success */
+.modal-footer .btn-outline-success {
+  border-color: #28a745;
+  color: #28a745;
+}
+.modal-footer .btn-outline-success:hover {
+  background: #28a745;
+  color: #fff;
+}

@@ -12,6 +12,10 @@ export class IndexedDBClientV2 {
     'NPCs',
     'Anotacoes',
     'Metadados',
+    'Caminhos',
+    'Arvores',
+    'Habilidades',
+    'Habilidades_jogadores'
   ];
 
   static async create(): Promise<IndexedDBClientV2> {
