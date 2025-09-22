@@ -7,18 +7,18 @@
     </div>
 
     <mat-nav-list>
-      <a mat-list-item (click)="navigateWithClose('/jogador', sidenav)">🦁 Jogador</a>
-      <a mat-list-item (click)="navigateWithClose('/skilltree', sidenav)">🧠 Skills</a>
-      <a mat-list-item (click)="navigateWithClose('/edicao-skilltree', sidenav)">➕ editarskilltree</a>
-      <a mat-list-item (click)="navigateWithClose('/inventario-jogador', sidenav)">📦 Inventário</a>
-      <a mat-list-item (click)="navigateWithClose('/oficina', sidenav)">⚒️ Oficina</a>
+      <a mat-list-item (click)="navigateWithClose('/jogador', sidenav)">🧝 Jogador</a>
+      <a mat-list-item (click)="navigateWithClose('/skilltree', sidenav)">✨ Skills</a>
+      <a mat-list-item (click)="navigateWithClose('/inventario-jogador', sidenav)">🎒 Inventário</a>
+      <a mat-list-item (click)="navigateWithClose('/oficina', sidenav)">⚒️ Bancada</a>
       <a mat-list-item (click)="navigateWithClose('/batalha', sidenav)">⚔️ Batalha</a>
-      <a mat-list-item (click)="navigateWithClose('/anotacoes', sidenav)">📝 Notas</a>
+      <a mat-list-item (click)="navigateWithClose('/anotacoes', sidenav)">📜 Notas</a>
 
       <mat-divider></mat-divider>
 
       <a mat-list-item (click)="navigateWithClose('/catalogo', sidenav)">📚 Catálogo</a>
       <a mat-list-item (click)="navigateWithClose('/npcs', sidenav)">👹 Feras & Vilões</a>
+      <a mat-list-item (click)="navigateWithClose('/edicao-skilltree', sidenav)">➕ Cadastrar Skill</a>
     </mat-nav-list>
 
   </mat-sidenav>
@@ -46,28 +46,28 @@
     <nav
       class="bottom-nav bg-dark border-top border-secondary d-flex justify-content-around py-2 fixed-bottom d-lg-none">
       <button mat-button (click)="navigateTo('/jogador')" class="nav-item d-flex flex-column align-items-center">
-        <mat-icon>person</mat-icon>
+        <h6 class="m-0">🧝</h6>
         <small>Jogador</small>
       </button>
       <button mat-button (click)="navigateTo('/skilltree')" class="nav-item d-flex flex-column align-items-center">
-        <mat-icon>psychology</mat-icon>
+        <h6 class="m-0">✨</h6>
         <small>Skills</small>
       </button>
       <button mat-button (click)="navigateTo('/inventario-jogador')"
         class="nav-item d-flex flex-column align-items-center">
-        <mat-icon>inventory</mat-icon>
+        <h6 class="m-0">🎒</h6>
         <small>Inventário</small>
       </button>
       <button mat-button (click)="navigateTo('/oficina')" class="nav-item d-flex flex-column align-items-center">
-        <mat-icon>build</mat-icon>
-        <small>Oficina</small>
+        <h6 class="m-0">⚒️</h6>
+        <small>Bancada</small>
       </button>
       <button mat-button (click)="navigateTo('/batalha')" class="nav-item d-flex flex-column align-items-center">
-        <mat-icon>swords</mat-icon>
+       <h6 class="m-0">⚔️</h6> 
         <small>Batalha</small>
       </button>
       <button mat-button (click)="navigateTo('/anotacoes')" class="nav-item d-flex flex-column align-items-center">
-        <mat-icon>notes</mat-icon>
+        <h6 class="m-0">📜</h6>
         <small>Notas</small>
       </button>
     </nav>

@@ -77,7 +77,7 @@
     <button class="fab fab-success"
             (click)="confirmarTroca()"
             [disabled]="processando || !jogadorSelecionado || itensTroca.length===0">
-      <ng-container *ngIf="!processando">✔️</ng-container>
+      <ng-container *ngIf="!processando">📤</ng-container>
       <ng-container *ngIf="processando">
         <span class="spinner-border spinner-border-sm"></span>
       </ng-container>
