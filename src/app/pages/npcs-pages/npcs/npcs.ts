@@ -28,7 +28,7 @@ export class Npcs implements OnInit {
   carregando = true;
   filtro = '';
 
-  abaAtiva: 'bestiais' | 'inimigos' = 'bestiais';
+  abaAtiva: 'bestiais' | 'inimigos' | 'ocultos' = 'bestiais';
 
   private repo = new BaseRepositoryV2<NpcDomain>('NPCs');
   private jogadorRepo = new BaseRepositoryV2<JogadorDomain>('Personagem');
@@ -40,7 +40,7 @@ export class Npcs implements OnInit {
 
   ehMestre = false;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   async ngOnInit() {
     this.carregando = true;
@@ -91,7 +91,12 @@ export class Npcs implements OnInit {
 
     lista
       .filter((npc) => {
-        // filtro por aba
+        // 🔎 filtro por aba
+        if (this.abaAtiva === 'ocultos') {
+          // apenas mestres podem ver → todos NPCs invisíveis
+          return this.ehMestre && !npc.visivel_jogadores;
+        }
+
         const porClassificacao =
           this.abaAtiva === 'bestiais'
             ? npc.classificacao === 'Bestial'
@@ -109,7 +114,6 @@ export class Npcs implements OnInit {
       });
 
     this.categorias = Array.from(mapa.entries())
-      // ordena na ordem fixa: Comum → Elite → Mágico → Lendário
       .sort(([a], [b]) => this.ordemTipos(a) - this.ordemTipos(b))
       .map(([nome, itens]) => ({
         nome,
@@ -119,6 +123,7 @@ export class Npcs implements OnInit {
 
     this.categoriasFiltradas = [...this.categorias];
   }
+
 
   private ordemTipos(tipo: string): number {
     const ordem = ['Comum', 'Elite', 'Mágico', 'Lendário'];
@@ -149,10 +154,11 @@ export class Npcs implements OnInit {
     return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
   }
 
-  selecionarAba(aba: 'bestiais' | 'inimigos') {
+  selecionarAba(aba: 'bestiais' | 'inimigos' | 'ocultos') {
     this.abaAtiva = aba;
-    this.processarCategorias(this.todosNpcs); // 🔹 reprocessa cache
+    this.processarCategorias(this.todosNpcs);
   }
+
 
   toggleCategoria(cat: CategoriaNpc) {
     cat.expandido = !cat.expandido;

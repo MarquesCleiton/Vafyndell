@@ -28,11 +28,12 @@ export class Catalogo implements OnInit {
   carregando = true;
   filtro = '';
 
-  abaAtiva: 'recursos' | 'equipamentos' | 'pocoes' | 'outros' = 'recursos';
+  abaAtiva: 'recursos' | 'equipamentos' | 'pocoes' | 'outros' | 'ocultos' = 'recursos';
 
   private repo = new BaseRepositoryV2<CatalogoDomain>('Catalogo');
   private jogadorRepo = new BaseRepositoryV2<JogadorDomain>('Personagem');
   private visibilidadeService = new VisibilidadeService<CatalogoDomain>(this.repo);
+  private todosItens: CatalogoDomain[] = []; // cache local em memória
 
   ehMestre = false;
   loadingVisibilidade: Record<string, boolean> = {};
@@ -53,7 +54,7 @@ export class Catalogo implements OnInit {
     outros: ['Outros'],
   };
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   async ngOnInit() {
     this.carregando = true;
@@ -81,14 +82,16 @@ export class Catalogo implements OnInit {
   private async loadLocalAndSync() {
     console.log('[Catalogo] 📂 Carregando itens locais...');
     const locais = await this.repo.getLocal();
-    this.processarItens(locais);
+    this.todosItens = locais;                    // 🔹 salva no cache
+    this.processarItens(this.todosItens);
 
     // sync em paralelo
     this.repo.sync().then(async (updated) => {
       if (updated) {
         console.log('[Catalogo] 🔄 Itens atualizados no servidor, recarregando...');
         const atualizados = await this.repo.getLocal();
-        this.processarItens(atualizados);
+        this.todosItens = atualizados;           // 🔹 atualiza cache
+        this.processarItens(this.todosItens);
       }
     });
 
@@ -96,9 +99,11 @@ export class Catalogo implements OnInit {
     if (locais.length === 0) {
       console.log('[Catalogo] 🌐 Nenhum item local, forçando fetch online...');
       const online = await this.repo.forceFetch();
-      this.processarItens(online);
+      this.todosItens = online;                  // 🔹 atualiza cache
+      this.processarItens(this.todosItens);
     }
   }
+
 
   private processarItens(lista: CatalogoDomain[]) {
     console.log(`[Catalogo] Processando ${lista.length} itens...`);
@@ -106,7 +111,12 @@ export class Catalogo implements OnInit {
     const mapa = new Map<string, CatalogoDomain[]>();
 
     lista
-      .filter((item) => (this.ehMestre ? true : item.visivel_jogadores))
+      .filter((item) => {
+        if (this.abaAtiva === 'ocultos') {
+          return this.ehMestre && !item.visivel_jogadores;
+        }
+        return this.ehMestre ? true : item.visivel_jogadores;
+      })
       .forEach((item) => {
         const cat = item.categoria || 'Outros';
         if (!mapa.has(cat)) mapa.set(cat, []);
@@ -123,6 +133,7 @@ export class Catalogo implements OnInit {
 
     this.categoriasFiltradas = [...this.categorias];
   }
+
 
   aplicarFiltro() {
     const termo = this.normalizarTexto(this.filtro);
@@ -158,9 +169,11 @@ export class Catalogo implements OnInit {
       .trim();
   }
 
-  selecionarAba(aba: 'recursos' | 'equipamentos' | 'pocoes' | 'outros') {
+  selecionarAba(aba: 'recursos' | 'equipamentos' | 'pocoes' | 'outros' | 'ocultos') {
     this.abaAtiva = aba;
+    this.processarItens(this.todosItens); // 🔹 sempre reprocessa o cache
   }
+
 
   pertenceAba(categoria: string): boolean {
     return this.mapaAbas[this.abaAtiva].includes(categoria);
