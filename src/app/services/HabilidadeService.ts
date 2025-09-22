@@ -64,21 +64,26 @@ export class HabilidadeService {
     });
 
     // Sempre renderizar a habilidade em edição (nova ou existente)
-    if (habilidadeEdit.habilidade && habilidadeEdit.arvore) {
+    // Sempre renderizar a habilidade em edição (nova ou existente)
+    if (habilidadeEdit.caminho && habilidadeEdit.arvore) {
       const tempId = habilidadeEdit.id || 'novaHab';
+      const label = habilidadeEdit.habilidade
+        ? `${habilidadeEdit.habilidade}\nLv ${habilidadeEdit.nivel}`
+        : `Nova Habilidade\nLv ${habilidadeEdit.nivel}`;
+
       elements.push({
-        data: {
-          id: tempId,
-          label: `${habilidadeEdit.habilidade}\nLv ${habilidadeEdit.nivel}`,
-        },
+        data: { id: tempId, label },
         classes: editMode ? 'habilidade-edit' : 'nova-habilidade',
       });
+
       if (dependenciaSelecionada) {
         elements.push({
           data: { source: String(dependenciaSelecionada), target: tempId },
         });
       }
     }
+
+
 
     const cyInstance = cytoscape({
       container,
@@ -243,4 +248,6 @@ export class HabilidadeService {
 
     return true;
   }
+
+
 }

@@ -45,7 +45,7 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
     private route: ActivatedRoute,
     public router: Router,
     private habilidadeService: HabilidadeService
-  ) {}
+  ) { }
 
   async ngOnInit() {
     await this.habilidadeService.carregarTudo();
@@ -117,6 +117,8 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
       this.editMode,
       (h) => (this.habilidadeSelecionada = h)
     );
+
+
   }
 
   async salvar(form: NgForm) {
@@ -164,13 +166,15 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
 
   atualizarPreview() {
     setTimeout(() => {
+      // 🔥 força sincronização com seleção atual
+      this.habilidadeEdit.caminho = this.caminhoSelecionado || '';
+      this.habilidadeEdit.arvore = this.arvoreSelecionada || '';
+
       this.renderPreview();
-      // 🔥 manter detalhes sincronizados em tempo real
-      if (this.editMode) {
-        this.habilidadeSelecionada = { ...this.habilidadeEdit };
-      }
+      this.habilidadeSelecionada = { ...this.habilidadeEdit };
     }, 0);
   }
+
 
   get arvoreSelecionadaNome(): string {
     if (this.arvoreSelecionada === 'nova')
