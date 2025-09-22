@@ -12,7 +12,11 @@ export class BootstrapService {
       'Personagem',
       'NPCs',
       'Anotacoes',
+      'Caminhos',
+      'Arvores',
+      'Habilidades',
       'Metadados',
+      'Habilidades_jogadores',
     ];
 
     // 🔄 loop de frases enquanto carrega do servidor

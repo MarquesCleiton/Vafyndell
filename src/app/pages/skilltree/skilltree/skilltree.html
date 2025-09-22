@@ -2,57 +2,90 @@
   <div class="flex-grow-1 p-3 d-flex justify-content-center">
     <div class="skilltree-container w-100">
 
-      <!-- Título -->
       <h2 class="page-title">🌳 Árvores de Habilidades</h2>
 
       <!-- Tabs -->
       <ul class="nav nav-tabs custom-tabs mb-4">
         <li class="nav-item" *ngFor="let caminho of caminhos">
-          <a
-            class="nav-link"
-            [class.active]="abaAtiva === caminho.id"
-            (click)="selecionarAba(caminho)"
-          >
+          <a class="nav-link" [class.active]="abaAtiva === caminho.id" (click)="selecionarAba(caminho)">
             {{ caminho.caminho }}
           </a>
         </li>
       </ul>
 
       <!-- Loading -->
-      <div *ngIf="carregando" class="text-center py-5">
+      @if (carregando) {
+      <div class="text-center py-5">
         <div class="spinner-border text-light"></div>
         <p class="mt-2">Carregando habilidades...</p>
       </div>
+      }
 
       <!-- Árvores -->
-      <div *ngIf="!carregando && abaAtiva" class="arvores-scroll">
+      @if (!carregando && abaAtiva) {
+      <div class="arvores-scroll">
         <div *ngFor="let arvore of arvoresAtivas" class="arvore-card shadow-lg">
           <h3 class="arvore-titulo">{{ arvore.arvore }}</h3>
           <div #cyContainer class="cy-arvore"></div>
         </div>
       </div>
+      }
 
-      <!-- Detalhe da Habilidade -->
-      <div *ngIf="habilidadeSelecionada" class="detalhe-card shadow-lg mt-4 p-3 position-relative">
-        <!-- Botão editar -->
-        <button
-          class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2"
-          (click)="editarHabilidade(habilidadeSelecionada.id)"
-        >
-          ✏️
-        </button>
+      <!-- Backdrop com blur -->
+      <div class="modal-backdrop-blur" *ngIf="habilidadeSelecionada"></div>
 
-        <h4 class="detalhe-nome">
-          {{ habilidadeSelecionada.habilidade }}
-          <span class="nivel">Lv {{ habilidadeSelecionada.nivel }}</span>
-        </h4>
+      <!-- Modal Detalhe Habilidade -->
+      <div class="modal fade" id="habilidadeModal" tabindex="-1" aria-hidden="true"
+        [ngClass]="{ 'show d-block': habilidadeSelecionada }" *ngIf="habilidadeSelecionada">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content bg-dark text-light detalhe-card shadow-lg">
+            <div class="modal-header border-0">
+              <h5 class="modal-title fw-bold">
+                {{ habilidadeSelecionada.habilidade }}
+                <span class="nivel">Lv {{ habilidadeSelecionada.nivel }}</span>
+              </h5>
+              <button type="button" class="btn-close btn-close-white" (click)="fecharModal()"></button>
+            </div>
 
-        <p class="detalhe-descricao">{{ habilidadeSelecionada.descricao }}</p>
+            <div class="modal-body">
+              <p class="mb-2">{{ habilidadeSelecionada.descricao }}</p>
 
-        <div class="detalhe-extra" *ngIf="habilidadeSelecionada.requisitos">
-          <span>📌 Requisito:</span> {{ habilidadeSelecionada.requisitos }}
+              <div *ngIf="habilidadeSelecionada?.requisitos" class="detalhe-extra">
+                <span>📌 Requisito:</span> <br>{{ habilidadeSelecionada.requisitos }}
+              </div>
+            </div>
+
+            <div class="modal-footer border-0 d-flex justify-content-end gap-2">
+              <!-- Editar -->
+              <button class="btn btn-sm btn-outline-warning" (click)="editarHabilidade(habilidadeSelecionada!.id)">
+                ✏️
+              </button>
+
+              <!-- Adicionar / Remover com loading -->
+              <ng-container *ngIf="temHabilidade(habilidadeSelecionada?.id); else addBtn">
+                <button class="btn btn-sm btn-outline-danger" [disabled]="processando"
+                  (click)="removerHabilidadeJogador(habilidadeSelecionada!)">
+                  <ng-container *ngIf="processando; else removerIcon">
+                    <span class="spinner-border spinner-border-sm"></span>
+                  </ng-container>
+                  <ng-template #removerIcon>❌</ng-template>
+                </button>
+              </ng-container>
+
+              <ng-template #addBtn>
+                <button class="btn btn-sm btn-outline-success" [disabled]="processando"
+                  (click)="adicionarHabilidadeJogador(habilidadeSelecionada!)">
+                  <ng-container *ngIf="processando; else addIcon">
+                    <span class="spinner-border spinner-border-sm"></span>
+                  </ng-container>
+                  <ng-template #addIcon>➕</ng-template>
+                </button>
+              </ng-template>
+            </div>
+          </div>
         </div>
       </div>
+
 
     </div>
   </div>

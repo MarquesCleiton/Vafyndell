@@ -20,10 +20,26 @@ export class HabilidadeService {
   arvores: ArvoreDomain[] = [];
   habilidades: HabilidadeDomain[] = [];
 
+  /** 🔥 Carrega tudo já normalizando IDs para string */
   async carregarTudo() {
-    this.caminhos = await this.repoCaminho.getLocal();
-    this.arvores = await this.repoArvore.getLocal();
-    this.habilidades = await this.repoHab.getLocal();
+    this.caminhos = (await this.repoCaminho.getLocal()).map(c => ({
+      ...c,
+      id: String(c.id),
+    }));
+
+    this.arvores = (await this.repoArvore.getLocal()).map(a => ({
+      ...a,
+      id: String(a.id),
+      caminho: String(a.caminho),
+    }));
+
+    this.habilidades = (await this.repoHab.getLocal()).map(h => ({
+      ...h,
+      id: String(h.id),
+      caminho: String(h.caminho),
+      arvore: String(h.arvore),
+      dependencia: h.dependencia ? String(h.dependencia) : null,
+    }));
   }
 
   getArvoresDoCaminho(caminhoId: string | null): ArvoreDomain[] {
@@ -48,14 +64,14 @@ export class HabilidadeService {
   ): Core {
     const elements: ElementDefinition[] = [];
 
-    // Habilidades já existentes, ignorando a que está em edição
+    // Habilidades já existentes (ignora a que está em edição)
     habilidades.forEach((h) => {
-      if (habilidadeEdit.id && String(h.id) === String(habilidadeEdit.id)) {
-        return; // não renderiza duplicado
-      }
+      if (habilidadeEdit.id && String(h.id) === String(habilidadeEdit.id)) return;
+
       elements.push({
         data: { id: String(h.id), label: `${h.habilidade}\nLv ${h.nivel}` },
       });
+
       if (h.dependencia) {
         elements.push({
           data: { source: String(h.dependencia), target: String(h.id) },
@@ -64,7 +80,6 @@ export class HabilidadeService {
     });
 
     // Sempre renderizar a habilidade em edição (nova ou existente)
-    // Sempre renderizar a habilidade em edição (nova ou existente)
     if (habilidadeEdit.caminho && habilidadeEdit.arvore) {
       const tempId = habilidadeEdit.id || 'novaHab';
       const label = habilidadeEdit.habilidade
@@ -72,18 +87,16 @@ export class HabilidadeService {
         : `Nova Habilidade\nLv ${habilidadeEdit.nivel}`;
 
       elements.push({
-        data: { id: tempId, label },
+        data: { id: String(tempId), label },
         classes: editMode ? 'habilidade-edit' : 'nova-habilidade',
       });
 
       if (dependenciaSelecionada) {
         elements.push({
-          data: { source: String(dependenciaSelecionada), target: tempId },
+          data: { source: String(dependenciaSelecionada), target: String(tempId) },
         });
       }
     }
-
-
 
     const cyInstance = cytoscape({
       container,
@@ -143,7 +156,7 @@ export class HabilidadeService {
     });
 
     cyInstance.on('tap', 'node', (evt) => {
-      const id = evt.target.id();
+      const id = String(evt.target.id());
       const found = habilidades.find((h) => String(h.id) === id) || null;
       onSelect(found);
     });
@@ -168,7 +181,7 @@ export class HabilidadeService {
     if (arvoreSelecionada === 'nova' && novaArvoreNome.trim()) {
       const novaArvore: ArvoreDomain = {
         id: IdUtils.generateULID(),
-        caminho: caminhoSelecionado || '',
+        caminho: String(caminhoSelecionado || ''),
         arvore: novaArvoreNome.trim(),
       };
       arvores.push(novaArvore);
@@ -177,17 +190,13 @@ export class HabilidadeService {
       creates['Arvores'] = [novaArvore];
     }
 
-    // Habilidade
-    if (!habilidadeEdit.id) {
-      habilidadeEdit.id = IdUtils.generateULID();
-      habilidadeEdit.caminho = caminhoSelecionado || '';
-      habilidadeEdit.arvore = arvoreSelecionada || '';
-    }
+    // Normalização 🔥
+    habilidadeEdit.id = String(habilidadeEdit.id || IdUtils.generateULID());
+    habilidadeEdit.caminho = String(caminhoSelecionado || '');
+    habilidadeEdit.arvore = String(arvoreSelecionada || '');
+    habilidadeEdit.dependencia = dependenciaSelecionada ? String(dependenciaSelecionada) : null;
 
-    habilidadeEdit.dependencia = dependenciaSelecionada
-      ? String(dependenciaSelecionada)
-      : null;
-
+    // Insert ou Update
     if (!habilidades.find((h) => String(h.id) === habilidadeEdit.id)) {
       if (!creates['Habilidades']) creates['Habilidades'] = [];
       creates['Habilidades'].push(habilidadeEdit);
@@ -205,7 +214,7 @@ export class HabilidadeService {
 
   async excluirHabilidade(id: string) {
     return await BaseRepositoryV2.batch({
-      deleteById: { Habilidades: [{ id }] },
+      deleteById: { Habilidades: [{ id: String(id) }] },
     });
   }
 
@@ -231,7 +240,8 @@ export class HabilidadeService {
 
       dependentes.forEach((h) => {
         h.dependencia = null;
-        const idx = habilidades.findIndex((x) => x.id === h.id);
+        h.id = String(h.id); // 🔥 normaliza
+        const idx = habilidades.findIndex((x) => String(x.id) === String(h.id));
         if (idx !== -1) habilidades[idx] = { ...h };
       });
     }
@@ -242,12 +252,10 @@ export class HabilidadeService {
     }
 
     await BaseRepositoryV2.batch({
-      deleteById: { Habilidades: [{ id }] },
+      deleteById: { Habilidades: [{ id: String(id) }] },
       updateById: Object.keys(updates).length ? updates : undefined,
     });
 
     return true;
   }
-
-
 }

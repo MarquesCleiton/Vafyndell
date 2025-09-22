@@ -6,7 +6,7 @@
   color: #f1f1f1;
 }
 
-/* Tabs corrigidas */
+/* Tabs */
 .nav-tabs {
   border-bottom: 1px solid #333;
 }
@@ -25,7 +25,7 @@
   color: #fff;
   background: transparent;
   border: none;
-  border-bottom: 2px solid #007bff; /* destaque elegante */
+  border-bottom: 2px solid #007bff;
   font-weight: 600;
 }
 
@@ -65,42 +65,104 @@
   color: #eaeaea;
   text-align: center;
 }
+
+/* Grafo ocupa mais espaço */
 .cy-arvore {
   width: 100%;
-  height: 320px;
+  height: 65vh;
   background: #0e0e0e;
   border-radius: 8px;
 }
 
-/* Card de detalhe */
-.detalhe-card {
+/* Modal */
+.modal-content {
   background: #1f1f1f;
-  border-radius: 12px;
-  padding: 16px 20px;
   color: #f1f1f1;
 }
-.detalhe-nome {
+.modal-header .modal-title {
   font-size: 1.2rem;
   font-weight: 700;
-  margin-bottom: 8px;
 }
-.detalhe-nome .nivel {
-  font-size: 0.9rem;
-  font-weight: 500;
-  margin-left: 6px;
-  color: #999;
-}
-.detalhe-descricao {
+.modal-body p {
   font-size: 0.95rem;
-  margin-bottom: 10px;
   color: #ccc;
 }
+.modal-footer {
+  gap: 8px;
+}
+
+/* Backdrop com blur */
+.modal-backdrop-blur {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 15, 15, 0.6);
+  backdrop-filter: blur(6px);
+  z-index: 1040;
+}
+#habilidadeModal {
+  z-index: 1050;
+}
+
+/* Modal escuro */
+.detalhe-card {
+  background: #1e1e1e;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #f1f1f1;
+  white-space: pre-line;
+}
 .detalhe-extra {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: #aaa;
-  margin-top: 4px;
 }
 .detalhe-extra span {
   font-weight: 600;
   color: #ddd;
+}
+.modal-header .modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* Botões minimalistas no estilo batalha */
+.modal-footer .btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+/* Warning */
+.modal-footer .btn-outline-warning {
+  border-color: #ffc107;
+  color: #ffc107;
+}
+.modal-footer .btn-outline-warning:hover {
+  background: #ffc107;
+  color: #000;
+}
+
+/* Danger */
+.modal-footer .btn-outline-danger {
+  border-color: #ff4d6d;
+  color: #ff4d6d;
+}
+.modal-footer .btn-outline-danger:hover {
+  background: #ff4d6d;
+  color: #fff;
+}
+
+/* Success */
+.modal-footer .btn-outline-success {
+  border-color: #28a745;
+  color: #28a745;
+}
+.modal-footer .btn-outline-success:hover {
+  background: #28a745;
+  color: #fff;
 }
