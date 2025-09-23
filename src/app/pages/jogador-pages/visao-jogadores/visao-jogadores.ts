@@ -7,6 +7,7 @@ import { JogadorDomain } from '../../../domain/jogadorDomain';
 import { InventarioDomain } from '../../../domain/InventarioDomain';
 import { CatalogoDomain } from '../../../domain/CatalogoDomain';
 import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
+import { Location } from '@angular/common';
 
 // ⬅️ IMPORTAR O SUBCOMPONENTE
 import { SkillTree } from '../../skilltree/skilltree/skilltree';
@@ -50,7 +51,7 @@ export class VisaoJogadores implements OnInit {
   private catalogoRepo = new BaseRepositoryV2<CatalogoDomain>('Catalogo');
   private inventarioRepo = new BaseRepositoryV2<InventarioDomain>('Inventario');
 
-  constructor(private route: ActivatedRoute, private router: Router) { }
+  constructor(private route: ActivatedRoute, private router: Router, private location: Location) { }
 
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -223,6 +224,6 @@ export class VisaoJogadores implements OnInit {
   }
 
   voltar() {
-    this.router.navigate(['/jogadores']);
+    this.location.back(); // 🔙 volta para a página anterior no histórico
   }
 }
