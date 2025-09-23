@@ -80,7 +80,7 @@ export class Batalha implements OnInit {
   async abrirDetalhes(jogador: JogadorDomain) {
     this.processando[jogador.id] = 'abrir';
     setTimeout(() => {
-      this.router.navigate(['/jogador-detalhes-batalha', jogador.id]);
+      this.router.navigate(['/visao-jogadores', jogador.id]);
       this.processando[jogador.id] = null;
     }, 400);
   }

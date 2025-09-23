@@ -15,10 +15,11 @@
   color: #fff;
   border: 1px solid #444;
 }
+
 .search-bar:focus {
   outline: none;
   border-color: #0d6efd;
-  box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.25);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
 }
 
 /* Cabeçalho de seção */
@@ -30,6 +31,7 @@
   padding: 0.6rem 1rem;
   text-align: left;
 }
+
 .btn-categoria:hover {
   background: #343a40;
   color: #fff;
@@ -42,6 +44,7 @@
   transition: transform 0.15s ease;
   color: #f1f1f1;
 }
+
 .anotacao-card:hover {
   transform: scale(1.02);
   background: #252525;
@@ -58,11 +61,13 @@
   justify-content: center;
   overflow: hidden;
 }
+
 .item-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
 .item-thumb span {
   font-size: 1.4rem;
   color: #bbb;
@@ -72,12 +77,14 @@
 .anotacao-card h6 {
   color: #fff;
 }
+
 .anotacao-card small {
   color: #ddd;
 }
+
 .anotacao-card p {
   color: #e0e0e0;
-  white-space: pre-line; /* 🔑 aceita quebra de linha */
+  white-space: pre-line;
 }
 
 /* FAB */
@@ -90,6 +97,7 @@
   gap: 15px;
   z-index: 1000;
 }
+
 .fab {
   width: 60px;
   height: 60px;
@@ -103,24 +111,35 @@
   cursor: pointer;
   transition: transform 0.2s ease;
 }
+
 .fab:hover {
   transform: scale(1.08);
 }
+
 .fab-primary {
   background: #0d6efd;
   color: #fff;
 }
+
 .fab-primary:hover {
   background: #0b5ed7;
 }
 
-/* Desktop: alinhado ao card */
-@media (min-width: 992px) {
-  .anotacoes-container {
-    padding: 0 2rem;
-  }
-  .fab-stack {
-    right: 50%;
-    transform: translateX(450px);
-  }
+/* Modal ajuste */
+.modal-content {
+  border-radius: 12px;
+}
+
+/* Modal fundo borrado */
+.modal-backdrop-blur {
+  background-color: rgba(0, 0, 0, 0.6);
+  /* camada escura */
+  backdrop-filter: blur(6px);
+  /* 🔑 desfoque */
+}
+
+/* Texto com quebras de linha */
+.descricao-text {
+  white-space: pre-line;
+  /* mantém quebras \n */
 }

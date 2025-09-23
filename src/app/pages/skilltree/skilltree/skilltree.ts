@@ -5,6 +5,7 @@ import {
   ViewChildren,
   QueryList,
   ElementRef,
+  Input,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -32,7 +33,7 @@ interface DagreLayoutOptions extends cytoscape.BaseLayoutOptions {
 export interface HabilidadeJogador {
   id: string;
   jogador: string;
-  habilidade: string; // sempre string
+  habilidade: string;
   data_aquisicao: string;
 }
 
@@ -44,6 +45,7 @@ export interface HabilidadeJogador {
   styleUrls: ['./skilltree.css'],
 })
 export class SkillTree implements OnInit, AfterViewInit {
+  @Input() jogadorId?: string; // se informado, trava edição
   @ViewChildren('cyContainer') cyContainers!: QueryList<ElementRef>;
   private cyInstances: { [arvoreId: string]: Core } = {};
 
@@ -56,23 +58,34 @@ export class SkillTree implements OnInit, AfterViewInit {
   habilidadeSelecionada: HabilidadeDomain | null = null;
   abaAtiva: string | null = null;
 
+  somenteVisualizacao = false;
+
   private repoCaminho = new BaseRepositoryV2<CaminhoDomain>('Caminhos');
   private repoArvore = new BaseRepositoryV2<ArvoreDomain>('Arvores');
   private repoHab = new BaseRepositoryV2<HabilidadeDomain>('Habilidades');
-  private repoHabJog = new BaseRepositoryV2<HabilidadeJogador>('Habilidades_jogadores');
+  private repoHabJog = new BaseRepositoryV2<HabilidadeJogador>(
+    'Habilidades_jogadores'
+  );
 
   private userEmail: string | null = null;
 
-  constructor(private router: Router) { }
+  constructor(private router: Router) {}
 
   processando = false;
 
   async ngOnInit() {
     this.carregando = true;
     try {
-      const user = AuthService.getUser();
-      if (!user?.email) throw new Error('Usuário não autenticado.');
-      this.userEmail = user.email;
+      if (this.jogadorId) {
+        this.somenteVisualizacao = true;
+        this.userEmail = this.jogadorId;
+      } else {
+        const user = AuthService.getUser();
+        if (!user?.email) throw new Error('Usuário não autenticado.');
+        this.userEmail = user.email;
+      }
+
+      if (!this.userEmail) throw new Error('Email do jogador não definido.');
 
       await this.loadLocalAndSync(this.userEmail);
 
@@ -94,17 +107,18 @@ export class SkillTree implements OnInit, AfterViewInit {
     });
   }
 
-
   get arvoresAtivas(): ArvoreDomain[] {
     if (!this.abaAtiva) return [];
-    return this.arvores.filter((a) => String(a.caminho) === String(this.abaAtiva));
+    return this.arvores.filter(
+      (a) => String(a.caminho) === String(this.abaAtiva)
+    );
   }
 
   private normalizeHabJog(list: HabilidadeJogador[]): HabilidadeJogador[] {
-    return list.map(h => ({ ...h, habilidade: String(h.habilidade) }));
+    return list.map((h) => ({ ...h, habilidade: String(h.habilidade) }));
   }
+
   private async loadLocalAndSync(email: string) {
-    // 1️⃣ Carrega local imediatamente
     const [caminhosLocal, arvoresLocal, habilidadesLocal, habJogLocal] =
       await Promise.all([
         this.repoCaminho.getLocal(),
@@ -117,12 +131,11 @@ export class SkillTree implements OnInit, AfterViewInit {
     this.arvores = arvoresLocal;
     this.habilidades = habilidadesLocal;
     this.habilidadesJogador = this.normalizeHabJog(
-      habJogLocal.filter(h => h.jogador === email)
+      habJogLocal.filter((h) => h.jogador === email)
     );
 
     this.renderizarArvores();
 
-    // 2️⃣ Dispara sync em background
     (async () => {
       const [camSync, arvSync, habSync, habJogSync] = await Promise.all([
         this.repoCaminho.sync(),
@@ -144,14 +157,13 @@ export class SkillTree implements OnInit, AfterViewInit {
         this.arvores = arvoresAtual;
         this.habilidades = habilidadesAtual;
         this.habilidadesJogador = this.normalizeHabJog(
-          habJogAtual.filter(h => h.jogador === email)
+          habJogAtual.filter((h) => h.jogador === email)
         );
 
         this.renderizarArvores();
       }
     })();
   }
-
 
   private renderizarArvores() {
     if (!this.abaAtiva) return;
@@ -178,8 +190,10 @@ export class SkillTree implements OnInit, AfterViewInit {
           classes: acquired ? 'habilidade-acquired' : '',
         });
 
-        if (h.dependencia &&
-          habilidadesDaArvore.some(x => String(x.id) === String(h.dependencia))) {
+        if (
+          h.dependencia &&
+          habilidadesDaArvore.some((x) => String(x.id) === String(h.dependencia))
+        ) {
           elements.push({
             data: { source: String(h.dependencia), target: String(h.id) },
           });
@@ -208,12 +222,12 @@ export class SkillTree implements OnInit, AfterViewInit {
               'background-color': '#222',
               'border-color': '#555',
               'border-width': 2,
-              'label': 'data(label)',
-              'color': '#eee',
+              label: 'data(label)',
+              color: '#eee',
               'text-valign': 'center',
               'text-halign': 'center',
-              'width': '65px',
-              'height': '65px',
+              width: '65px',
+              height: '65px',
               'font-size': '10px',
               'text-wrap': 'wrap',
               'text-max-width': '90px',
@@ -225,7 +239,7 @@ export class SkillTree implements OnInit, AfterViewInit {
               'background-color': '#28a745',
               'border-color': '#fff',
               'border-width': 3,
-              'color': '#fff',
+              color: '#fff',
             },
           },
           {
@@ -234,7 +248,7 @@ export class SkillTree implements OnInit, AfterViewInit {
               'background-color': '#007bff',
               'border-color': '#fff',
               'border-width': 3,
-              'color': '#fff',
+              color: '#fff',
             },
           },
           {
@@ -259,7 +273,8 @@ export class SkillTree implements OnInit, AfterViewInit {
         evt.target.addClass('selected');
 
         const id = String(evt.target.data('id'));
-        const habilidade = this.habilidades.find((h) => String(h.id) === id) || null;
+        const habilidade =
+          this.habilidades.find((h) => String(h.id) === id) || null;
         this.selecionarHab(habilidade);
       });
     });
@@ -275,22 +290,26 @@ export class SkillTree implements OnInit, AfterViewInit {
   }
 
   editarHabilidade(id: string) {
-    if (!id) return;
+    if (!id || this.somenteVisualizacao) return;
     this.router.navigate(['/edicao-skilltree', id]);
   }
 
   temHabilidade(habilidadeId: string | undefined): boolean {
     if (!habilidadeId) return false;
     return this.habilidadesJogador.some(
-      hj => String(hj.habilidade) === String(habilidadeId)
+      (hj) => String(hj.habilidade) === String(habilidadeId)
     );
   }
 
-  private coletarDependencias(habilidade: HabilidadeDomain): HabilidadeDomain[] {
+  private coletarDependencias(
+    habilidade: HabilidadeDomain
+  ): HabilidadeDomain[] {
     const deps: HabilidadeDomain[] = [];
     let atual: HabilidadeDomain | undefined = habilidade;
     while (atual?.dependencia) {
-      const dep = this.habilidades.find((h) => String(h.id) === String(atual!.dependencia));
+      const dep = this.habilidades.find(
+        (h) => String(h.id) === String(atual!.dependencia)
+      );
       if (dep && !this.temHabilidade(dep.id)) {
         deps.unshift(dep);
       }
@@ -299,10 +318,14 @@ export class SkillTree implements OnInit, AfterViewInit {
     return deps;
   }
 
-  private coletarDependentes(habilidade: HabilidadeDomain): HabilidadeDomain[] {
+  private coletarDependentes(
+    habilidade: HabilidadeDomain
+  ): HabilidadeDomain[] {
     const remover: HabilidadeDomain[] = [];
     const buscar = (id: string) => {
-      const filhos = this.habilidades.filter(h => String(h.dependencia) === String(id));
+      const filhos = this.habilidades.filter(
+        (h) => String(h.dependencia) === String(id)
+      );
       for (const f of filhos) {
         remover.push(f);
         buscar(String(f.id));
@@ -313,18 +336,23 @@ export class SkillTree implements OnInit, AfterViewInit {
   }
 
   async adicionarHabilidadeJogador(habilidade: HabilidadeDomain) {
+    if (this.somenteVisualizacao) return;
     if (this.temHabilidade(habilidade.id)) return;
 
     const dependencias = this.coletarDependencias(habilidade);
     const cadeia = [...dependencias, habilidade];
 
-    // Sempre confirma, mesmo sem dependências
-    const lista = cadeia.map(d => `- ${d.habilidade} (Lv ${d.nivel})`).join('\n');
-    if (!confirm(`⚠️ Deseja realmente adicionar a habilidade?\n\n${lista}`)) return;
+    const lista = cadeia
+      .map((d) => `- ${d.habilidade} (Lv ${d.nivel})`)
+      .join('\n');
+    if (
+      !confirm(`⚠️ Deseja realmente adicionar a habilidade?\n\n${lista}`)
+    )
+      return;
 
     this.processando = true;
     try {
-      const toSave = cadeia.map(h => ({
+      const toSave = cadeia.map((h) => ({
         id: IdUtils.generateULID(),
         jogador: this.userEmail!,
         habilidade: String(h.id),
@@ -334,7 +362,9 @@ export class SkillTree implements OnInit, AfterViewInit {
       await this.repoHabJog.createBatch(toSave);
 
       this.habilidadesJogador = this.normalizeHabJog(
-        (await this.repoHabJog.getLocal()).filter(h => h.jogador === this.userEmail)
+        (await this.repoHabJog.getLocal()).filter(
+          (h) => h.jogador === this.userEmail
+        )
       );
 
       this.renderizarArvores();
@@ -344,26 +374,35 @@ export class SkillTree implements OnInit, AfterViewInit {
   }
 
   async removerHabilidadeJogador(habilidade: HabilidadeDomain) {
+    if (this.somenteVisualizacao) return;
     const dependentes = this.coletarDependentes(habilidade);
 
-    // filtra apenas os dependentes que o jogador realmente possui
-    const dependentesJogador = dependentes.filter(d => this.temHabilidade(d.id));
+    const dependentesJogador = dependentes.filter((d) =>
+      this.temHabilidade(d.id)
+    );
     const cadeia = [habilidade, ...dependentesJogador];
 
-    const lista = cadeia.map(d => `- ${d.habilidade} (Lv ${d.nivel})`).join('\n');
-    if (!confirm(`⚠️ Deseja realmente remover a habilidade?\n\n${lista}`)) return;
+    const lista = cadeia
+      .map((d) => `- ${d.habilidade} (Lv ${d.nivel})`)
+      .join('\n');
+    if (
+      !confirm(`⚠️ Deseja realmente remover a habilidade?\n\n${lista}`)
+    )
+      return;
 
     this.processando = true;
     try {
-      const registrosRemover = this.habilidadesJogador.filter(
-        hj => cadeia.some(h => String(h.id) === String(hj.habilidade))
+      const registrosRemover = this.habilidadesJogador.filter((hj) =>
+        cadeia.some((h) => String(h.id) === String(hj.habilidade))
       );
-      const idsRemover = registrosRemover.map(r => r.id);
+      const idsRemover = registrosRemover.map((r) => r.id);
 
       await this.repoHabJog.deleteBatch(idsRemover);
 
       this.habilidadesJogador = this.normalizeHabJog(
-        (await this.repoHabJog.getLocal()).filter(h => h.jogador === this.userEmail)
+        (await this.repoHabJog.getLocal()).filter(
+          (h) => h.jogador === this.userEmail
+        )
       );
 
       this.renderizarArvores();
@@ -372,9 +411,7 @@ export class SkillTree implements OnInit, AfterViewInit {
     }
   }
 
-
   fecharModal() {
     this.habilidadeSelecionada = null;
   }
-
 }

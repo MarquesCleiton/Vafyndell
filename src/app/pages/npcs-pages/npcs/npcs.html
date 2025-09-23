@@ -8,15 +8,25 @@
 
   <!-- Tabs -->
   <ul class="nav nav-tabs bg-dark px-3" role="tablist">
+    <!-- Aba Ocultos → só para Mestre -->
+    <li class="nav-item" *ngIf="ehMestre">
+      <button class="nav-link" [class.active]="abaAtiva === 'ocultos'" (click)="selecionarAba('ocultos')">
+        🙈 Ocultos
+      </button>
+    </li>
+
     <li class="nav-item">
-      <button class="nav-link" [class.active]="abaAtiva === 'bestiais'" (click)="selecionarAba('bestiais')">🐾
-        Bestiais</button>
+      <button class="nav-link" [class.active]="abaAtiva === 'bestiais'" (click)="selecionarAba('bestiais')">
+        🐾 Bestiais
+      </button>
     </li>
     <li class="nav-item">
-      <button class="nav-link" [class.active]="abaAtiva === 'inimigos'" (click)="selecionarAba('inimigos')">⚔️
-        Inimigos</button>
+      <button class="nav-link" [class.active]="abaAtiva === 'inimigos'" (click)="selecionarAba('inimigos')">
+        ⚔️ Inimigos
+      </button>
     </li>
   </ul>
+
 
   <!-- Conteúdo -->
   <div class="flex-grow-1 p-3 d-flex justify-content-center">

@@ -14,29 +14,26 @@
       </ul>
 
       <!-- Loading -->
-      @if (carregando) {
-      <div class="text-center py-5">
+      <div *ngIf="carregando" class="text-center py-5">
         <div class="spinner-border text-light"></div>
         <p class="mt-2">Carregando habilidades...</p>
       </div>
-      }
 
       <!-- Árvores -->
-      @if (!carregando && abaAtiva) {
-      <div class="arvores-scroll">
+      <div *ngIf="!carregando && abaAtiva" class="arvores-scroll">
         <div *ngFor="let arvore of arvoresAtivas" class="arvore-card shadow-lg">
           <h3 class="arvore-titulo">{{ arvore.arvore }}</h3>
           <div #cyContainer class="cy-arvore"></div>
         </div>
       </div>
-      }
 
-      <!-- Backdrop com blur -->
+      <!-- Backdrop -->
       <div class="modal-backdrop-blur" *ngIf="habilidadeSelecionada"></div>
 
-      <!-- Modal Detalhe Habilidade -->
+      <!-- Modal -->
       <div class="modal fade" id="habilidadeModal" tabindex="-1" aria-hidden="true"
-        [ngClass]="{ 'show d-block': habilidadeSelecionada }" *ngIf="habilidadeSelecionada">
+           [ngClass]="{ 'show d-block': habilidadeSelecionada }"
+           *ngIf="habilidadeSelecionada">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content bg-dark text-light detalhe-card shadow-lg">
             <div class="modal-header border-0">
@@ -49,43 +46,42 @@
 
             <div class="modal-body">
               <p class="mb-2">{{ habilidadeSelecionada.descricao }}</p>
-
               <div *ngIf="habilidadeSelecionada?.requisitos" class="detalhe-extra">
                 <span>📌 Requisito:</span> <br>{{ habilidadeSelecionada.requisitos }}
               </div>
             </div>
 
-            <div class="modal-footer border-0 d-flex justify-content-end gap-2">
-              <!-- Editar -->
-              <button class="btn btn-sm btn-outline-warning" (click)="editarHabilidade(habilidadeSelecionada!.id)">
-                ✏️
-              </button>
+            <!-- Rodapé condicional -->
+<div class="modal-footer border-0 d-flex justify-content-end gap-2" *ngIf="!somenteVisualizacao">
+  <!-- Editar -->
+  <button class="btn btn-sm btn-outline-warning" (click)="editarHabilidade(habilidadeSelecionada!.id)">
+    ✏️
+  </button>
 
-              <!-- Adicionar / Remover com loading -->
-              <ng-container *ngIf="temHabilidade(habilidadeSelecionada?.id); else addBtn">
-                <button class="btn btn-sm btn-outline-danger" [disabled]="processando"
-                  (click)="removerHabilidadeJogador(habilidadeSelecionada!)">
-                  <ng-container *ngIf="processando; else removerIcon">
-                    <span class="spinner-border spinner-border-sm"></span>
-                  </ng-container>
-                  <ng-template #removerIcon>❌</ng-template>
-                </button>
-              </ng-container>
+  <ng-container *ngIf="temHabilidade(habilidadeSelecionada?.id); else addBtn">
+    <button class="btn btn-sm btn-outline-danger" [disabled]="processando"
+            (click)="removerHabilidadeJogador(habilidadeSelecionada!)">
+      <ng-container *ngIf="processando; else removerIcon">
+        <span class="spinner-border spinner-border-sm"></span>
+      </ng-container>
+      <ng-template #removerIcon>❌</ng-template>
+    </button>
+  </ng-container>
 
-              <ng-template #addBtn>
-                <button class="btn btn-sm btn-outline-success" [disabled]="processando"
-                  (click)="adicionarHabilidadeJogador(habilidadeSelecionada!)">
-                  <ng-container *ngIf="processando; else addIcon">
-                    <span class="spinner-border spinner-border-sm"></span>
-                  </ng-container>
-                  <ng-template #addIcon>➕</ng-template>
-                </button>
-              </ng-template>
-            </div>
+  <ng-template #addBtn>
+    <button class="btn btn-sm btn-outline-success" [disabled]="processando"
+            (click)="adicionarHabilidadeJogador(habilidadeSelecionada!)">
+      <ng-container *ngIf="processando; else addIcon">
+        <span class="spinner-border spinner-border-sm"></span>
+      </ng-container>
+      <ng-template #addIcon>➕</ng-template>
+    </button>
+  </ng-template>
+</div>
+
           </div>
         </div>
       </div>
-
 
     </div>
   </div>
