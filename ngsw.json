@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1758589795526,
+  "timestamp": 1758590195966,
   "index": "https://marquesCleiton.github.io/Vafyndell/index.html",
   "assetGroups": [
     {
@@ -38,6 +38,7 @@
         "https://marquesCleiton.github.io/Vafyndell/chunk-MHU6CXY4.js",
         "https://marquesCleiton.github.io/Vafyndell/chunk-N67YLK72.js",
         "https://marquesCleiton.github.io/Vafyndell/chunk-NHHIKYCI.js",
+        "https://marquesCleiton.github.io/Vafyndell/chunk-NO7E7ON7.js",
         "https://marquesCleiton.github.io/Vafyndell/chunk-ODJX7BRD.js",
         "https://marquesCleiton.github.io/Vafyndell/chunk-PDQX5YQG.js",
         "https://marquesCleiton.github.io/Vafyndell/chunk-QWKS73CC.js",
@@ -49,11 +50,10 @@
         "https://marquesCleiton.github.io/Vafyndell/chunk-XIPVRWM5.js",
         "https://marquesCleiton.github.io/Vafyndell/chunk-XQNWO7VY.js",
         "https://marquesCleiton.github.io/Vafyndell/chunk-YATNPQKW.js",
-        "https://marquesCleiton.github.io/Vafyndell/chunk-YRSYI4ZN.js",
         "https://marquesCleiton.github.io/Vafyndell/chunk-YZ6JJ5TS.js",
         "https://marquesCleiton.github.io/Vafyndell/favicon.ico",
         "https://marquesCleiton.github.io/Vafyndell/index.html",
-        "https://marquesCleiton.github.io/Vafyndell/main-5Y6EHA6W.js",
+        "https://marquesCleiton.github.io/Vafyndell/main-CU3MC6SA.js",
         "https://marquesCleiton.github.io/Vafyndell/manifest.webmanifest",
         "https://marquesCleiton.github.io/Vafyndell/polyfills-5CFQRCPP.js",
         "https://marquesCleiton.github.io/Vafyndell/styles-TUZFDYL7.css"
@@ -103,6 +103,7 @@
     "https://marquesCleiton.github.io/Vafyndell/chunk-MHU6CXY4.js": "b1ad6e6bd40a0777d69756e13ba4806be36149b3",
     "https://marquesCleiton.github.io/Vafyndell/chunk-N67YLK72.js": "7c9348e0cebc51c86277881f8a693873158295c4",
     "https://marquesCleiton.github.io/Vafyndell/chunk-NHHIKYCI.js": "249910af120fe26a9aab6dab738a6fd69ef4ab97",
+    "https://marquesCleiton.github.io/Vafyndell/chunk-NO7E7ON7.js": "83158be501fd01a04ecda002a694c16a5b8f639a",
     "https://marquesCleiton.github.io/Vafyndell/chunk-ODJX7BRD.js": "4c74b0371951e87fa982cc3b26fa7ca25840a3a3",
     "https://marquesCleiton.github.io/Vafyndell/chunk-PDQX5YQG.js": "9f3565e2d846155bf3eee7cf10e3e4f6a10febbe",
     "https://marquesCleiton.github.io/Vafyndell/chunk-QWKS73CC.js": "96eee34ad0897f24083000579be45f9b9a507853",
@@ -114,13 +115,12 @@
     "https://marquesCleiton.github.io/Vafyndell/chunk-XIPVRWM5.js": "3eb4071e4e0a1a81eba38dddbfe0245b7eb4f2fa",
     "https://marquesCleiton.github.io/Vafyndell/chunk-XQNWO7VY.js": "274b73633a3e9f690a3cb69b7215866df2c3fc13",
     "https://marquesCleiton.github.io/Vafyndell/chunk-YATNPQKW.js": "a9f64b070d359730f250e4820b392887021b6994",
-    "https://marquesCleiton.github.io/Vafyndell/chunk-YRSYI4ZN.js": "a27861c1aa84b225255afbafe060ed8cbb9fd3e2",
     "https://marquesCleiton.github.io/Vafyndell/chunk-YZ6JJ5TS.js": "1ee4629ecf4f48111ad5302ea8e8c586ba292217",
     "https://marquesCleiton.github.io/Vafyndell/favicon.ico": "8b2cca964388fd3909e0b34d22ac1ac7ccc0e85e",
     "https://marquesCleiton.github.io/Vafyndell/icons/icon-192x192.png": "8ce0d1005f890cf60c56e7124952e551b955efe8",
     "https://marquesCleiton.github.io/Vafyndell/icons/icon-512x512.png": "d6163075501ac4f60cb8997e5421b12f9cef8798",
-    "https://marquesCleiton.github.io/Vafyndell/index.html": "aa26214323cb94c0b23358ceec3412b9b5ef3d80",
-    "https://marquesCleiton.github.io/Vafyndell/main-5Y6EHA6W.js": "226f33128eacb49c98c77949c981c37c145eb2d1",
+    "https://marquesCleiton.github.io/Vafyndell/index.html": "90b76c4ddce0ee6832bc7c90ab0a3be266760228",
+    "https://marquesCleiton.github.io/Vafyndell/main-CU3MC6SA.js": "1ea2ae7362407296d5b926ef4fef2bcb16bfa34d",
     "https://marquesCleiton.github.io/Vafyndell/manifest.webmanifest": "a3b987db53465ed4cd942d48a8dd44aa3ba4db60",
     "https://marquesCleiton.github.io/Vafyndell/polyfills-5CFQRCPP.js": "f2241e9a25858f895ce299d15f6f22e849e2fd72",
     "https://marquesCleiton.github.io/Vafyndell/styles-TUZFDYL7.css": "e30e79dc3c6d1271cb300b74535aff5911191911"
