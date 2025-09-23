@@ -14,7 +14,6 @@
       <div *ngIf="habilidadeSelecionada" class="detalhe-card shadow-lg mt-4 p-3">
         <h4 class="detalhe-nome">
           {{ habilidadeSelecionada.habilidade }}
-          <span class="nivel">Lv {{ habilidadeSelecionada.nivel }}</span>
         </h4>
         <p class="detalhe-descricao">{{ habilidadeSelecionada.descricao }}</p>
         <div class="detalhe-extra" *ngIf="habilidadeSelecionada.requisitos">
@@ -26,10 +25,8 @@
         <!-- Caminho -->
         <div class="mb-3">
           <label class="form-label">🌐 Caminho</label>
-          <select class="form-select input-dark"
-                  [(ngModel)]="caminhoSelecionado"
-                  name="caminhoSelecionado"
-                  (ngModelChange)="onCaminhoChange($event)" required>
+          <select class="form-select input-dark" [(ngModel)]="caminhoSelecionado" name="caminhoSelecionado"
+            (ngModelChange)="onCaminhoChange($event)" required>
             <option [ngValue]="null" disabled>Selecione...</option>
             <option *ngFor="let c of caminhos" [ngValue]="c.id">{{ c.caminho }}</option>
           </select>
@@ -38,10 +35,8 @@
         <!-- Árvore -->
         <div class="mb-3" *ngIf="caminhoSelecionado">
           <label class="form-label">🌳 Árvore</label>
-          <select class="form-select input-dark"
-                  [(ngModel)]="arvoreSelecionada"
-                  name="arvoreSelecionada"
-                  (ngModelChange)="onArvoreChange($event)" required>
+          <select class="form-select input-dark" [(ngModel)]="arvoreSelecionada" name="arvoreSelecionada"
+            (ngModelChange)="onArvoreChange($event)" required>
             <option [ngValue]="null" disabled>Selecione...</option>
             <option *ngFor="let a of arvoresDoCaminho" [ngValue]="a.id">
               {{ a.arvore }}
@@ -50,25 +45,19 @@
           </select>
 
           <div *ngIf="arvoreSelecionada === 'nova'" class="mt-2">
-            <input type="text"
-                   class="form-control input-dark"
-                   [(ngModel)]="novaArvoreNome"
-                   name="novaArvoreNome"
-                   placeholder="Digite o nome da nova árvore"
-                   (ngModelChange)="atualizarPreview()" />
+            <input type="text" class="form-control input-dark" [(ngModel)]="novaArvoreNome" name="novaArvoreNome"
+              placeholder="Digite o nome da nova árvore" (ngModelChange)="atualizarPreview()" />
           </div>
         </div>
 
         <!-- Dependência -->
         <div class="mb-3" *ngIf="arvoreSelecionada">
           <label class="form-label">🔗 Dependência</label>
-          <select class="form-select input-dark"
-                  [(ngModel)]="dependenciaSelecionada"
-                  name="dependenciaSelecionada"
-                  (ngModelChange)="atualizarPreview()">
+          <select class="form-select input-dark" [(ngModel)]="dependenciaSelecionada" name="dependenciaSelecionada"
+            (ngModelChange)="atualizarPreview()">
             <option [ngValue]="null">Nenhuma</option>
             <option *ngFor="let h of habilidadesDaArvore" [ngValue]="h.id">
-              {{ h.habilidade }} (Lv {{ h.nivel }})
+              {{ h.habilidade }}
             </option>
           </select>
         </div>
@@ -76,50 +65,31 @@
         <!-- Nome -->
         <div class="mb-3" *ngIf="arvoreSelecionada">
           <label class="form-label">🏷️ Nome</label>
-          <input type="text"
-                 class="form-control input-dark"
-                 [(ngModel)]="habilidadeEdit.habilidade"
-                 name="habilidade"
-                 (ngModelChange)="atualizarPreview()" required />
-        </div>
-
-        <!-- Nível -->
-        <div class="mb-3" *ngIf="arvoreSelecionada">
-          <label class="form-label">📈 Nível</label>
-          <input type="number"
-                 class="form-control input-dark"
-                 [(ngModel)]="habilidadeEdit.nivel"
-                 name="nivel"
-                 (ngModelChange)="atualizarPreview()"
-                 required />
+          <input type="text" class="form-control input-dark" [(ngModel)]="habilidadeEdit.habilidade" name="habilidade"
+            (ngModelChange)="atualizarPreview()" required />
         </div>
 
         <!-- Requisitos -->
         <div class="mb-3" *ngIf="arvoreSelecionada">
           <label class="form-label">📌 Requisitos</label>
-          <textarea class="form-control input-dark"
-                    [(ngModel)]="habilidadeEdit.requisitos"
-                    name="requisitos"
-                    (ngModelChange)="atualizarPreview()"></textarea>
+          <textarea class="form-control input-dark auto-expand" rows="3" [(ngModel)]="habilidadeEdit.requisitos"
+            name="requisitos" (ngModelChange)="atualizarPreview()"></textarea>
         </div>
 
         <!-- Descrição -->
         <div class="mb-3" *ngIf="arvoreSelecionada">
           <label class="form-label">📝 Descrição</label>
-          <textarea class="form-control input-dark"
-                    [(ngModel)]="habilidadeEdit.descricao"
-                    name="descricao"
-                    (ngModelChange)="atualizarPreview()"></textarea>
+          <textarea class="form-control input-dark auto-expand" rows="3" [(ngModel)]="habilidadeEdit.descricao"
+            name="descricao" (ngModelChange)="atualizarPreview()"></textarea>
         </div>
+
       </form>
     </div>
   </div>
 
   <!-- FABs -->
   <div class="fab-stack">
-    <button type="submit" form="formSkillTree"
-            class="fab fab-success"
-            [disabled]="form?.invalid || salvando">
+    <button type="submit" form="formSkillTree" class="fab fab-success" [disabled]="form?.invalid || salvando">
       <ng-container *ngIf="!salvando">💾</ng-container>
       <ng-container *ngIf="salvando">
         <span class="spinner-border spinner-border-sm"></span>

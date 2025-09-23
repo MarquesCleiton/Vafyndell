@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -33,7 +33,6 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
     caminho: '',
     arvore: '',
     habilidade: '',
-    nivel: 1,
     requisitos: '',
     descricao: '',
     dependencia: null,
@@ -44,8 +43,46 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
   constructor(
     private route: ActivatedRoute,
     public router: Router,
-    private habilidadeService: HabilidadeService
+    private habilidadeService: HabilidadeService,
+    private el: ElementRef,
+    private zone: NgZone
   ) { }
+
+  // Autoexpand textareas
+  ngAfterViewInit(): void {
+    this.renderPreview();
+    this.scheduleAutoExpand();
+  }
+
+  private scheduleAutoExpand() {
+    this.zone.runOutsideAngular(() => {
+      setTimeout(() => this.applyAutoExpand(), 0);
+    });
+  }
+
+  private applyAutoExpand() {
+    const textareas = this.el.nativeElement.querySelectorAll('textarea.auto-expand');
+    textareas.forEach((ta: HTMLTextAreaElement) => {
+      // aplica altura inicial
+      ta.style.height = 'auto';
+      const maxHeight = 200;
+      ta.style.height = Math.min(ta.scrollHeight, maxHeight) + 'px';
+
+      // remove listeners antigos para não acumular
+      ta.removeEventListener('input', this.autoResize);
+      // adiciona o listener
+      ta.addEventListener('input', this.autoResize);
+    });
+  }
+
+  // função separada para reuso
+  private autoResize = (event: Event) => {
+    const ta = event.target as HTMLTextAreaElement;
+    ta.style.height = 'auto';
+    const maxHeight = 200;
+    ta.style.height = Math.min(ta.scrollHeight, maxHeight) + 'px';
+  };
+
 
   async ngOnInit() {
     await this.habilidadeService.carregarTudo();
@@ -61,7 +98,6 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
           caminho: String(hab.caminho),
           arvore: String(hab.arvore),
           habilidade: hab.habilidade,
-          nivel: hab.nivel,
           requisitos: hab.requisitos || '',
           descricao: hab.descricao || '',
           dependencia: hab.dependencia ? String(hab.dependencia) : null,
@@ -81,9 +117,6 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
     this.renderPreview();
   }
 
-  ngAfterViewInit(): void {
-    this.renderPreview();
-  }
 
   get arvoresDoCaminho(): ArvoreDomain[] {
     return this.habilidadeService.getArvoresDoCaminho(this.caminhoSelecionado);
@@ -166,16 +199,17 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
 
   atualizarPreview() {
     setTimeout(() => {
-      // 🔥 força sincronização com seleção atual
       this.habilidadeEdit.caminho = this.caminhoSelecionado || '';
       this.habilidadeEdit.arvore = this.arvoreSelecionada || '';
 
       this.renderPreview();
       this.habilidadeSelecionada = { ...this.habilidadeEdit };
+
+      this.scheduleAutoExpand(); // 👈 garante o ajuste
     }, 0);
   }
 
-
+  
   get arvoreSelecionadaNome(): string {
     if (this.arvoreSelecionada === 'nova')
       return this.novaArvoreNome || 'Nova Árvore';

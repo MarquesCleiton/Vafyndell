@@ -69,7 +69,7 @@ export class HabilidadeService {
       if (habilidadeEdit.id && String(h.id) === String(habilidadeEdit.id)) return;
 
       elements.push({
-        data: { id: String(h.id), label: `${h.habilidade}\nLv ${h.nivel}` },
+        data: { id: String(h.id), label: `${h.habilidade}` },
       });
 
       if (h.dependencia) {
@@ -83,8 +83,8 @@ export class HabilidadeService {
     if (habilidadeEdit.caminho && habilidadeEdit.arvore) {
       const tempId = habilidadeEdit.id || 'novaHab';
       const label = habilidadeEdit.habilidade
-        ? `${habilidadeEdit.habilidade}\nLv ${habilidadeEdit.nivel}`
-        : `Nova Habilidade\nLv ${habilidadeEdit.nivel}`;
+        ? `${habilidadeEdit.habilidade}`
+        : `Nova Habilidade`;
 
       elements.push({
         data: { id: String(tempId), label },
@@ -228,7 +228,7 @@ export class HabilidadeService {
 
     if (dependentes.length > 0) {
       const lista = dependentes
-        .map((h) => `- ${h.habilidade} (Lv ${h.nivel})`)
+        .map((h) => `- ${h.habilidade}`)
         .join('\n');
 
       const confirma = confirm(

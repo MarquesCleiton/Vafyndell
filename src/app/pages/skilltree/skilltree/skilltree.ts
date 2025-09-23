@@ -185,7 +185,7 @@ export class SkillTree implements OnInit, AfterViewInit {
           data: {
             ...h,
             id: String(h.id),
-            label: `${h.habilidade}\nLv ${h.nivel}`,
+            label: `${h.habilidade}`,
           },
           classes: acquired ? 'habilidade-acquired' : '',
         });
@@ -343,7 +343,7 @@ export class SkillTree implements OnInit, AfterViewInit {
     const cadeia = [...dependencias, habilidade];
 
     const lista = cadeia
-      .map((d) => `- ${d.habilidade} (Lv ${d.nivel})`)
+      .map((d) => `- ${d.habilidade}`)
       .join('\n');
     if (
       !confirm(`⚠️ Deseja realmente adicionar a habilidade?\n\n${lista}`)
@@ -383,7 +383,7 @@ export class SkillTree implements OnInit, AfterViewInit {
     const cadeia = [habilidade, ...dependentesJogador];
 
     const lista = cadeia
-      .map((d) => `- ${d.habilidade} (Lv ${d.nivel})`)
+      .map((d) => `- ${d.habilidade}`)
       .join('\n');
     if (
       !confirm(`⚠️ Deseja realmente remover a habilidade?\n\n${lista}`)

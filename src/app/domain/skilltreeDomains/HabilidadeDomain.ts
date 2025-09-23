@@ -3,7 +3,6 @@ export interface HabilidadeDomain {
   caminho: string;
   arvore: string;
   habilidade: string;
-  nivel: number;
   dependencia: string | null;  // 👈 sempre presente
   requisitos?: string;
   descricao?: string;
