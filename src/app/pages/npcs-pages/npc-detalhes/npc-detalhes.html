@@ -19,7 +19,10 @@
         <!-- Imagem ou fallback -->
         <div class="position-relative">
           <ng-container *ngIf="npc.imagem && npc.imagem !== '-'; else noImagem">
-            <img [src]="npc.imagem" class="card-img-top detalhe-img" alt="{{ npc.nome }}" />
+            <img [src]="npc.imagem"
+                 class="card-img-top detalhe-img"
+                 alt="{{ npc.nome }}"
+                 (click)="abrirImagem(npc.imagem)" />
           </ng-container>
           <ng-template #noImagem>
             <div
@@ -105,3 +108,10 @@
     </button>
   </div>
 </div>
+
+<!-- 🔎 Modal de Imagem -->
+<app-image-modal
+  [imagem]="imagemSelecionada"
+  [aberto]="modalAberto"
+  (fecharModal)="modalAberto = false">
+</app-image-modal>

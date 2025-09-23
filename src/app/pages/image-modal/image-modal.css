@@ -1,0 +1,55 @@
+.imagem-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  display: flex;              /* garante centralização inicial */
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  touch-action: none;
+}
+
+.imagem-container {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imagem-zoom {
+  max-width: 100%;   /* imagem sempre cabe na tela no início */
+  max-height: 100%;
+  user-select: none;
+  will-change: transform;
+  cursor: grab;
+}
+
+.imagem-zoom:active {
+  cursor: grabbing;
+}
+
+/* Botão fixo de fechar */
+.btn-fechar {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;              /* largura fixa */
+  height: 40px;             /* altura fixa */
+  background: rgba(0,0,0,0.7);
+  border: none;
+  color: #fff;
+  font-size: 1.2rem;
+  border-radius: 50%;       /* sempre círculo */
+  cursor: pointer;
+  z-index: 2100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.btn-fechar:hover {
+  background: rgba(255, 0, 0, 0.8);
+}

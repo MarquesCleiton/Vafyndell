@@ -1,0 +1,20 @@
+@if (aberto) {
+  <div class="imagem-modal">
+    
+    <!-- Botão fixo de fechar -->
+    <button class="btn-fechar" (click)="fechar()">✖</button>
+
+    <div class="imagem-container"
+         (touchstart)="onTouchStart($event)"
+         (touchmove)="onTouchMove($event)"
+         (touchend)="onTouchEnd($event)"
+         (click)="$event.stopPropagation()">
+      <img [src]="imagem"
+           alt="Visualização"
+           class="imagem-zoom"
+           [style.transform]="'translate(' + posX + 'px, ' + posY + 'px) scale(' + zoom + ')'"
+           (wheel)="ajustarZoom($event)"
+           (mousedown)="onMouseDown($event)" />
+    </div>
+  </div>
+}

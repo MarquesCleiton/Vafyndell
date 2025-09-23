@@ -20,7 +20,10 @@
         <!-- Imagem ou fallback -->
         <div class="position-relative">
           <ng-container *ngIf="item.imagem && item.imagem !== '-'; else noImagem">
-            <img [src]="item.imagem" class="card-img-top detalhe-img" alt="{{ item.nome || 'Item' }}" />
+            <img [src]="item.imagem"
+                 class="card-img-top detalhe-img"
+                 alt="{{ item.nome || 'Item' }}"
+                 (click)="abrirImagem(item.imagem)" />
           </ng-container>
           <ng-template #noImagem>
             <div
@@ -28,7 +31,6 @@
               📦
             </div>
           </ng-template>
-
         </div>
 
         <!-- Informações -->
@@ -111,3 +113,10 @@
   </div>
 </div>
 <div class="mb-5 py-5"></div>
+
+<!-- Modal de Imagem -->
+<app-image-modal
+  [imagem]="imagemSelecionada"
+  [aberto]="modalAberto"
+  (fecharModal)="modalAberto = false">
+</app-image-modal>

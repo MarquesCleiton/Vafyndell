@@ -4,11 +4,12 @@ import { CommonModule, Location } from '@angular/common';
 import { CatalogoDomain } from '../../../domain/CatalogoDomain';
 import { ReceitaDomain } from '../../../domain/ReceitaDomain';
 import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
+import { ImageModal } from '../../image-modal/image-modal';
 
 @Component({
   selector: 'app-item-catalogo',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ImageModal],
   templateUrl: './item-catalogo.html',
   styleUrls: ['./item-catalogo.css'],
 })
@@ -17,8 +18,14 @@ export class ItemCatalogo implements OnInit {
   ingredientesDetalhados: { item: CatalogoDomain; quantidade: number }[] = [];
   carregando = true;
 
+
   processandoEditar = false;
   processandoExcluir = false;
+
+  // 🔎 controle do modal
+  imagemSelecionada: string | null = null;
+  modalAberto = false;
+
 
   private repoCatalogo = new BaseRepositoryV2<CatalogoDomain>('Catalogo');
   private repoReceitas = new BaseRepositoryV2<ReceitaDomain>('Receitas');
@@ -27,7 +34,7 @@ export class ItemCatalogo implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private location: Location
-  ) {}
+  ) { }
 
   async ngOnInit() {
     try {
@@ -153,5 +160,10 @@ export class ItemCatalogo implements OnInit {
       default:
         return 'raridade-comum';
     }
+  }
+
+  abrirImagem(src: string) {
+    this.imagemSelecionada = src;
+    this.modalAberto = true;
   }
 }

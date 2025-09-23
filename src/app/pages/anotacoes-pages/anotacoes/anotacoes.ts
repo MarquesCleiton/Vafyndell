@@ -8,6 +8,7 @@ import { AuthService } from '../../../core/auth/AuthService';
 import { JogadorDomain } from '../../../domain/jogadorDomain';
 import { IdUtils } from '../../../core/utils/IdUtils';
 import { ImageUtils } from '../../../core/utils/ImageUtils';
+import { ImageModal } from '../../image-modal/image-modal';
 
 interface SecaoAnotacao {
   data: string;
@@ -18,7 +19,7 @@ interface SecaoAnotacao {
 @Component({
   selector: 'app-anotacoes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ImageModal],
   templateUrl: './anotacoes.html',
   styleUrls: ['./anotacoes.css'],
 })
@@ -27,6 +28,9 @@ export class Anotacoes implements OnInit {
   secoesFiltradas: SecaoAnotacao[] = [];
   carregando = true;
   filtro = '';
+
+  imagemSelecionada: string | null = null;
+  modalAbertoImagem = false;
 
   jogadores: JogadorDomain[] = [];
   modalAberto = false;
@@ -38,7 +42,7 @@ export class Anotacoes implements OnInit {
   private jogadoresRepo = new BaseRepositoryV2<JogadorDomain>('Personagem');
   private uploadRepo = new BaseRepositoryV2<any>('Upload'); // 🔑 repositorio usado p/ upload imagens
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   async ngOnInit() {
     this.carregando = true;
@@ -253,5 +257,11 @@ export class Anotacoes implements OnInit {
     return txt
       ? txt.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
       : '';
+  }
+
+  abrirImagem(src: string, event?: Event) {
+    if (event) event.stopPropagation(); // não abrir anotação ao clicar na imagem
+    this.imagemSelecionada = src;
+    this.modalAbertoImagem = true;
   }
 }

@@ -44,7 +44,7 @@
         <!-- Imagem -->
         <div class="position-relative">
           <ng-container *ngIf="jogador.imagem && jogador.imagem !== '-'; else noImagem">
-            <img [src]="jogador.imagem" class="card-img-top detalhe-img" alt="Imagem do personagem" />
+            <img [src]="jogador.imagem" class="card-img-top detalhe-img" alt="Imagem do personagem" (click)="abrirImagem(jogador.imagem)"/>
           </ng-container>
           <ng-template #noImagem>
             <div class="d-flex align-items-center justify-content-center bg-secondary text-dark detalhe-img"
@@ -179,3 +179,10 @@
     <button class="fab fab-primary" (click)="voltar()">⬅️</button>
   </div>
 </div>
+
+<!-- Modal de Imagem -->
+<app-image-modal
+  [imagem]="imagemSelecionada"
+  [aberto]="modalAberto"
+  (fecharModal)="modalAberto = false">
+</app-image-modal>

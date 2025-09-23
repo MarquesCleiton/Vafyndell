@@ -6,11 +6,12 @@ import { NpcDomain } from '../../../domain/NpcDomain';
 import { JogadorDomain } from '../../../domain/jogadorDomain';
 import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { IdUtils } from '../../../core/utils/IdUtils';
+import { ImageModal } from '../../image-modal/image-modal';
 
 @Component({
   selector: 'app-npc-detalhes',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ImageModal],
   templateUrl: './npc-detalhes.html',
   styleUrls: ['./npc-detalhes.css'],
 })
@@ -22,6 +23,10 @@ export class NpcDetalhes implements OnInit {
   processandoExcluir = false;
   processandoAdicionar = false;
 
+  // controle do modal
+  imagemSelecionada: string | null = null;
+  modalAberto = false;
+
   private npcRepo = new BaseRepositoryV2<NpcDomain>('NPCs');
   private jogadorRepo = new BaseRepositoryV2<JogadorDomain>('Personagem');
 
@@ -29,7 +34,7 @@ export class NpcDetalhes implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private location: Location
-  ) {}
+  ) { }
 
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -160,5 +165,10 @@ export class NpcDetalhes implements OnInit {
     } finally {
       this.processandoAdicionar = false;
     }
+  }
+
+  abrirImagem(src: string) {
+    this.imagemSelecionada = src;
+    this.modalAberto = true;
   }
 }

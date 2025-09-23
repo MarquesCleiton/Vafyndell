@@ -5,13 +5,14 @@ import { CommonModule } from '@angular/common';
 import { JogadorDomain } from '../../../domain/jogadorDomain';
 import { AuthService } from '../../../core/auth/AuthService';
 import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
+import { ImageModal } from '../../image-modal/image-modal';
 
 @Component({
   selector: 'app-jogador',
   templateUrl: './jogador.html',
   styleUrls: ['./jogador.css'],
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ImageModal],
 })
 export class Jogador implements OnInit {
   jogador: (JogadorDomain & {
@@ -24,10 +25,14 @@ export class Jogador implements OnInit {
   atributos: { label: string; value: number; mod: number; icon: string }[] = [];
   loading = true;
 
+  // controle do modal de imagem
+  imagemSelecionada: string | null = null;
+  modalAberto = false;
+
   // ✅ agora padronizado com BaseRepositoryV2
   private repo = new BaseRepositoryV2<JogadorDomain>('Personagem');
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   async ngOnInit() {
     console.log('[Jogador] Iniciando carregamento...');
@@ -113,5 +118,10 @@ export class Jogador implements OnInit {
 
   editarJogador() {
     this.router.navigate(['/edicao-jogador']);
+  }
+
+  abrirImagem(src: string) {
+    this.imagemSelecionada = src;
+    this.modalAberto = true;
   }
 }

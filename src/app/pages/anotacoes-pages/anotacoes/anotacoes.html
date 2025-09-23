@@ -45,7 +45,7 @@
                     style="cursor: pointer; flex:1;">
                     <div class="item-thumb me-3">
                       <img *ngIf="anot.imagem && anot.imagem !== '-'" [src]="anot.imagem"
-                        alt="{{ anot.titulo || 'Anotação' }}" />
+                        alt="{{ anot.titulo || 'Anotação' }}" (click)="abrirImagem(anot.imagem, $event)" />
                       <span *ngIf="!anot.imagem || anot.imagem === '-'">📝</span>
                     </div>
 
@@ -127,3 +127,7 @@
     </div>
   </div>
 </div>
+
+<!-- Modal de Imagem -->
+<app-image-modal [imagem]="imagemSelecionada" [aberto]="modalAbertoImagem" (fecharModal)="modalAbertoImagem = false">
+</app-image-modal>

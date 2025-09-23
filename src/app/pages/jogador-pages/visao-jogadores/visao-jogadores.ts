@@ -11,6 +11,7 @@ import { Location } from '@angular/common';
 
 // ⬅️ IMPORTAR O SUBCOMPONENTE
 import { SkillTree } from '../../skilltree/skilltree/skilltree';
+import { ImageModal } from '../../image-modal/image-modal';
 
 interface InventarioDetalhado extends InventarioDomain {
   itemDetalhe?: CatalogoDomain;
@@ -24,7 +25,7 @@ interface CategoriaInventario {
 @Component({
   selector: 'app-visao-jogadores',
   standalone: true,
-  imports: [CommonModule, FormsModule, SkillTree],
+  imports: [CommonModule, FormsModule, SkillTree, ImageModal],
   templateUrl: './visao-jogadores.html',
   styleUrls: ['./visao-jogadores.css'],
 })
@@ -37,6 +38,10 @@ export class VisaoJogadores implements OnInit {
   categorias: CategoriaInventario[] = [];
   categoriasFiltradas: CategoriaInventario[] = [];
   carregandoInventario = true;
+
+  // Modal de imagem
+  imagemSelecionada: string | null = null;
+  modalAberto = false;
 
   resumo = { tipos: 0, unidades: 0, pesoTotal: 0 };
 
@@ -225,5 +230,10 @@ export class VisaoJogadores implements OnInit {
 
   voltar() {
     this.location.back(); // 🔙 volta para a página anterior no histórico
+  }
+
+  abrirImagem(src: string) {
+    this.imagemSelecionada = src;
+    this.modalAberto = true;
   }
 }
