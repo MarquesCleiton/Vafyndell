@@ -33,7 +33,7 @@ export class ItemInventario implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private location: Location
-  ) {}
+  ) { }
 
   async ngOnInit() {
     try {
@@ -53,8 +53,9 @@ export class ItemInventario implements OnInit {
       ]);
 
       const encontrado = inventarioLocal.find(
-        (i) => i.id === id && i.jogador === user.email
+        (i) => String(i.id) === String(id) && i.jogador === user.email
       );
+
       if (encontrado) {
         this.item = this.montarDetalhe(encontrado, catalogoLocal);
         this.carregando = false;
@@ -69,9 +70,11 @@ export class ItemInventario implements OnInit {
               this.catalogoRepo.getLocal(),
               this.inventarioRepo.getLocal(),
             ]);
+
             const atualizado = inventarioAtualizado.find(
-              (i) => i.id === id && i.jogador === user.email
+              (i) => String(i.id) === String(id) && i.jogador === user.email
             );
+
             if (atualizado) {
               this.item = this.montarDetalhe(atualizado, catalogoAtualizado);
             }
@@ -91,7 +94,7 @@ export class ItemInventario implements OnInit {
         ]);
 
         const achadoOnline = inventarioOnline.find(
-          (i) => i.id === id && i.jogador === user.email
+          (i) => String(i.id) === String(id) && i.jogador === user.email
         );
         if (achadoOnline) {
           this.item = this.montarDetalhe(achadoOnline, catalogoOnline);
@@ -111,7 +114,7 @@ export class ItemInventario implements OnInit {
     inventario: InventarioDomain,
     catalogo: CatalogoDomain[]
   ): ItemInventarioDetalhe {
-    const detalhe = catalogo.find((c) => c.id === inventario.item_catalogo);
+    const detalhe = catalogo.find((c) => String(c.id) === String(inventario.item_catalogo));
     return { inventario, catalogo: detalhe };
   }
 
