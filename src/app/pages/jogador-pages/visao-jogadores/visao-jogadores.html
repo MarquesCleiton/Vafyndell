@@ -3,20 +3,33 @@
   <ul class="nav nav-tabs bg-dark px-3" role="tablist">
     <li class="nav-item">
       <button class="nav-link" [class.active]="abaAtiva === 'jogador'" (click)="selecionarAba('jogador')">
-        🧙 Jogador
+        <ng-container *ngIf="jogador?.email; else npcLabel">
+          🧙 Jogador
+        </ng-container>
+        <ng-template #npcLabel>
+          <ng-container [ngSwitch]="jogador?.classificacao">
+            <span *ngSwitchCase="'Inimigo'">👹 Inimigo</span>
+            <span *ngSwitchCase="'Bestial'">🦖 Bestial</span>
+            <span *ngSwitchDefault>👤 NPC</span>
+          </ng-container>
+        </ng-template>
       </button>
     </li>
+
+    <!-- Inventário só se for jogador -->
     <li class="nav-item" *ngIf="jogador?.email">
       <button class="nav-link" [class.active]="abaAtiva === 'inventario'" (click)="selecionarAba('inventario')">
         🎒 Inventário
       </button>
     </li>
+
     <li class="nav-item" *ngIf="jogador?.email">
       <button class="nav-link" [class.active]="abaAtiva === 'habilidades'" (click)="selecionarAba('habilidades')">
         🌳 Habilidades
       </button>
     </li>
   </ul>
+
 
   <div class="flex-grow-1 d-flex justify-content-center">
     <div class="visao-container w-100">
@@ -35,7 +48,7 @@
           </ng-container>
           <ng-template #noImagem>
             <div class="d-flex align-items-center justify-content-center bg-secondary text-dark detalhe-img"
-                 style="height:200px; font-size:3rem;">👤</div>
+              style="height:200px; font-size:3rem;">👤</div>
           </ng-template>
         </div>
 
@@ -82,9 +95,8 @@
         <!-- Abas internas -->
         <ul class="nav nav-tabs bg-dark px-3 mb-3" role="tablist">
           <li class="nav-item" *ngFor="let aba of abasInventario">
-            <button class="nav-link"
-                    [class.active]="abaInventario === aba.toLowerCase()"
-                    (click)="selecionarAbaInventario(aba)">
+            <button class="nav-link" [class.active]="abaInventario === aba.toLowerCase()"
+              (click)="selecionarAbaInventario(aba)">
               {{ aba }}
             </button>
           </li>
@@ -94,7 +106,7 @@
 
         <!-- Resumo -->
         <div *ngIf="!carregandoInventario && categoriasFiltradas.length > 0"
-             class="card resumo-card mb-4 p-3 shadow-sm">
+          class="card resumo-card mb-4 p-3 shadow-sm">
           <p class="mb-1 text-light">
             ⚖️ Peso total: <b>{{ resumo.pesoTotal | number:'1.0-2' }} kg</b>
           </p>
@@ -107,8 +119,7 @@
         </div>
 
         <!-- Vazio -->
-        <div *ngIf="!carregandoInventario && categoriasFiltradas.length === 0"
-             class="text-center text-secondary py-5">
+        <div *ngIf="!carregandoInventario && categoriasFiltradas.length === 0" class="text-center text-secondary py-5">
           Nenhum item encontrado.
         </div>
 
@@ -117,7 +128,7 @@
           <ng-container *ngFor="let cat of categoriasFiltradas">
             <div class="mb-3" *ngIf="pertenceAbaInventario(cat.nome)">
               <button class="btn btn-categoria w-100 d-flex justify-content-between align-items-center"
-                      (click)="toggleCategoria(cat)">
+                (click)="toggleCategoria(cat)">
                 <span>{{ cat.nome }}</span><span>{{ cat.expandido ? '−' : '+' }}</span>
               </button>
               <div *ngIf="cat.expandido" class="mt-2">
@@ -127,8 +138,7 @@
                       <div class="d-flex align-items-center mb-2">
                         <div class="item-thumb me-3">
                           <img *ngIf="inv.itemDetalhe?.imagem && inv.itemDetalhe?.imagem !== '-'"
-                               [src]="inv.itemDetalhe?.imagem"
-                               alt="{{ inv.itemDetalhe?.nome }}" />
+                            [src]="inv.itemDetalhe?.imagem" alt="{{ inv.itemDetalhe?.nome }}" />
                           <span *ngIf="!inv.itemDetalhe?.imagem || inv.itemDetalhe?.imagem === '-'">📦</span>
                         </div>
                         <div>
@@ -139,8 +149,10 @@
                           </small>
                         </div>
                       </div>
-                      <p *ngIf="inv.itemDetalhe?.efeito" class="small mt-2 text-info">✨ {{ inv.itemDetalhe?.efeito }}</p>
-                      <p *ngIf="inv.itemDetalhe?.colateral" class="small text-danger">⚠️ {{ inv.itemDetalhe?.colateral }}</p>
+                      <p *ngIf="inv.itemDetalhe?.efeito" class="small mt-2 text-info">✨ {{ inv.itemDetalhe?.efeito }}
+                      </p>
+                      <p *ngIf="inv.itemDetalhe?.colateral" class="small text-danger">⚠️ {{ inv.itemDetalhe?.colateral
+                        }}</p>
                     </div>
                   </div>
                 </div>
