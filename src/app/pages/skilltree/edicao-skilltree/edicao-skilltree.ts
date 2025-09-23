@@ -168,7 +168,7 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
         this.habilidadeService.habilidades
       );
       alert('✅ Habilidade salva com sucesso!');
-      this.router.navigate(['/skills-jogador']);
+      this.router.navigate(['/skilltree']);
     } catch (err) {
       console.error(err);
       alert('❌ Erro ao salvar');
@@ -187,7 +187,7 @@ export class EdicaoSkillTree implements OnInit, AfterViewInit {
       );
       if (ok) {
         alert('🗑️ Habilidade excluída com sucesso!');
-        this.router.navigate(['/skills-jogador']);
+        this.router.navigate(['/skilltree']);
       }
     } catch (err) {
       console.error('[EdicaoSkillTree] ❌ Erro ao excluir:', err);
