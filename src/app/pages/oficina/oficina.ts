@@ -53,7 +53,7 @@ export class Oficina implements OnInit {
     outros: ['Outros'],
   };
 
-  constructor(private router: Router, private oficinaService: OficinaService) {}
+  constructor(private router: Router, private oficinaService: OficinaService) { }
 
   async ngOnInit() {
     try {
@@ -101,9 +101,9 @@ export class Oficina implements OnInit {
         const itensFiltrados = c.itens.filter((i) =>
           (!this.fabricaveisOnly || i.fabricavel) &&
           (this.normalize(i.nome).includes(termo) ||
-           this.normalize(i.raridade).includes(termo) ||
-           this.normalize(i.efeito).includes(termo) ||
-           this.normalize(i.descricao).includes(termo))
+            this.normalize(i.raridade).includes(termo) ||
+            this.normalize(i.efeito).includes(termo) ||
+            this.normalize(i.descricao).includes(termo))
         );
 
         return {
@@ -184,4 +184,29 @@ export class Oficina implements OnInit {
       this.loadingAction[rec.id] = null;
     }
   }
+
+  getEmojiFallback(categoria?: string): string {
+    if (!categoria) return '📦'; // padrão
+
+    const mapa: Record<string, string> = {
+      recursos: '🌿',
+      equipamentos: '⚔️',
+      pocoes: '🧪',
+      outros: '📦',
+    };
+
+    // verifica em qual aba a categoria se encaixa
+    for (const aba of Object.keys(this.mapaAbas)) {
+      if (this.mapaAbas[aba as keyof typeof this.mapaAbas].includes(categoria)) {
+        return mapa[aba as keyof typeof mapa];
+      }
+    }
+
+    return '📦'; // fallback
+  }
+
+  abrirItemCatalogo(id: string | number) {
+    this.router.navigate(['/item-catalogo', String(id)]);
+  }
+
 }

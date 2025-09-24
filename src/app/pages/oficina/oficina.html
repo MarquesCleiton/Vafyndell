@@ -3,13 +3,12 @@
   <!-- 🔎 Barra de pesquisa -->
   <div class="p-3 top-bar position-sticky top-0" style="z-index: 10;">
     <div class="d-flex align-items-center gap-2">
-      <input type="text" class="form-control search-input rounded-pill px-3"
-             placeholder="🔍 Procurar receitas..."
-             [(ngModel)]="filtro" (input)="aplicarFiltro()" />
+      <input type="text" class="form-control search-input rounded-pill px-3" placeholder="🔍 Procurar receitas..."
+        [(ngModel)]="filtro" (input)="aplicarFiltro()" />
 
       <div class="form-check ms-2">
-        <input class="form-check-input" type="checkbox" id="fabricaveisOnly"
-               [(ngModel)]="fabricaveisOnly" (change)="aplicarFiltro()" />
+        <input class="form-check-input" type="checkbox" id="fabricaveisOnly" [(ngModel)]="fabricaveisOnly"
+          (change)="aplicarFiltro()" />
         <label class="form-check-label small text-light" for="fabricaveisOnly">
           Apenas fabricáveis
         </label>
@@ -19,12 +18,11 @@
     <!-- 🔖 Abas -->
     <ul class="nav nav-tabs mt-2">
       <li class="nav-item" *ngFor="let aba of abas">
-        <button class="nav-link" [class.active]="abaAtiva === aba"
-                (click)="selecionarAba(aba)">
+        <button class="nav-link" [class.active]="abaAtiva === aba" (click)="selecionarAba(aba)">
           {{ aba === 'recursos' ? '🌿 Recursos' :
-             aba === 'equipamentos' ? '⚔️ Equipamentos' :
-             aba === 'pocoes' ? '🧪 Poções' :
-             '📦 Outros' }}
+          aba === 'equipamentos' ? '⚔️ Equipamentos' :
+          aba === 'pocoes' ? '🧪 Poções' :
+          '📦 Outros' }}
         </button>
       </li>
     </ul>
@@ -41,15 +39,12 @@
         <p class="mt-2">Carregando receitas...</p>
       </div>
 
-      <div *ngIf="!carregando && categoriasFiltradas.length === 0"
-           class="text-center text-muted py-5">
+      <div *ngIf="!carregando && categoriasFiltradas.length === 0" class="text-center text-muted py-5">
         Nenhum item encontrado.
       </div>
 
       <div *ngIf="!carregando">
-        <div *ngFor="let cat of categoriasFiltradas"
-             class="mb-3"
-             [hidden]="!pertenceAba(cat.nome)">
+        <div *ngFor="let cat of categoriasFiltradas" class="mb-3" [hidden]="!pertenceAba(cat.nome)">
 
           <button class="categoria-btn" (click)="toggleCategoria(cat)">
             <span>{{ cat.nome || 'Outros' }}</span>
@@ -58,15 +53,17 @@
 
           <div *ngIf="cat.expandido" class="mt-2 d-flex flex-column gap-3">
             <div *ngFor="let rec of cat.itens" class="receita-card">
-              <small class="status-indicador"
-                     [ngClass]="rec.fabricavel ? 'status-ok' : 'status-off'">
+              <small class="status-indicador" [ngClass]="rec.fabricavel ? 'status-ok' : 'status-off'">
                 {{ rec.fabricavel ? '✔ Dispon.' : '✖ Indisp.' }}
               </small>
 
-              <div class="d-flex align-items-center mb-2">
+              <div class="d-flex align-items-center mb-2 cursor-pointer" (click)="abrirItemCatalogo(rec.id)">
                 <div class="thumb">
                   <img *ngIf="rec.imagem" [src]="rec.imagem" alt="{{ rec.nome }}" />
-                  <span *ngIf="!rec.imagem">⚒️</span>
+                  <span *ngIf="!rec.imagem">
+                    {{ getEmojiFallback(rec.categoria) }}
+                  </span>
+
                 </div>
                 <div>
                   <h6 class="fw-bold text-white mb-1">{{ rec.nome }}</h6>
@@ -80,10 +77,8 @@
               <p *ngIf="rec.colateral" class="small text-danger mb-2">⚠️ {{ rec.colateral }}</p>
 
               <div *ngIf="rec.ingredientes?.length" class="ingredientes-grid">
-                <div *ngFor="let ing of rec.ingredientes"
-                     class="ingrediente-pill"
-                     [ngClass]="{ 'ok': ing.quantidadeInventario >= ing.quantidade,
-                                  'fail': ing.quantidadeInventario < ing.quantidade }">
+                <div *ngFor="let ing of rec.ingredientes" class="ingrediente-pill" [ngClass]="{ 'ok': ing.quantidadeInventario >= ing.quantidade,
+                                  'fail': ing.quantidadeInventario < ing.quantidade }" (click)="abrirItemCatalogo(ing.id)">
                   <div class="ingrediente-thumb">
                     <img *ngIf="ing.imagem" [src]="ing.imagem" alt="{{ ing.nome }}" />
                     <span *ngIf="!ing.imagem">🧪</span>
@@ -105,19 +100,13 @@
               </div>
 
               <div *ngIf="rec.fabricavel" class="acoes-bottom">
-                <button class="btn-square success"
-                        [disabled]="loadingAction[rec.id]"
-                        (click)="criarItem(rec)">
-                  <span *ngIf="loadingAction[rec.id] === 'criar'"
-                        class="spinner-border spinner-border-sm"></span>
+                <button class="btn-square success" [disabled]="loadingAction[rec.id]" (click)="criarItem(rec)">
+                  <span *ngIf="loadingAction[rec.id] === 'criar'" class="spinner-border spinner-border-sm"></span>
                   <span *ngIf="loadingAction[rec.id] !== 'criar'">🛠️</span>
                 </button>
 
-                <button class="btn-square danger"
-                        [disabled]="loadingAction[rec.id]"
-                        (click)="forcarFalha(rec)">
-                  <span *ngIf="loadingAction[rec.id] === 'falha'"
-                        class="spinner-border spinner-border-sm"></span>
+                <button class="btn-square danger" [disabled]="loadingAction[rec.id]" (click)="forcarFalha(rec)">
+                  <span *ngIf="loadingAction[rec.id] === 'falha'" class="spinner-border spinner-border-sm"></span>
                   <span *ngIf="loadingAction[rec.id] !== 'falha'">🧨</span>
                 </button>
               </div>

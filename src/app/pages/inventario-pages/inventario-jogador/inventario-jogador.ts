@@ -53,7 +53,7 @@ export class InventarioJogador implements OnInit {
     outros: ['Outros'],
   };
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   async ngOnInit() {
     try {
@@ -68,101 +68,101 @@ export class InventarioJogador implements OnInit {
     }
   }
 
-private async loadLocalAndSync(email: string) {
-  console.log('[InventarioJogador] 🔑 Email do jogador:', email);
+  private async loadLocalAndSync(email: string) {
+    console.log('[InventarioJogador] 🔑 Email do jogador:', email);
 
-  // 1️⃣ Local
-  const [catalogoLocal, inventarioLocal] = await Promise.all([
-    this.catalogoRepo.getLocal(),
-    this.inventarioRepo.getLocal(),
-  ]);
-  console.log('[InventarioJogador] 📂 Catalogo Local:', catalogoLocal);
-  console.log('[InventarioJogador] 📂 Inventario Local:', inventarioLocal);
-
-  const meusItens = inventarioLocal.filter((i) => i.jogador === email);
-  console.log('[InventarioJogador] 🎯 Meus Itens (local):', meusItens);
-
-  this.processarInventario(meusItens, catalogoLocal);
-
-  // 2️⃣ Sync em paralelo
-  (async () => {
-    const [catSync, invSync] = await Promise.all([
-      this.catalogoRepo.sync(),
-      this.inventarioRepo.sync(),
+    // 1️⃣ Local
+    const [catalogoLocal, inventarioLocal] = await Promise.all([
+      this.catalogoRepo.getLocal(),
+      this.inventarioRepo.getLocal(),
     ]);
-    console.log('[InventarioJogador] 🔄 Sync concluído:', { catSync, invSync });
+    console.log('[InventarioJogador] 📂 Catalogo Local:', catalogoLocal);
+    console.log('[InventarioJogador] 📂 Inventario Local:', inventarioLocal);
 
-    if (catSync || invSync) {
-      const [catAtualizado, invAtualizado] = await Promise.all([
-        this.catalogoRepo.getLocal(),
-        this.inventarioRepo.getLocal(),
+    const meusItens = inventarioLocal.filter((i) => i.jogador === email);
+    console.log('[InventarioJogador] 🎯 Meus Itens (local):', meusItens);
+
+    this.processarInventario(meusItens, catalogoLocal);
+
+    // 2️⃣ Sync em paralelo
+    (async () => {
+      const [catSync, invSync] = await Promise.all([
+        this.catalogoRepo.sync(),
+        this.inventarioRepo.sync(),
       ]);
-      console.log('[InventarioJogador] 📂 Catalogo Atualizado:', catAtualizado);
-      console.log('[InventarioJogador] 📂 Inventario Atualizado:', invAtualizado);
+      console.log('[InventarioJogador] 🔄 Sync concluído:', { catSync, invSync });
 
-      const meusAtualizados = invAtualizado.filter((i) => i.jogador === email);
-      console.log('[InventarioJogador] 🎯 Meus Itens (sync):', meusAtualizados);
+      if (catSync || invSync) {
+        const [catAtualizado, invAtualizado] = await Promise.all([
+          this.catalogoRepo.getLocal(),
+          this.inventarioRepo.getLocal(),
+        ]);
+        console.log('[InventarioJogador] 📂 Catalogo Atualizado:', catAtualizado);
+        console.log('[InventarioJogador] 📂 Inventario Atualizado:', invAtualizado);
 
-      this.processarInventario(meusAtualizados, catAtualizado);
+        const meusAtualizados = invAtualizado.filter((i) => i.jogador === email);
+        console.log('[InventarioJogador] 🎯 Meus Itens (sync):', meusAtualizados);
+
+        this.processarInventario(meusAtualizados, catAtualizado);
+      }
+    })();
+
+    // 3️⃣ Fallback online
+    if (!meusItens.length) {
+      console.log('[InventarioJogador] ⚠️ Nenhum item local → buscando online...');
+      const [catalogoOnline, inventarioOnline] = await Promise.all([
+        this.catalogoRepo.forceFetch(),
+        this.inventarioRepo.forceFetch(),
+      ]);
+      console.log('[InventarioJogador] 🌐 Catalogo Online:', catalogoOnline);
+      console.log('[InventarioJogador] 🌐 Inventario Online:', inventarioOnline);
+
+      const meusOnline = inventarioOnline.filter((i) => i.jogador === email);
+      console.log('[InventarioJogador] 🎯 Meus Itens (online):', meusOnline);
+
+      this.processarInventario(meusOnline, catalogoOnline);
     }
-  })();
-
-  // 3️⃣ Fallback online
-  if (!meusItens.length) {
-    console.log('[InventarioJogador] ⚠️ Nenhum item local → buscando online...');
-    const [catalogoOnline, inventarioOnline] = await Promise.all([
-      this.catalogoRepo.forceFetch(),
-      this.inventarioRepo.forceFetch(),
-    ]);
-    console.log('[InventarioJogador] 🌐 Catalogo Online:', catalogoOnline);
-    console.log('[InventarioJogador] 🌐 Inventario Online:', inventarioOnline);
-
-    const meusOnline = inventarioOnline.filter((i) => i.jogador === email);
-    console.log('[InventarioJogador] 🎯 Meus Itens (online):', meusOnline);
-
-    this.processarInventario(meusOnline, catalogoOnline);
   }
-}
 
-private processarInventario(inventarioBruto: InventarioDomain[], catalogo: CatalogoDomain[]) {
-  console.log('[InventarioJogador] 🛠️ processarInventario →', { inventarioBruto, catalogo });
+  private processarInventario(inventarioBruto: InventarioDomain[], catalogo: CatalogoDomain[]) {
+    console.log('[InventarioJogador] 🛠️ processarInventario →', { inventarioBruto, catalogo });
 
-  const inventarioDetalhado: InventarioDetalhado[] = inventarioBruto.map((inv) => {
-    const detalhe = catalogo.find(
-      (c) => String(c.id) === String(inv.item_catalogo) || String(c.id) === String(inv.item_catalogo)
-    );
+    const inventarioDetalhado: InventarioDetalhado[] = inventarioBruto.map((inv) => {
+      const detalhe = catalogo.find(
+        (c) => String(c.id) === String(inv.item_catalogo) || String(c.id) === String(inv.item_catalogo)
+      );
 
-    if (!detalhe) {
-      console.warn('[InventarioJogador] ⚠️ Sem detalhe encontrado para item:', inv);
-    }
+      if (!detalhe) {
+        console.warn('[InventarioJogador] ⚠️ Sem detalhe encontrado para item:', inv);
+      }
 
-    return { ...inv, itemDetalhe: detalhe };
-  });
+      return { ...inv, itemDetalhe: detalhe };
+    });
 
-  console.log('[InventarioJogador] 📦 Inventario Detalhado:', inventarioDetalhado);
+    console.log('[InventarioJogador] 📦 Inventario Detalhado:', inventarioDetalhado);
 
-  const estados = new Map(this.categorias.map((c) => [c.nome, c.expandido]));
-  const mapa = new Map<string, InventarioDetalhado[]>();
+    const estados = new Map(this.categorias.map((c) => [c.nome, c.expandido]));
+    const mapa = new Map<string, InventarioDetalhado[]>();
 
-  inventarioDetalhado.forEach((i) => {
-    const cat = i.itemDetalhe?.categoria || 'Outros';
-    if (!mapa.has(cat)) mapa.set(cat, []);
-    mapa.get(cat)!.push(i);
-  });
+    inventarioDetalhado.forEach((i) => {
+      const cat = i.itemDetalhe?.categoria || 'Outros';
+      if (!mapa.has(cat)) mapa.set(cat, []);
+      mapa.get(cat)!.push(i);
+    });
 
-  this.categorias = Array.from(mapa.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([nome, itens]) => ({
-      nome,
-      itens,
-      expandido: estados.get(nome) ?? false,
-    }));
+    this.categorias = Array.from(mapa.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([nome, itens]) => ({
+        nome,
+        itens,
+        expandido: estados.get(nome) ?? false,
+      }));
 
-  console.log('[InventarioJogador] 📊 Categorias:', this.categorias);
+    console.log('[InventarioJogador] 📊 Categorias:', this.categorias);
 
-  this.categoriasFiltradas = [...this.categorias];
-  this.calcularResumo();
-}
+    this.categoriasFiltradas = [...this.categorias];
+    this.calcularResumo();
+  }
 
 
   private calcularResumo() {
@@ -234,4 +234,25 @@ private processarInventario(inventarioBruto: InventarioDomain[], catalogo: Catal
     event.stopPropagation();
     this.router.navigate(['/troca-de-itens', itemId]);
   }
+
+  getEmojiFallback(categoria?: string): string {
+    if (!categoria) return '📦'; // padrão
+
+    const mapa: Record<string, string> = {
+      recursos: '🌿',
+      equipamentos: '⚔️',
+      pocoes: '🧪',
+      outros: '📦',
+    };
+
+    // verifica em qual aba a categoria se encaixa
+    for (const aba of Object.keys(this.mapaAbas)) {
+      if (this.mapaAbas[aba].includes(categoria)) {
+        return mapa[aba as keyof typeof mapa];
+      }
+    }
+
+    return '📦'; // fallback padrão
+  }
+
 }

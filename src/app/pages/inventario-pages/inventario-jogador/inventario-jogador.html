@@ -73,7 +73,10 @@
                         <div class="item-thumb me-3">
                           <img *ngIf="inv.itemDetalhe?.imagem && inv.itemDetalhe?.imagem !== '-'"
                             [src]="inv.itemDetalhe?.imagem" alt="{{ inv.itemDetalhe?.nome }}" />
-                          <span *ngIf="!inv.itemDetalhe?.imagem || inv.itemDetalhe?.imagem === '-'">📦</span>
+                          <span *ngIf="!inv.itemDetalhe?.imagem || inv.itemDetalhe?.imagem === '-'">
+                            {{ getEmojiFallback(inv.itemDetalhe?.categoria) }}
+                          </span>
+
                         </div>
 
                         <div>
@@ -82,7 +85,7 @@
                           </h6>
                           <small class="item-meta">
                             {{ inv.quantidade }} {{ inv.itemDetalhe?.unidade_medida || '' }}
-                            | ⚖️ {{ inv.itemDetalhe?.peso || 0 }} kg
+                            | ⚖️ {{ inv.quantidade * (inv.itemDetalhe?.peso || 0) }} kg
                           </small>
                         </div>
                       </div>

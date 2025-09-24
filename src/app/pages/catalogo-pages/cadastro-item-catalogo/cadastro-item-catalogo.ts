@@ -56,10 +56,28 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
   salvando = false;
   editMode = false;
 
-  unidadesMedida = ['g', 'kg', 'ml', 'l', 'cm', 'm', 'unidade'];
-  origens = ['Fabricável', 'Natural'];
+  unidadesMedida = ['g', 'kg', 'ml', 'L', 'mm', 'cm', 'm', 'gota(s)', 'dose(s)', 'frasco(s)', 'unidade(s)'];
+  origens = ['Frabricado', 'Natural'];
   raridades = ['Comum', 'Incomum', 'Raro', 'Épico', 'Lendário'];
-  categorias = ['Recursos botânicos', 'Mineral', 'Equipamento', 'Moeda', 'Tesouro', 'Outros'];
+  categorias = [
+    'Poção de Cura – Regenera vida, cicatriza feridas',
+    'Poção de Cura – Regenera vida, cicatriza feridas',
+    'Poção Sensorial – Visão, audição, percepção, voz, respiração',
+    'Poção de Aprimoramento Físico – Força, resistência, agilidade',
+    'Poção Mental – Calmante, foco, memória, sono, esquecimento',
+    'Poção de Energia – Percepção da energia fundamental',
+    'Poção de Furtividade – Camuflagem, passos suaves, silêncio',
+    'Veneno – Sonolência, confusão ou morte',
+    'Utilitário – Bombas, armadilhas, luz, som, gás, adesivos',
+    'Recursos botânicos',
+    'Componentes bestiais e animalescos',
+    'Mineral',
+    'Moeda',
+    'Tesouro',
+    'Equipamento',
+    'Ferramentas',
+    'Outros'
+  ];
 
   private repoCatalogo = new BaseRepositoryV2<CatalogoDomain>('Catalogo');
   private repoReceitas = new BaseRepositoryV2<ReceitaDomain>('Receitas');

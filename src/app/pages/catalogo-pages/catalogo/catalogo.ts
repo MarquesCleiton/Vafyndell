@@ -214,4 +214,26 @@ export class Catalogo implements OnInit {
       this.loadingVisibilidade[item.id] = false;
     }
   }
+
+  getEmojiFallback(categoria?: string): string {
+    if (!categoria) return '📦'; // padrão
+
+    const mapa: Record<string, string> = {
+      recursos: '🌿',
+      equipamentos: '⚔️',
+      pocoes: '🧪',
+      outros: '📦',
+      ocultos: '🙈',
+    };
+
+    // verifica em qual aba a categoria se encaixa
+    for (const aba of Object.keys(this.mapaAbas)) {
+      if (this.mapaAbas[aba].includes(categoria)) {
+        return mapa[aba as keyof typeof mapa];
+      }
+    }
+
+    return '📦'; // fallback
+  }
+
 }

@@ -76,7 +76,10 @@
                     <div class="item-thumb me-3">
                       <img *ngIf="item.imagem && item.imagem !== '-'" [src]="item.imagem"
                         alt="{{ item.nome || 'Item' }}" />
-                      <span *ngIf="!item.imagem || item.imagem === '-'" class="text-muted fs-4">📦</span>
+                      <span *ngIf="!item.imagem || item.imagem === '-'" class="text-muted fs-4">
+                        {{ getEmojiFallback(item.categoria) }}
+                      </span>
+
                     </div>
 
                     <div>
