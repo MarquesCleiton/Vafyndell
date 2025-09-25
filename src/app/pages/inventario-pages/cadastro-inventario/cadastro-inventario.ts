@@ -49,7 +49,7 @@ export class CadastroInventario implements OnInit {
   constructor(
     private router: Router,
     private route: ActivatedRoute
-  ) {}
+  ) { }
 
   async ngOnInit() {
     try {
@@ -78,8 +78,9 @@ export class CadastroInventario implements OnInit {
 
         const locais = await this.inventarioRepo.getLocal();
         this.inventarioAtual = locais.find(
-          (i) => i.id === idParam && i.jogador === user.email
+          (i) => String(i.id) === String(idParam) && i.jogador === user.email
         ) || null;
+
 
         if (this.inventarioAtual) {
           await this.carregarItemSelecionado(this.inventarioAtual);
@@ -90,8 +91,9 @@ export class CadastroInventario implements OnInit {
           if (updated) {
             const atualizados = await this.inventarioRepo.getLocal();
             const recarregado = atualizados.find(
-              (i) => i.id === idParam && i.jogador === user.email
+              (i) => String(i.id) === String(idParam) && i.jogador === user.email
             );
+
             if (recarregado) {
               this.inventarioAtual = recarregado;
               await this.carregarItemSelecionado(this.inventarioAtual);
@@ -103,8 +105,9 @@ export class CadastroInventario implements OnInit {
         if (!this.inventarioAtual) {
           const online = await this.inventarioRepo.forceFetch();
           this.inventarioAtual = online.find(
-            (i) => i.id === idParam && i.jogador === user.email
+            (i) => String(i.id) === String(idParam) && i.jogador === user.email
           ) || null;
+
 
           if (this.inventarioAtual) {
             await this.carregarItemSelecionado(this.inventarioAtual);
@@ -122,7 +125,10 @@ export class CadastroInventario implements OnInit {
       this.catalogoFiltrado = this.catalogoItens;
     }
 
-    this.selecionado = this.catalogoItens.find((c) => c.id === inventario.item_catalogo) || null;
+    this.selecionado = this.catalogoItens.find(
+      (c) => String(c.id) === String(inventario.item_catalogo)
+    ) || null;
+
     this.quantidade = inventario.quantidade;
     this.filtro = this.selecionado?.nome || '';
   }

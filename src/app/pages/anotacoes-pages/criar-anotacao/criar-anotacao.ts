@@ -132,7 +132,12 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
         this.anotacao.data = new Date().toISOString();
       }
 
-      // Prepara payload
+      if (!this.editMode) {
+        // ⚡ gera o id ANTES de montar o payload
+        this.anotacao.id = IdUtils.generateULID();
+      }
+
+      // Agora sim monta o payload atualizado
       const payload: any = { ...this.anotacao };
       if (this.imagemBase64Temp) {
         payload.imagem = this.imagemBase64Temp; // envia base64 → Script cuida
@@ -143,7 +148,6 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
         this.anotacao = { ...updated };
         window.alert('✅ Anotação atualizada!');
       } else {
-        this.anotacao.id = IdUtils.generateULID();
         const created = await this.repo.create(payload);
         this.anotacao = { ...created };
         window.alert('✅ Anotação criada!');
@@ -158,6 +162,7 @@ export class CriarAnotacao implements OnInit, AfterViewInit {
       this.imagemBase64Temp = null;
     }
   }
+
 
   cancelar() {
     this.router.navigate(['/anotacoes']);
