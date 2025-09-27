@@ -12,6 +12,10 @@ import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { CommonModule } from '@angular/common';
 import { AuthService } from './core/auth/AuthService';
+import { BootstrapService } from './services/BootstrapService';
+
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+
 
 @Component({
   selector: 'app-root',
@@ -24,7 +28,8 @@ import { AuthService } from './core/auth/AuthService';
     MatButtonModule,
     MatSidenavModule,
     MatListModule,
-    MatDividerModule
+    MatDividerModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
@@ -51,7 +56,7 @@ export class App {
   protected readonly title = signal('Vafyndell');
   private readonly activeRoute = signal('');
   protected readonly isLogged = signal(false);
-
+  protected readonly syncing = signal(false);
   isDesktop = window.innerWidth >= 992; // 🔑 controla se é desktop
 
   get currentRoute(): string {
@@ -73,7 +78,7 @@ export class App {
     '/npcs': 'Feras & Vilões'
   };
 
-  constructor(private router: Router) {
+  constructor(private router: Router, private bootstrap: BootstrapService) {
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
@@ -88,21 +93,42 @@ export class App {
     window.addEventListener('resize', () => {
       this.isDesktop = window.innerWidth >= 992;
     });
+
   }
 
-  onRefresh() {
-    window.location.reload();
+  async onRefresh() {
+    try {
+      this.syncing.set(true);
+      console.log('[App] Forçando sincronia de todas as bases...');
+
+      await this.bootstrap.preloadAll((msg) => {
+        console.log('[Sync]', msg);
+      });
+
+      alert('🔄 Sincronia concluída com sucesso!');
+      window.location.reload();
+    } catch (err) {
+      console.error('[App] Erro na sincronia:', err);
+      alert('❌ Erro ao sincronizar dados. Tente novamente.');
+    } finally {
+      this.syncing.set(false);
+    }
   }
+
 
   navigateTo(path: string) {
     this.router.navigate([path]);
   }
 
   navigateWithClose(path: string, sidenav: any) {
-  this.navigateTo(path);
-  if (!this.isDesktop) {
-    sidenav.close();
+    this.navigateTo(path);
+    if (!this.isDesktop) {
+      sidenav.close();
+    }
   }
-}
 
+  async logout(sidenav: any) {
+    localStorage.removeItem("user");
+    window.location.href = '/login'
+  }
 }

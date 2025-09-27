@@ -29,15 +29,14 @@ export class Login implements OnInit {
     if (user && !AuthService.isAuthenticated()) {
       console.warn('[Login] Token expirado → limpando credenciais e banco');
       await AuthService.logoutHard();
-      const db = await IndexedDBClientV2.create();
-      await db.deleteDatabase();
+      // const db = await IndexedDBClientV2.create();
+      // await db.deleteDatabase();
       return;
     }
 
     // 🚨 Caso 2: Não tem user mas ainda existe banco local → reset banco
     if (!user) {
-      const db = await IndexedDBClientV2.create();
-      await db.deleteDatabase();
+      await AuthService.logoutHard();
       console.warn('[Login] Nenhum usuário → banco local limpo');
     }
 

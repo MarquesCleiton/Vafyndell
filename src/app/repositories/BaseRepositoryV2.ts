@@ -222,7 +222,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
     console.log(`[BaseRepositoryV2:${this.tab}] ◀️ sync result`, result);
 
     // --- sync ---
-    const onlineMeta = result?.['Metadados']?.find((m: any) => m.id === this.tab);
+    const onlineMeta = result?.['Metadados']?.find((m: any) => String(m.id) === String(this.tab));
     if (!onlineMeta) {
       console.warn(`[BaseRepositoryV2:${this.tab}] ⚠️ Nenhum metadado encontrado online`);
       return false;

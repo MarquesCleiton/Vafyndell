@@ -19,7 +19,15 @@
       <a mat-list-item (click)="navigateWithClose('/catalogo', sidenav)">📚 Catálogo</a>
       <a mat-list-item (click)="navigateWithClose('/npcs', sidenav)">👹 Feras & Vilões</a>
       <a mat-list-item (click)="navigateWithClose('/edicao-skilltree', sidenav)">➕ Cadastrar Skill</a>
+
+      <mat-divider></mat-divider>
+
+      <!-- 🚪 Botão de sair -->
+      <a mat-list-item (click)="logout(sidenav)" class="text-danger fw-bold">
+        🚪 Sair
+      </a>
     </mat-nav-list>
+
 
   </mat-sidenav>
 
@@ -32,9 +40,10 @@
       </button>
       <span class="ms-2">{{ title() }}</span>
       <span class="flex-grow-1"></span>
-      <button mat-icon-button (click)="onRefresh()" class="text-light">
-        <mat-icon>refresh</mat-icon>
+      <button mat-icon-button (click)="onRefresh()" class="text-light" [disabled]="syncing()">
+        <mat-icon [ngClass]="{ 'refresh-rotating': syncing() }">refresh</mat-icon>
       </button>
+
     </mat-toolbar>
 
     <!-- Área de rotas -->
@@ -63,7 +72,7 @@
         <small>Bancada</small>
       </button>
       <button mat-button (click)="navigateTo('/batalha')" class="nav-item d-flex flex-column align-items-center">
-       <h6 class="m-0">⚔️</h6> 
+        <h6 class="m-0">⚔️</h6>
         <small>Batalha</small>
       </button>
       <button mat-button (click)="navigateTo('/anotacoes')" class="nav-item d-flex flex-column align-items-center">

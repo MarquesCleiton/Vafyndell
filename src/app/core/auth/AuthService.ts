@@ -81,11 +81,10 @@ export class AuthService {
     localStorage.removeItem(this.STORAGE_KEY);
   }
 
-  static async logoutHard(): Promise<void> {
+  static async logoutHard() {
     console.log('[AuthService] logoutHard → limpando user + banco');
     localStorage.removeItem(this.STORAGE_KEY);
-
-    const db = await IndexedDBClientV2.create(); // 🔄 agora usa V2
+    const db = await IndexedDBClientV2.create();
     await db.deleteDatabase();
   }
 
@@ -96,11 +95,16 @@ export class AuthService {
     try {
       const payload = this.parseJwt(user.idToken);
       const now = Math.floor(Date.now() / 1000);
-      return payload.exp && Number(payload.exp) > now;
+
+      // margem de 12h = 43.200 segundos
+      const gracePeriod = 12 * 60 * 60;
+
+      return payload.exp && Number(payload.exp) + gracePeriod > now;
     } catch {
       return false;
     }
   }
+
 
   private static parseJwt(token: string): any {
     const base64Url = token.split('.')[1];
