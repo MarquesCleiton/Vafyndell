@@ -129,6 +129,6 @@ export class App {
 
   async logout(sidenav: any) {
     localStorage.removeItem("user");
-    window.location.href = '/login'
+    window.location.href = '/Vafyndell'
   }
 }
