@@ -41,6 +41,8 @@ export const routes: Routes = [
   { path: 'edicao-skilltree/:id', loadComponent: () => import('./pages/skilltree/edicao-skilltree/edicao-skilltree').then((m) => m.EdicaoSkillTree) },
   { path: 'visao-jogadores', loadComponent: () => import('./pages/jogador-pages/visao-jogadores/visao-jogadores').then((m) => m.VisaoJogadores) },
   { path: 'visao-jogadores/:id', loadComponent: () => import('./pages/jogador-pages/visao-jogadores/visao-jogadores').then((m) => m.VisaoJogadores) },
+  { path: 'registro', loadComponent: () => import('./pages/registro/registro').then((m) => m.Registro) },
+  { path: 'registro/:id', loadComponent: () => import('./pages/registro/registro').then((m) => m.Registro) },
 
   { path: '**', redirectTo: 'login' }
 ];

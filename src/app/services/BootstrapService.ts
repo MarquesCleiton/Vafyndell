@@ -17,6 +17,7 @@ export class BootstrapService {
       'Habilidades',
       'Metadados',
       'Habilidades_jogadores',
+      'Registro'
     ];
 
     // 🔄 loop de frases enquanto carrega do servidor

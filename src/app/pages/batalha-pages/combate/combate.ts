@@ -15,13 +15,17 @@ import { JogadorDomain } from '../../../domain/jogadorDomain';
 import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { AuthService } from '../../../core/auth/AuthService';
 
+import { IdUtils } from '../../../core/utils/IdUtils';
+import { RegistroDomain } from '../../../domain/RegistroDomain';
+
+import { JogadorUtils } from '../../../domain/jogadorDomain';
+
 @Component({
   selector: 'app-combate',
   standalone: true,
   imports: [
     CommonModule,
     FormsModule,
-    // Material
     MatFormFieldModule,
     MatSelectModule,
     MatInputModule,
@@ -44,8 +48,9 @@ export class Combate implements OnInit {
 
   // ✅ agora com BaseRepositoryV2 (id é a chave)
   private repo = new BaseRepositoryV2<JogadorDomain>('Personagem');
+  private repoRegistro = new BaseRepositoryV2<RegistroDomain>('Registro');
 
-  constructor(private router: Router, private route: ActivatedRoute) {}
+  constructor(private router: Router, private route: ActivatedRoute) { }
 
   async ngOnInit() {
     try {
@@ -104,6 +109,7 @@ export class Combate implements OnInit {
     this.router.navigate(['/batalha']);
   }
 
+
   async registrarCombate(form: NgForm) {
     if (form.invalid || !this.ofensorSelecionado || !this.vitimaSelecionada) return;
 
@@ -136,27 +142,55 @@ export class Combate implements OnInit {
         this.vitimaSelecionada.dano_tomado = danoTomadoAtual + danoAplicado;
       }
 
-      // ✅ Atualiza no repositório (clone limpo)
-      await this.repo.update({ ...this.vitimaSelecionada });
+      // 📌 Calcula informações derivadas
+      const vidaBase = JogadorUtils.getVidaBase(this.vitimaSelecionada);
+      const vidaAtual = JogadorUtils.getVidaAtual(this.vitimaSelecionada);
+      const morto = JogadorUtils.estaMorto(this.vitimaSelecionada);
 
-      console.log('⚔️ Combate registrado:', {
-        ofensor: this.ofensorSelecionado,
-        vitima: this.vitimaSelecionada,
-        danoRecebido: this.dano,
-        caRestante: this.vitimaSelecionada.classe_de_armadura,
-        danoTomadoTotal: this.vitimaSelecionada.dano_tomado,
-        efeitos: this.efeitos,
+      // 📌 Monta detalhes elegantes
+      let detalhes =
+        `⚔️ ${this.ofensorSelecionado.personagem} atacou ${this.vitimaSelecionada.personagem}\n` +
+        `💥 Dano causado: ${this.dano}\n` +
+        `🛡️ Armadura restante: ${this.vitimaSelecionada.classe_de_armadura}\n` +
+        `❤️ Vida atual: ${vidaAtual}/${vidaBase}`;
+
+      if (this.efeitos?.trim()) {
+        detalhes += `\n✨ Efeitos adicionais: ${this.efeitos}`;
+      }
+
+      // 🚨 Eventos especiais
+      if (caAtual > 0 && this.vitimaSelecionada.classe_de_armadura === 0) {
+        detalhes += `\n💔 A armadura de ${this.vitimaSelecionada.personagem} foi destruída!`;
+      }
+      if (morto) {
+        detalhes += `\n☠️ ${this.vitimaSelecionada.personagem} caiu em combate!`;
+      }
+
+      // 📌 Cria registro
+      const registro: RegistroDomain = {
+        id: IdUtils.generateULID(),
+        jogador: this.ofensorSelecionado.email,             // 👈 email do ofensor
+        alvo: this.vitimaSelecionada.email,                 // 👈 email da vítima
+        tipo: 'batalha',
+        acao: 'ataque',
+        detalhes,
+        data: new Date().toISOString(),
+      };
+
+
+      // ✅ Tudo em 1 batch (Personagem + Registro)
+      const result = await BaseRepositoryV2.batch({
+        updateById: { Personagem: [{ ...this.vitimaSelecionada }] },
+        create: { Registro: [registro] }
       });
 
-      alert(
-        `✅ ${this.ofensorSelecionado.personagem} causou ${this.dano} de dano em ${this.vitimaSelecionada.personagem}!\n` +
-          `🛡️ Armadura restante: ${this.vitimaSelecionada.classe_de_armadura}\n` +
-          `💥 Dano total sofrido: ${this.vitimaSelecionada.dano_tomado}`
-      );
+      console.log('⚔️ Combate registrado (batch):', result);
+
+      alert('✅ Registro de batalha salvo!\n\n' + detalhes);
 
       this.router.navigate(['/batalha']);
     } catch (err) {
-      console.error('[Combate] Erro ao registrar:', err);
+      console.error('[Combate] Erro ao registrar (batch):', err);
       alert('❌ Erro ao registrar combate.');
     } finally {
       this.salvando = false;

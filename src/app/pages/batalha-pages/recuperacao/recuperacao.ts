@@ -5,6 +5,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { JogadorDomain, JogadorUtils } from '../../../domain/jogadorDomain';
 import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
+import { RegistroDomain } from '../../../domain/RegistroDomain';
+import { IdUtils } from '../../../core/utils/IdUtils';
 
 @Component({
   selector: 'app-recuperacao',
@@ -25,8 +27,9 @@ export class Recuperacao implements OnInit {
 
   // ✅ agora com BaseRepositoryV2
   private repo = new BaseRepositoryV2<JogadorDomain>('Personagem');
+  private repoRegistro = new BaseRepositoryV2<RegistroDomain>('Registro');
 
-  constructor(private route: ActivatedRoute, private router: Router) {}
+  constructor(private route: ActivatedRoute, private router: Router) { }
 
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -117,22 +120,46 @@ export class Recuperacao implements OnInit {
           (this.jogador.classe_de_armadura || 0) + this.armadura;
       }
 
-      // ✅ update sempre via id
-      await this.repo.update(this.jogador);
+      // 📌 Calcula valores após atualização
+      const vidaFinal = JogadorUtils.getVidaAtual(this.jogador);
+      const armaduraFinal = this.jogador.classe_de_armadura || 0;
 
-      alert(
-        `✅ ${this.jogador.personagem} se recuperou!\n` +
-          `❤️ Vida: ${JogadorUtils.getVidaAtual(this.jogador)}/${vidaBase}\n` +
-          `🛡️ Armadura: ${this.jogador.classe_de_armadura}\n` +
-          (this.descricao ? `📝 ${this.descricao}` : '')
-      );
+      // 📌 Monta detalhes elegantes
+      let detalhes =
+        `💊 ${this.jogador.personagem} se recuperou!\n` +
+        (vidaRecuperada > 0 ? `❤️ Vida restaurada: +${vidaRecuperada} → ${JogadorUtils.getVidaAtual(this.jogador)}/${vidaBase}\n` : '') +
+        (this.armadura > 0 ? `🛡️ Armadura reforçada: +${this.armadura} → ${this.jogador.classe_de_armadura}\n` : '') +
+        (this.descricao?.trim() ? `📝 ${this.descricao}` : '');
+
+
+      // 📌 Cria registro
+      const registro: RegistroDomain = {
+        id: IdUtils.generateULID(),
+        jogador: this.jogador.email,
+        alvo: this.jogador.email,
+        tipo: 'recuperacao',
+        acao: 'cura',
+        detalhes,
+        data: new Date().toISOString(),
+      };
+
+      // ✅ Tudo em 1 batch (Personagem + Registro)
+      const result = await BaseRepositoryV2.batch({
+        updateById: { Personagem: [{ ...this.jogador }] },
+        create: { Registro: [registro] }
+      });
+
+      console.log('💊 Recuperação registrada (batch):', result);
+
+      alert('✅ Recuperação salva!\n\n' + detalhes);
 
       this.router.navigate(['/batalha']);
     } catch (err) {
-      console.error('[Recuperacao] Erro ao registrar:', err);
+      console.error('[Recuperacao] Erro ao registrar (batch):', err);
       alert('❌ Erro ao registrar recuperação.');
     } finally {
       this.salvando = false;
     }
   }
+
 }
