@@ -97,7 +97,7 @@ export class AuthService {
       const now = Math.floor(Date.now() / 1000);
 
       // margem de 12h = 43.200 segundos
-      const gracePeriod = 12 * 60 * 60;
+      const gracePeriod = 30 * 60 * 60;
 
       return payload.exp && Number(payload.exp) + gracePeriod > now;
     } catch {
