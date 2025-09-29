@@ -8,8 +8,10 @@
 
 .item-detalhe-container {
   width: 100%;
-  max-width: 900px; /* 🔑 largura máxima padronizada */
-  margin: 0 auto;   /* 🔑 centraliza o card */
+  max-width: 900px;
+  /* 🔑 largura máxima padronizada */
+  margin: 0 auto;
+  /* 🔑 centraliza o card */
 }
 
 /* ======================
@@ -23,7 +25,8 @@
 
 /* Área de imagem sempre consistente */
 .detalhe-img {
-  height: 220px; /* 🔑 altura fixa padronizada */
+  height: 220px;
+  /* 🔑 altura fixa padronizada */
   object-fit: cover;
   width: 100%;
 }
@@ -36,16 +39,29 @@
   padding: 2px 8px;
   border-radius: 6px;
 }
-.raridade.comum { color: #ccc; }
-.raridade.incomum { color: #00bcd4; }
-.raridade.raro { color: #673ab7; }
-.raridade.lendario { color: gold; }
+
+.raridade.comum {
+  color: #ccc;
+}
+
+.raridade.incomum {
+  color: #00bcd4;
+}
+
+.raridade.raro {
+  color: #673ab7;
+}
+
+.raridade.lendario {
+  color: gold;
+}
 
 /* ======================
    TEXTO EXTRA
    ====================== */
 .descricao-text {
-  white-space: pre-line;   /* 👈 respeita quebras de linha */
+  white-space: pre-line;
+  /* 👈 respeita quebras de linha */
   color: #ddd;
   font-size: 0.95rem;
   background: #2a2a2a;
@@ -80,6 +96,7 @@
   box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s ease;
 }
+
 .fab:hover {
   transform: scale(1.08);
 }
@@ -89,19 +106,28 @@
   background: #0d6efd;
   color: #fff;
 }
-.fab-primary:hover { background: #0b5ed7; }
+
+.fab-primary:hover {
+  background: #0b5ed7;
+}
 
 .fab-warning {
   background: #ffc107;
   color: #000;
 }
-.fab-warning:hover { background: #e0a800; }
+
+.fab-warning:hover {
+  background: #e0a800;
+}
 
 .fab-danger {
   background: #ff4d6d;
   color: #fff;
 }
-.fab-danger:hover { background: #e63e5b; }
+
+.fab-danger:hover {
+  background: #e63e5b;
+}
 
 /* ======================
    DESKTOP AJUSTE
@@ -116,13 +142,15 @@
   }
 
   .fab-stack {
-    right: calc(50% - 450px + 20px); /* ancora ao card central */
+    right: calc(50% - 450px + 20px);
+    /* ancora ao card central */
   }
 }
 
 /* fallback para quando não há imagem */
 .fallback-icone {
-  font-size: 3rem; /* deixa o ícone grande e centralizado */
+  font-size: 3rem;
+  /* deixa o ícone grande e centralizado */
 }
 
 
@@ -194,4 +222,15 @@
   font-weight: bold;
   color: #28a745;
   font-size: 1rem;
+}
+
+.link-hover {
+  cursor: pointer;
+  color: #0dcaf0;
+  transition: color 0.2s ease;
+}
+
+.link-hover:hover {
+  color: #17a2b8;
+  text-decoration: underline;
 }

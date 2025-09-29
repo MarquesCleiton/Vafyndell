@@ -16,6 +16,7 @@ import { ImageModal } from '../../image-modal/image-modal';
 export class ItemCatalogo implements OnInit {
   item: CatalogoDomain | null = null;
   ingredientesDetalhados: { item: CatalogoDomain; quantidade: number }[] = [];
+  receitasAssociadas: { produto: CatalogoDomain; quantidade: number }[] = [];
   carregando = true;
 
 
@@ -37,26 +38,31 @@ export class ItemCatalogo implements OnInit {
   ) { }
 
   async ngOnInit() {
-    try {
-      console.log('[ItemCatalogo] Iniciando carregamento...');
-      this.carregando = true;
-
-      const id = this.route.snapshot.paramMap.get('id');
+    this.route.paramMap.subscribe(async (params) => {
+      const id = params.get('id');
       if (!id) {
         this.router.navigate(['/catalogo']);
         return;
       }
+      await this.carregarItem(id);
+    });
+  }
 
-      // 1️⃣ Carrega cache local (Catálogo)
+
+  private async carregarItem(id: string) {
+    try {
+      console.log('[ItemCatalogo] Carregando item', id);
+      this.carregando = true;
+
+      // tenta local
       const existente = await this.repoCatalogo.getById(id, true);
       if (existente) {
         this.item = existente;
-        this.carregando = false;
         await this.carregarReceita(id);
       }
 
-      // 2️⃣ Sincroniza catálogo e receitas em paralelo
-      Promise.all([this.repoCatalogo.sync(), this.repoReceitas.sync()]).then(async (updated) => {
+      // sincroniza catálogo e receitas
+      Promise.all([this.repoCatalogo.sync(), this.repoReceitas.sync()]).then(async () => {
         const atualizado = await this.repoCatalogo.getById(id, true);
         if (atualizado) {
           this.item = atualizado;
@@ -64,47 +70,53 @@ export class ItemCatalogo implements OnInit {
         }
       });
 
-      // 3️⃣ Fallback online (se não achou local)
+      // fallback online
       if (!existente) {
-        console.log('[ItemCatalogo] Não encontrado localmente → forçando fetch online');
         const online = await this.repoCatalogo.forceFetch();
         const achadoOnline = online.find((i) => String(i.id) === id);
         if (achadoOnline) {
           this.item = achadoOnline;
           await this.carregarReceita(id, true);
         } else {
-          console.warn('[ItemCatalogo] Item não encontrado nem online');
           this.router.navigate(['/catalogo']);
         }
-        this.carregando = false;
       }
     } catch (err) {
       console.error('[ItemCatalogo] Erro ao carregar item:', err);
+    } finally {
       this.carregando = false;
     }
   }
 
-  /** 🔑 Busca os ingredientes da receita deste item */
+  /** 🔑 Busca os ingredientes da receita deste item + receitas associadas */
   private async carregarReceita(idFabricavel: string, forcarOnline = false) {
     const receitas = forcarOnline
       ? await this.repoReceitas.forceFetch()
       : await this.repoReceitas.getLocal();
 
-    // Filtra só as receitas desse item
-    const doItem = receitas.filter((r) => String(r.fabricavel) === String(idFabricavel));
-
-    if (doItem.length === 0) {
-      this.ingredientesDetalhados = [];
-      return;
-    }
-
-    // Carrega catálogo para mapear os ingredientes
     const catalogo = await this.repoCatalogo.getLocal();
 
-    this.ingredientesDetalhados = doItem.map((rec) => {
-      const ingItem = catalogo.find((c) => String(c.id) === String(rec.catalogo));
+    // ==========================
+    // 📦 1) Ingredientes do item
+    // ==========================
+    const doItem = receitas.filter(r => String(r.fabricavel) === String(idFabricavel));
+    this.ingredientesDetalhados = doItem.map(rec => {
+      const ingItem = catalogo.find(c => String(c.id) === String(rec.catalogo));
       return {
         item: ingItem || ({} as CatalogoDomain),
+        quantidade: rec.quantidade,
+      };
+    });
+
+    // =====================================
+    // 🔗 2) Receitas em que ele é ingrediente
+    // =====================================
+    const usadasEm = receitas.filter(r => String(r.catalogo) === String(idFabricavel));
+
+    this.receitasAssociadas = usadasEm.map(rec => {
+      const produto = catalogo.find(c => String(c.id) === String(rec.fabricavel));
+      return {
+        produto: produto || ({} as CatalogoDomain),
         quantidade: rec.quantidade,
       };
     });
@@ -166,4 +178,11 @@ export class ItemCatalogo implements OnInit {
     this.imagemSelecionada = src;
     this.modalAberto = true;
   }
+
+  abrirItem(id: string) {
+    console.log(id)
+    if (!id) return;
+    this.router.navigate(['/item-catalogo', String(id)]);
+  }
+
 }

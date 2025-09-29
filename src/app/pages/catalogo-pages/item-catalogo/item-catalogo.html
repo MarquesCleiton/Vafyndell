@@ -20,10 +20,8 @@
         <!-- Imagem ou fallback -->
         <div class="position-relative">
           <ng-container *ngIf="item.imagem && item.imagem !== '-'; else noImagem">
-            <img [src]="item.imagem"
-                 class="card-img-top detalhe-img"
-                 alt="{{ item.nome || 'Item' }}"
-                 (click)="abrirImagem(item.imagem)" />
+            <img [src]="item.imagem" class="card-img-top detalhe-img" alt="{{ item.nome || 'Item' }}"
+              (click)="abrirImagem(item.imagem)" />
           </ng-container>
           <ng-template #noImagem>
             <div
@@ -69,7 +67,10 @@
                   <img [src]="ing.item.imagem" class="thumb-mini rounded">
                 </ng-container>
                 <ng-template #noImgIng><span class="fs-5">📦</span></ng-template>
-                <span class="nome">{{ ing.item.nome || 'Ingrediente' }}</span>
+                <span class="nome link-hover" (click)="abrirItem(ing.item.id)">
+                  {{ ing.item.nome || 'Ingrediente' }}
+                </span>
+
               </div>
               <span class="qtd">x{{ ing.quantidade }}</span>
             </div>
@@ -84,6 +85,27 @@
             </div>
           </div>
         </div>
+        <!-- Receitas associadas -->
+        <div *ngIf="receitasAssociadas.length > 0" class="ingredientes-wrapper p-3 border-top">
+          <h5 class="fw-bold text-light mb-3">🔗 Receitas associadas</h5>
+
+          <div class="ingredientes-grid mb-3">
+            <div *ngFor="let rec of receitasAssociadas" class="ingrediente-card">
+              <div class="d-flex align-items-center gap-2">
+                <ng-container *ngIf="rec.produto.imagem && rec.produto.imagem !== '-'; else noImgProduto">
+                  <img [src]="rec.produto.imagem" class="thumb-mini rounded">
+                </ng-container>
+                <ng-template #noImgProduto><span class="fs-5">📦</span></ng-template>
+                
+                <span class="nome link-hover" (click)="abrirItem(rec.produto.id)">
+                  {{ rec.produto.nome || 'Produto' }}
+                </span>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -115,8 +137,5 @@
 <div class="mb-5 py-5"></div>
 
 <!-- Modal de Imagem -->
-<app-image-modal
-  [imagem]="imagemSelecionada"
-  [aberto]="modalAberto"
-  (fecharModal)="modalAberto = false">
+<app-image-modal [imagem]="imagemSelecionada" [aberto]="modalAberto" (fecharModal)="modalAberto = false">
 </app-image-modal>

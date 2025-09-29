@@ -94,11 +94,13 @@ export class OficinaService {
             const ref = catalogo.find((c) => String(c.id) === String(ing.catalogo));
             return {
               ...ing,
+              id: ing.catalogo, // 👈 garante que o ID usado no HTML seja o do Catálogo
               quantidadeInventario: qtdInventario,
               nome: ref?.nome,
               imagem: ref?.imagem,
             };
           });
+
 
         const podeFabricar = ingredientes.every(
           (ing) => ing.quantidadeInventario >= ing.quantidade
