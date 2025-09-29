@@ -17,6 +17,8 @@ import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { AuthService } from '../../../core/auth/AuthService';
 import { IdUtils } from '../../../core/utils/IdUtils';
 
+import { Location } from '@angular/common';
+
 @Component({
   selector: 'app-cadastro-inventario',
   standalone: true,
@@ -48,7 +50,8 @@ export class CadastroInventario implements OnInit {
 
   constructor(
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private location: Location // 👈 agora reconhecido
   ) { }
 
   async ngOnInit() {
@@ -157,12 +160,9 @@ export class CadastroInventario implements OnInit {
   }
 
   cancelar() {
-    if (this.editando && this.inventarioAtual?.id) {
-      this.router.navigate(['/item-inventario', this.inventarioAtual.id]);
-    } else {
-      this.router.navigate(['/inventario-jogador']);
-    }
+    this.location.back();
   }
+
 
   novoItem() {
     this.router.navigate(['/cadastro-item-catalogo']);
@@ -176,15 +176,38 @@ export class CadastroInventario implements OnInit {
       const user = AuthService.getUser();
       if (!user?.email) throw new Error('Usuário não autenticado');
 
+      // 🔎 Caso esteja editando e quantidade = 0 → remover item
+      if (this.editando && this.inventarioAtual && this.quantidade === 0) {
+        const confirmar = confirm(
+          `⚠️ Você definiu a quantidade como 0.\n\nDeseja remover "${this.selecionado?.nome}" do inventário?`
+        );
+        if (!confirmar) {
+          this.salvando = false;
+          return;
+        }
+
+        await this.inventarioRepo.delete(this.inventarioAtual.id);
+        alert('🗑️ Item removido do inventário!');
+        this.router.navigate(['/inventario-jogador']);
+        return;
+      }
+
       if (this.editando && this.inventarioAtual) {
         const atualizado: InventarioDomain = {
           ...this.inventarioAtual,
           jogador: user.email,
           item_catalogo: this.selecionado.id,
-          quantidade: this.quantidade,
+          quantidade: Math.max(0, this.quantidade), // 🔒 nunca negativo
         };
         await this.inventarioRepo.update(atualizado);
       } else {
+        // 🚫 Bloqueia salvar com quantidade zero
+        if (this.quantidade <= 0) {
+          alert('❌ Não é permitido adicionar um item com quantidade zero.');
+          this.salvando = false;
+          return;
+        }
+
         const todos = await this.inventarioRepo.getLocal();
 
         const existente = todos.find(
@@ -200,7 +223,7 @@ export class CadastroInventario implements OnInit {
         } else {
           const novo: InventarioDomain = {
             id: IdUtils.generateULID(),
-            index: Date.now(), // 🔑 apenas referência incremental
+            index: Date.now(),
             jogador: user.email,
             item_catalogo: this.selecionado.id,
             quantidade: this.quantidade,
@@ -218,6 +241,7 @@ export class CadastroInventario implements OnInit {
       this.salvando = false;
     }
   }
+
 
   displayFn(item?: CatalogoDomain): string {
     return item ? item.nome : '';

@@ -39,7 +39,8 @@
 }
 
 .preview-item {
-  color: #f8f9fa;   /* 🔑 texto bem claro */
+  color: #f8f9fa;
+  /* 🔑 texto bem claro */
   font-weight: 500;
 }
 
@@ -70,4 +71,13 @@
 
 .fab:hover {
   transform: scale(1.08);
+}
+
+.fab-secondary {
+  background: linear-gradient(135deg, #6c757d, #495057);
+  color: #fff;
+}
+
+.fab-secondary:hover {
+  background: #5a6268;
 }

@@ -255,4 +255,38 @@ export class InventarioJogador implements OnInit {
     return '📦'; // fallback padrão
   }
 
+  processando: { [id: string]: 'transferir' | 'editar' | 'excluir' | null } = {};
+
+  editarItem(id: string, event: Event) {
+    event.stopPropagation();
+    this.processando[id] = 'editar';
+    setTimeout(() => {
+      this.router.navigate(['/cadastro-inventario', id]);
+      this.processando[id] = null;
+    }, 400);
+  }
+
+  async excluirItem(id: string, event: Event) {
+    event.stopPropagation();
+    const confirmar = confirm('🗑️ Deseja excluir este item do inventário?');
+    if (!confirmar) return;
+
+    this.processando[id] = 'excluir';
+    try {
+      await this.inventarioRepo.delete(id);
+      alert('✅ Item excluído do inventário!');
+      // recarregar lista
+      this.categoriasFiltradas = this.categoriasFiltradas.map(c => ({
+        ...c,
+        itens: c.itens.filter(i => i.id !== id),
+      }));
+    } catch (err) {
+      console.error('[Inventário] Erro ao excluir:', err);
+      alert('❌ Erro ao excluir item');
+    } finally {
+      this.processando[id] = null;
+    }
+  }
+
+
 }

@@ -5,7 +5,6 @@
         <!-- Cabeçalho -->
         <div class="card-body p-3 border-bottom d-flex align-items-center justify-content-between">
           <h4 class="fw-bold mb-0 text-light">🔄 Troca de Itens</h4>
-          <button class="btn btn-outline-light btn-sm" (click)="cancelar()">⬅ Voltar</button>
         </div>
 
         <div class="card-body">
@@ -13,13 +12,9 @@
           <div class="mb-3">
             <label class="form-label text-light">🙍 Jogador Destinatário *</label>
             <mat-form-field appearance="fill" class="w-100 input-dark compact-select dropdown-field">
-              <input type="text" matInput placeholder="Selecione ou pesquise..."
-                     [(ngModel)]="filtroJogador"
-                     name="filtroJogador"
-                     [matAutocomplete]="autoJog"
-                     (input)="filtrarJogadores()" />
-              <mat-autocomplete #autoJog="matAutocomplete"
-                                (optionSelected)="selecionarJogador($event.option.value)">
+              <input type="text" matInput placeholder="Selecione ou pesquise..." [(ngModel)]="filtroJogador"
+                name="filtroJogador" [matAutocomplete]="autoJog" (input)="filtrarJogadores()" />
+              <mat-autocomplete #autoJog="matAutocomplete" (optionSelected)="selecionarJogador($event.option.value)">
                 <mat-option *ngFor="let j of jogadoresFiltrados" [value]="j" class="bg-dark text-light">
                   🙍 {{ j.personagem }}
                 </mat-option>
@@ -31,13 +26,9 @@
           <div class="mb-3">
             <label class="form-label text-light">📦 Adicionar Item</label>
             <mat-form-field appearance="fill" class="w-100 input-dark compact-select dropdown-field">
-              <input type="text" matInput placeholder="Pesquisar item no inventário..."
-                     [(ngModel)]="filtroItem"
-                     name="filtroItem"
-                     [matAutocomplete]="autoItem"
-                     (input)="filtrarItensInventario()" />
-              <mat-autocomplete #autoItem="matAutocomplete"
-                                (optionSelected)="selecionarItem($event.option.value)">
+              <input type="text" matInput placeholder="Pesquisar item no inventário..." [(ngModel)]="filtroItem"
+                name="filtroItem" [matAutocomplete]="autoItem" (input)="filtrarItensInventario()" />
+              <mat-autocomplete #autoItem="matAutocomplete" (optionSelected)="selecionarItem($event.option.value)">
                 <mat-option *ngFor="let i of inventarioFiltrado" [value]="i" class="bg-dark text-light">
                   <div class="d-flex align-items-center gap-2">
                     <span>📦</span>
@@ -51,11 +42,8 @@
           <!-- Quantidade -->
           <div *ngIf="itemSelecionado" class="d-flex align-items-center gap-2 mb-3">
             <button type="button" class="btn btn-outline-light btn-sm" (click)="decrementar()">−</button>
-            <input type="number"
-                   [(ngModel)]="quantidade"
-                   (blur)="validarQuantidade()"
-                   min="1"
-                   class="form-control quantidade-input" />
+            <input type="number" [(ngModel)]="quantidade" (blur)="validarQuantidade()" min="1"
+              class="form-control quantidade-input" />
             <button type="button" class="btn btn-outline-light btn-sm" (click)="incrementar()">＋</button>
             <button type="button" class="btn btn-success ms-2" (click)="adicionarItem()">➕ Adicionar</button>
           </div>
@@ -73,14 +61,18 @@
   </div>
 
   <!-- FAB confirmar -->
+  <!-- FABs -->
   <div class="fab-stack">
-    <button class="fab fab-success"
-            (click)="confirmarTroca()"
-            [disabled]="processando || !jogadorSelecionado || itensTroca.length===0">
+    <!-- Confirmar -->
+    <button class="fab fab-success" (click)="confirmarTroca()"
+      [disabled]="processando || !jogadorSelecionado || itensTroca.length===0">
       <ng-container *ngIf="!processando">📤</ng-container>
       <ng-container *ngIf="processando">
         <span class="spinner-border spinner-border-sm"></span>
       </ng-container>
     </button>
+
+    <!-- Voltar -->
+    <button class="fab fab-secondary" (click)="cancelar()">⬅️</button>
   </div>
 </div>
