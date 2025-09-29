@@ -10,9 +10,7 @@
 .oficina-container {
   width: 100%;
   max-width: 900px;
-  /* 🔑 largura máxima padronizada */
-  margin: 0 auto;
-  /* 🔑 centraliza no meio */
+  margin: 0 auto; /* 🔑 centraliza no meio */
 }
 
 /* ======================
@@ -46,24 +44,18 @@
 .nav-tabs {
   display: flex;
   flex-wrap: nowrap;
-  /* não quebra linha */
   overflow-x: auto;
-  /* permite rolar horizontal */
   -webkit-overflow-scrolling: touch;
-  /* rolagem suave no mobile */
   border-bottom: 1px solid #444;
   scrollbar-width: none;
-  /* oculta barra no Firefox */
 }
 
 .nav-tabs::-webkit-scrollbar {
   display: none;
-  /* oculta barra no Chrome/Safari */
 }
 
 .nav-tabs .nav-item {
   flex: 1 0 auto;
-  /* não deixa encolher demais */
   text-align: center;
 }
 
@@ -76,7 +68,6 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  /* espaço entre emoji e texto */
   white-space: nowrap;
 }
 
@@ -213,7 +204,7 @@
 }
 
 /* ======================
-   AÇÕES
+   AÇÕES - PADRÃO OUTLINE
    ====================== */
 .acoes-bottom {
   display: flex;
@@ -230,30 +221,34 @@
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
-  border: none;
+  font-weight: bold;
+  background: transparent;
   transition: transform 0.2s ease;
 }
 
+/* Hover suave */
 .btn-square:hover {
-  transform: scale(1.08);
+  transform: scale(1.1);
 }
 
+/* Sucesso (verde) */
 .btn-square.success {
-  background: #198754;
+  border: 2px solid #28a745;
+  color: #28a745;
+}
+.btn-square.success:hover {
+  background: #28a745;
   color: #fff;
 }
 
-.btn-square.success:hover {
-  background: #157347;
-}
-
+/* Perigo (vermelho) */
 .btn-square.danger {
+  border: 2px solid #dc3545;
+  color: #dc3545;
+}
+.btn-square.danger:hover {
   background: #dc3545;
   color: #fff;
-}
-
-.btn-square.danger:hover {
-  background: #bb2d3b;
 }
 
 /* ======================
@@ -297,7 +292,6 @@
   }
 }
 
-
 .producao-info {
   font-size: 0.9rem;
   color: #0dcaf0;
@@ -316,4 +310,52 @@
 .link-hover:hover {
   background: #333;
   color: #0dcaf0;
+}
+
+/* ======================
+   AÇÕES - PADRÃO UNIFICADO
+   ====================== */
+.acoes-bottom {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.btn-acao {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: bold;
+  background: transparent;
+  transition: transform 0.2s ease;
+  padding: 0;
+}
+
+.btn-acao:hover {
+  transform: scale(1.1);
+}
+
+/* Sucesso (verde) */
+.btn-acao.btn-outline-success {
+  border: 2px solid #28a745;
+  color: #28a745;
+}
+.btn-acao.btn-outline-success:hover {
+  background: #28a745;
+  color: #fff;
+}
+
+/* Perigo (vermelho) */
+.btn-acao.btn-outline-danger {
+  border: 2px solid #dc3545;
+  color: #dc3545;
+}
+.btn-acao.btn-outline-danger:hover {
+  background: #dc3545;
+  color: #fff;
 }

@@ -105,16 +105,25 @@
               </div>
 
               <div *ngIf="rec.fabricavel" class="acoes-bottom">
-                <button class="btn-square success" [disabled]="loadingAction[rec.id]" (click)="criarItem(rec)">
-                  <span *ngIf="loadingAction[rec.id] === 'criar'" class="spinner-border spinner-border-sm"></span>
-                  <span *ngIf="loadingAction[rec.id] !== 'criar'">🛠️</span>
+                <!-- Criar -->
+                <button class="btn-acao btn-outline-success" [disabled]="loadingAction[rec.id] === 'criar'"
+                  (click)="criarItem(rec)">
+                  <ng-container *ngIf="loadingAction[rec.id] === 'criar'; else criarIcon">
+                    <span class="spinner-border spinner-border-sm"></span>
+                  </ng-container>
+                  <ng-template #criarIcon>🛠️</ng-template>
                 </button>
 
-                <button class="btn-square danger" [disabled]="loadingAction[rec.id]" (click)="forcarFalha(rec)">
-                  <span *ngIf="loadingAction[rec.id] === 'falha'" class="spinner-border spinner-border-sm"></span>
-                  <span *ngIf="loadingAction[rec.id] !== 'falha'">🧨</span>
+                <!-- Forçar falha -->
+                <button class="btn-acao btn-outline-danger" [disabled]="loadingAction[rec.id] === 'falha'"
+                  (click)="forcarFalha(rec)">
+                  <ng-container *ngIf="loadingAction[rec.id] === 'falha'; else falhaIcon">
+                    <span class="spinner-border spinner-border-sm"></span>
+                  </ng-container>
+                  <ng-template #falhaIcon>🧨</ng-template>
                 </button>
               </div>
+
             </div>
           </div>
         </div>
