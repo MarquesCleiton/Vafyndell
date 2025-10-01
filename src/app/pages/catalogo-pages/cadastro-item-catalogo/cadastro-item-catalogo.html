@@ -117,8 +117,20 @@
                     <ng-template #noImg><span class="fs-5">📦</span></ng-template>
                     <span class="nome">{{ ing.item?.nome }}</span>
                   </div>
+
                   <div class="d-flex align-items-center gap-2">
-                    <span class="qtd">x{{ ing.quantidade }}</span>
+                    <!-- 🔹 Campo editável de quantidade -->
+                    <div class="quantidade-box">
+                      <button type="button" class="btn btn-sm btn-outline-light px-2"
+                        (click)="ing.quantidade = Math.max(1, ing.quantidade - 1)">−</button>
+
+                      <input type="number" class="quantidade-input"
+                        [(ngModel)]="ing.quantidade" name="qtd{{i}}" min="1" />
+
+                      <button type="button" class="btn btn-sm btn-outline-light px-2"
+                        (click)="ing.quantidade = ing.quantidade + 1">+</button>
+                    </div>
+
                     <button type="button" class="btn btn-sm btn-danger px-2 py-1"
                       (click)="removerIngrediente(i)">✖</button>
                   </div>
@@ -165,8 +177,6 @@
 
               <!-- Produção -->
               <div *ngIf="ingredientes.length > 0" class="producao-wrapper mt-3">
-
-                <!-- Linha Produz + Input + Unidade -->
                 <div class="d-flex align-items-center gap-2 mb-2">
                   <label class="form-label text-light fw-bold mb-0">⚒️Produz</label>
                   <input type="number" class="form-control input-dark quantidade-fabricavel"
@@ -188,10 +198,7 @@
                   </div>
                 </div>
               </div>
-
-
             </div>
-
           </div>
         </div>
       </form>

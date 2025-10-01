@@ -56,6 +56,7 @@ export class CadastroItemCatalogo implements OnInit, AfterViewInit {
   salvando = false;
   editMode = false;
 
+  Math = Math;
   unidadesMedida = ['g', 'kg', 'ml', 'L', 'mm', 'cm', 'm', 'gota(s)', 'dose(s)', 'frasco(s)', 'unidade(s)'];
   origens = ['Frabricado', 'Natural'];
   raridades = ['Comum', 'Incomum', 'Raro', 'Épico', 'Lendário'];
