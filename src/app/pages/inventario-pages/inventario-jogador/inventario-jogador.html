@@ -2,28 +2,23 @@
 
   <!-- Barra de pesquisa -->
   <div class="p-3 bg-black border-bottom position-sticky top-0 z-10">
-    <input type="text" class="form-control search-bar" placeholder="🔍 Pesquisar no inventário..." [(ngModel)]="filtro"
-      (input)="aplicarFiltro()" />
+    <input type="text" class="form-control search-bar" placeholder="🔍 Pesquisar no inventário..."
+      [(ngModel)]="filtro" (input)="aplicarFiltro()" />
   </div>
 
-  <!-- Tabs -->
+  <!-- Tabs dinâmicas -->
   <ul class="nav nav-tabs bg-dark px-3" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" [class.active]="abaAtiva === 'recursos'" (click)="selecionarAba('recursos')">🌿
-        Recursos</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" [class.active]="abaAtiva === 'equipamentos'" (click)="selecionarAba('equipamentos')">⚔️
-        Equipamentos</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" [class.active]="abaAtiva === 'pocoes'" (click)="selecionarAba('pocoes')">🧪
-        Poções</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" [class.active]="abaAtiva === 'outros'" (click)="selecionarAba('outros')">📦
-        Outros</button>
-    </li>
+    <ng-container *ngFor="let aba of abas">
+      <li class="nav-item" role="presentation" *ngIf="getQuantidadePorAba(aba) > 0">
+        <button class="nav-link" [class.active]="abaAtiva === aba" (click)="selecionarAba(aba)">
+          {{ aba === 'recursos' ? '🌿 Recursos' :
+             aba === 'equipamentos' ? '⚔️ Equipamentos' :
+             aba === 'pocoes' ? '🧪 Poções' :
+             '📦 Outros' }}
+          ({{ getQuantidadePorAba(aba) }})
+        </button>
+      </li>
+    </ng-container>
   </ul>
 
   <!-- Conteúdo -->
@@ -66,7 +61,13 @@
             <div *ngIf="cat.expandido" class="mt-2">
               <div class="row row-cols-1 g-3">
                 <div class="col" *ngFor="let inv of cat.itens">
-                  <div class="card inventario-card h-100 p-3 shadow-sm">
+                  <div class="card inventario-card h-100 p-3 shadow-sm position-relative">
+
+                    <!-- 🔹 Raridade no canto superior direito -->
+                    <small class="raridade-label {{ getRaridadeClass(inv.itemDetalhe?.raridade) }}">
+                      {{ inv.itemDetalhe?.raridade || 'Comum' }}
+                    </small>
+
                     <!-- Clique abre detalhes -->
                     <div (click)="abrirItem(inv.id)">
                       <div class="d-flex align-items-center mb-2">
@@ -76,7 +77,6 @@
                           <span *ngIf="!inv.itemDetalhe?.imagem || inv.itemDetalhe?.imagem === '-'">
                             {{ getEmojiFallback(inv.itemDetalhe?.categoria) }}
                           </span>
-
                         </div>
 
                         <div>
@@ -90,14 +90,11 @@
                         </div>
                       </div>
 
-                      <p *ngIf="inv.itemDetalhe?.efeito" class="small mt-2 text-info">✨ {{ inv.itemDetalhe?.efeito }}
-                      </p>
-                      <p *ngIf="inv.itemDetalhe?.colateral" class="small text-danger">⚠️ {{ inv.itemDetalhe?.colateral
-                        }}</p>
+                      <p *ngIf="inv.itemDetalhe?.efeito" class="small mt-2 text-info">✨ {{ inv.itemDetalhe?.efeito }}</p>
+                      <p *ngIf="inv.itemDetalhe?.colateral" class="small text-danger">⚠️ {{ inv.itemDetalhe?.colateral }}</p>
                     </div>
 
-                    <!-- Botão de troca direto -->
-                    <!-- Botões de ação -->
+                    <!-- Botões -->
                     <div class="text-end mt-2 d-flex justify-content-end gap-1">
                       <!-- Transferir -->
                       <button class="btn btn-sm btn-outline-success" [disabled]="processando[inv.id] === 'transferir'"
@@ -132,7 +129,6 @@
               </div>
             </div>
 
-
           </div>
         </ng-container>
       </div>
@@ -140,11 +136,9 @@
     </div>
   </div>
 
-  <!-- FABs -->
+  <!-- FAB -->
   <div class="fab-stack">
-    <!-- Item novo -->
     <button class="fab fab-primary" (click)="novoItemInventario()">＋</button>
-    
   </div>
 
 </div>

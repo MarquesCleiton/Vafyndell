@@ -11,7 +11,6 @@ import { AuthService } from '../../../core/auth/AuthService';
 interface InventarioDetalhado extends InventarioDomain {
   itemDetalhe?: CatalogoDomain;
 }
-
 interface CategoriaInventario {
   nome: string;
   itens: InventarioDetalhado[];
@@ -31,9 +30,13 @@ export class InventarioJogador implements OnInit {
   carregando = true;
   filtro = '';
 
+  abas: Array<'recursos' | 'equipamentos' | 'pocoes' | 'outros'> = [
+    'recursos', 'equipamentos', 'pocoes', 'outros'
+  ];
   abaAtiva: 'recursos' | 'equipamentos' | 'pocoes' | 'outros' = 'recursos';
 
   resumo = { tipos: 0, unidades: 0, pesoTotal: 0, categorias: 0 };
+  processando: { [id: string]: 'transferir' | 'editar' | 'excluir' | null } = {};
 
   private catalogoRepo = new BaseRepositoryV2<CatalogoDomain>('Catalogo');
   private inventarioRepo = new BaseRepositoryV2<InventarioDomain>('Inventario');
@@ -61,90 +64,45 @@ export class InventarioJogador implements OnInit {
       const user = AuthService.getUser();
       if (!user?.email) throw new Error('Usuário não autenticado.');
       await this.loadLocalAndSync(user.email);
-    } catch (err) {
-      console.error('[InventarioJogador] ❌ Erro ao carregar inventário:', err);
     } finally {
       this.carregando = false;
     }
   }
 
   private async loadLocalAndSync(email: string) {
-    console.log('[InventarioJogador] 🔑 Email do jogador:', email);
-
-    // 1️⃣ Local
     const [catalogoLocal, inventarioLocal] = await Promise.all([
       this.catalogoRepo.getLocal(),
       this.inventarioRepo.getLocal(),
     ]);
-    console.log('[InventarioJogador] 📂 Catalogo Local:', catalogoLocal);
-    console.log('[InventarioJogador] 📂 Inventario Local:', inventarioLocal);
-
-    const meusItens = inventarioLocal.filter((i) => i.jogador === email);
-    console.log('[InventarioJogador] 🎯 Meus Itens (local):', meusItens);
-
+    const meusItens = inventarioLocal.filter(i => i.jogador === email);
     this.processarInventario(meusItens, catalogoLocal);
 
-    // 2️⃣ Sync em paralelo
     (async () => {
       const [catSync, invSync] = await Promise.all([
         this.catalogoRepo.sync(),
         this.inventarioRepo.sync(),
       ]);
-      console.log('[InventarioJogador] 🔄 Sync concluído:', { catSync, invSync });
-
       if (catSync || invSync) {
         const [catAtualizado, invAtualizado] = await Promise.all([
           this.catalogoRepo.getLocal(),
           this.inventarioRepo.getLocal(),
         ]);
-        console.log('[InventarioJogador] 📂 Catalogo Atualizado:', catAtualizado);
-        console.log('[InventarioJogador] 📂 Inventario Atualizado:', invAtualizado);
-
-        const meusAtualizados = invAtualizado.filter((i) => i.jogador === email);
-        console.log('[InventarioJogador] 🎯 Meus Itens (sync):', meusAtualizados);
-
+        const meusAtualizados = invAtualizado.filter(i => i.jogador === email);
         this.processarInventario(meusAtualizados, catAtualizado);
       }
     })();
-
-    // 3️⃣ Fallback online
-    if (!meusItens.length) {
-      console.log('[InventarioJogador] ⚠️ Nenhum item local → buscando online...');
-      const [catalogoOnline, inventarioOnline] = await Promise.all([
-        this.catalogoRepo.forceFetch(),
-        this.inventarioRepo.forceFetch(),
-      ]);
-      console.log('[InventarioJogador] 🌐 Catalogo Online:', catalogoOnline);
-      console.log('[InventarioJogador] 🌐 Inventario Online:', inventarioOnline);
-
-      const meusOnline = inventarioOnline.filter((i) => i.jogador === email);
-      console.log('[InventarioJogador] 🎯 Meus Itens (online):', meusOnline);
-
-      this.processarInventario(meusOnline, catalogoOnline);
-    }
   }
 
   private processarInventario(inventarioBruto: InventarioDomain[], catalogo: CatalogoDomain[]) {
-    console.log('[InventarioJogador] 🛠️ processarInventario →', { inventarioBruto, catalogo });
-
-    const inventarioDetalhado: InventarioDetalhado[] = inventarioBruto.map((inv) => {
-      const detalhe = catalogo.find(
-        (c) => String(c.id) === String(inv.item_catalogo) || String(c.id) === String(inv.item_catalogo)
-      );
-
-      if (!detalhe) {
-        console.warn('[InventarioJogador] ⚠️ Sem detalhe encontrado para item:', inv);
-      }
-
+    const inventarioDetalhado: InventarioDetalhado[] = inventarioBruto.map(inv => {
+      const detalhe = catalogo.find(c => String(c.id) === String(inv.item_catalogo));
       return { ...inv, itemDetalhe: detalhe };
     });
 
-    console.log('[InventarioJogador] 📦 Inventario Detalhado:', inventarioDetalhado);
-
-    const estados = new Map(this.categorias.map((c) => [c.nome, c.expandido]));
+    const estados = new Map(this.categorias.map(c => [c.nome, c.expandido]));
     const mapa = new Map<string, InventarioDetalhado[]>();
 
-    inventarioDetalhado.forEach((i) => {
+    inventarioDetalhado.forEach(i => {
       const cat = i.itemDetalhe?.categoria || 'Outros';
       if (!mapa.has(cat)) mapa.set(cat, []);
       mapa.get(cat)!.push(i);
@@ -158,21 +116,16 @@ export class InventarioJogador implements OnInit {
         expandido: estados.get(nome) ?? false,
       }));
 
-    console.log('[InventarioJogador] 📊 Categorias:', this.categorias);
-
     this.categoriasFiltradas = [...this.categorias];
     this.calcularResumo();
   }
 
-
   private calcularResumo() {
-    const todosItens = this.categorias.flatMap((c) => c.itens);
+    const todosItens = this.categorias.flatMap(c => c.itens);
     this.resumo.tipos = todosItens.length;
     this.resumo.unidades = todosItens.reduce((sum, i) => sum + (i.quantidade || 0), 0);
     this.resumo.pesoTotal = todosItens.reduce(
-      (sum, i) => sum + (i.quantidade || 0) * (i.itemDetalhe?.peso || 0),
-      0
-    );
+      (sum, i) => sum + (i.quantidade || 0) * (i.itemDetalhe?.peso || 0), 0);
     this.resumo.categorias = this.categorias.length;
   }
 
@@ -182,10 +135,9 @@ export class InventarioJogador implements OnInit {
       this.categoriasFiltradas = [...this.categorias];
       return;
     }
-
     this.categoriasFiltradas = this.categorias
-      .map((c) => {
-        const itensFiltrados = c.itens.filter((i) =>
+      .map(c => {
+        const itensFiltrados = c.itens.filter(i =>
           [
             i.itemDetalhe?.nome,
             i.itemDetalhe?.raridade,
@@ -193,77 +145,67 @@ export class InventarioJogador implements OnInit {
             i.itemDetalhe?.colateral,
             i.itemDetalhe?.categoria,
           ]
-            .map((v) => this.normalizarTexto(String(v || '')))
-            .some((texto) => texto.includes(termo))
+            .map(v => this.normalizarTexto(String(v || '')))
+            .some(texto => texto.includes(termo))
         );
         return { ...c, itens: itensFiltrados, expandido: itensFiltrados.length > 0 };
       })
-      .filter((c) => c.itens.length > 0);
+      .filter(c => c.itens.length > 0);
   }
 
   private normalizarTexto(texto: string): string {
     return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
   }
 
-  selecionarAba(aba: 'recursos' | 'equipamentos' | 'pocoes' | 'outros') {
-    this.abaAtiva = aba;
-  }
+  selecionarAba(aba: 'recursos' | 'equipamentos' | 'pocoes' | 'outros') { this.abaAtiva = aba; }
 
   pertenceAba(categoria?: string): boolean {
     if (!categoria) return this.abaAtiva === 'outros';
     return this.mapaAbas[this.abaAtiva].includes(categoria);
   }
 
-  toggleCategoria(cat: CategoriaInventario) {
-    cat.expandido = !cat.expandido;
+  toggleCategoria(cat: CategoriaInventario) { cat.expandido = !cat.expandido; }
+
+  getQuantidadePorAba(aba: 'recursos' | 'equipamentos' | 'pocoes' | 'outros'): number {
+    const categoriasAba = this.mapaAbas[aba];
+    let count = 0;
+    this.categorias.forEach(cat => {
+      if (categoriasAba.includes(cat.nome)) count += cat.itens.length;
+    });
+    return count;
   }
 
-  abrirItem(itemId: string) {
-    this.router.navigate(['/item-inventario', itemId]);
-  }
-
-  novoItemInventario() {
-    this.router.navigate(['/cadastro-inventario']);
-  }
-
-  abrirTroca() {
-    this.router.navigate(['/troca-de-itens']);
-  }
-
-  trocarItem(itemId: string, event: Event) {
-    event.stopPropagation();
-    this.router.navigate(['/troca-de-itens', itemId]);
+  getRaridadeClass(raridade?: string): string {
+    if (!raridade) return 'comum';
+    return raridade.toLowerCase();
   }
 
   getEmojiFallback(categoria?: string): string {
-    if (!categoria) return '📦'; // padrão
-
+    if (!categoria) return '📦';
     const mapa: Record<string, string> = {
-      recursos: '🌿',
-      equipamentos: '⚔️',
-      pocoes: '🧪',
-      outros: '📦',
+      recursos: '🌿', equipamentos: '⚔️', pocoes: '🧪', outros: '📦'
     };
-
-    // verifica em qual aba a categoria se encaixa
     for (const aba of Object.keys(this.mapaAbas)) {
       if (this.mapaAbas[aba].includes(categoria)) {
         return mapa[aba as keyof typeof mapa];
       }
     }
-
-    return '📦'; // fallback padrão
+    return '📦';
   }
 
-  processando: { [id: string]: 'transferir' | 'editar' | 'excluir' | null } = {};
+  abrirItem(itemId: string) { this.router.navigate(['/item-inventario', itemId]); }
+  novoItemInventario() { this.router.navigate(['/cadastro-inventario']); }
+
+  trocarItem(itemId: string, event: Event) {
+    event.stopPropagation();
+    this.processando[itemId] = 'transferir';
+    setTimeout(() => { this.router.navigate(['/troca-de-itens', itemId]); this.processando[itemId] = null; }, 400);
+  }
 
   editarItem(id: string, event: Event) {
     event.stopPropagation();
     this.processando[id] = 'editar';
-    setTimeout(() => {
-      this.router.navigate(['/cadastro-inventario', id]);
-      this.processando[id] = null;
-    }, 400);
+    setTimeout(() => { this.router.navigate(['/cadastro-inventario', id]); this.processando[id] = null; }, 400);
   }
 
   async excluirItem(id: string, event: Event) {
@@ -275,11 +217,14 @@ export class InventarioJogador implements OnInit {
     try {
       await this.inventarioRepo.delete(id);
       alert('✅ Item excluído do inventário!');
-      // recarregar lista
-      this.categoriasFiltradas = this.categoriasFiltradas.map(c => ({
+
+      // Atualiza lista removendo o item excluído
+      this.categorias = this.categorias.map(c => ({
         ...c,
         itens: c.itens.filter(i => i.id !== id),
       }));
+      this.aplicarFiltro(); // reaplica filtro para atualizar categoriasFiltradas
+      this.calcularResumo();
     } catch (err) {
       console.error('[Inventário] Erro ao excluir:', err);
       alert('❌ Erro ao excluir item');
@@ -287,6 +232,4 @@ export class InventarioJogador implements OnInit {
       this.processando[id] = null;
     }
   }
-
-
 }
