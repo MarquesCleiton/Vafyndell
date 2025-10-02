@@ -10,7 +10,8 @@
 .oficina-container {
   width: 100%;
   max-width: 900px;
-  margin: 0 auto; /* 🔑 centraliza no meio */
+  margin: 0 auto;
+  /* 🔑 centraliza no meio */
 }
 
 /* ======================
@@ -236,6 +237,7 @@
   border: 2px solid #28a745;
   color: #28a745;
 }
+
 .btn-square.success:hover {
   background: #28a745;
   color: #fff;
@@ -246,6 +248,7 @@
   border: 2px solid #dc3545;
   color: #dc3545;
 }
+
 .btn-square.danger:hover {
   background: #dc3545;
   color: #fff;
@@ -254,9 +257,23 @@
 /* ======================
    RARIDADE
    ====================== */
-.raridade {
-  font-weight: bold;
-  font-size: 0.85rem;
+/* (mantive tudo que você tinha) */
+/* adição: ajustei espaço para raridade dos ingredientes */
+
+.ingrediente-pill {
+  background: #2a2a2a;
+  border-radius: 8px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.ingrediente-pill .raridade {
+  font-size: 0.75rem;
+  display: block;
+  margin-top: -2px;
 }
 
 .raridade.comum {
@@ -278,6 +295,7 @@
 .raridade.lendario {
   color: gold;
 }
+
 
 /* ======================
    DESKTOP AJUSTE
@@ -345,6 +363,7 @@
   border: 2px solid #28a745;
   color: #28a745;
 }
+
 .btn-acao.btn-outline-success:hover {
   background: #28a745;
   color: #fff;
@@ -355,6 +374,7 @@
   border: 2px solid #dc3545;
   color: #dc3545;
 }
+
 .btn-acao.btn-outline-danger:hover {
   background: #dc3545;
   color: #fff;

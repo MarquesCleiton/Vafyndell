@@ -10,7 +10,9 @@ export interface IngredienteDetalhado extends ReceitaDomain {
   quantidadeInventario: number;
   nome?: string;
   imagem?: string;
+  raridade?: string;   // 👈 adiciona aqui
 }
+
 
 export type ReceitaComStatus = CatalogoDomain & {
   fabricavel: boolean;
@@ -94,12 +96,14 @@ export class OficinaService {
             const ref = catalogo.find((c) => String(c.id) === String(ing.catalogo));
             return {
               ...ing,
-              id: ing.catalogo, // 👈 garante que o ID usado no HTML seja o do Catálogo
+              id: ing.catalogo, // 👈 garante ID do Catálogo
               quantidadeInventario: qtdInventario,
               nome: ref?.nome,
               imagem: ref?.imagem,
+              raridade: ref?.raridade || 'Comum', // 👈 adiciona raridade do catálogo
             };
           });
+
 
 
         const podeFabricar = ingredientes.every(

@@ -17,15 +17,20 @@
 
     <!-- 🔖 Abas -->
     <ul class="nav nav-tabs mt-2">
-      <li class="nav-item" *ngFor="let aba of abas">
-        <button class="nav-link" [class.active]="abaAtiva === aba" (click)="selecionarAba(aba)">
-          {{ aba === 'recursos' ? '🌿 Recursos' :
-          aba === 'equipamentos' ? '⚔️ Equipamentos' :
-          aba === 'pocoes' ? '🧪 Poções' :
-          '📦 Outros' }}
-        </button>
-      </li>
+      <ng-container *ngFor="let aba of abas">
+        <li class="nav-item" *ngIf="getQuantidadePorAba(aba) > 0">
+          <button class="nav-link" [class.active]="abaAtiva === aba" (click)="selecionarAba(aba)">
+            {{ aba === 'recursos' ? '🌿 Recursos' :
+            aba === 'equipamentos' ? '⚔️ Equipamentos' :
+            aba === 'pocoes' ? '🧪 Poções' :
+            '📦 Outros' }}
+            ({{ getQuantidadePorAba(aba) }})
+          </button>
+        </li>
+      </ng-container>
     </ul>
+
+
   </div>
 
   <!-- Conteúdo -->
@@ -74,27 +79,35 @@
                 </div>
               </div>
 
-
               <p *ngIf="rec.efeito" class="small text-info mb-1">✨ {{ rec.efeito }}</p>
               <p *ngIf="rec.colateral" class="small text-danger mb-2">⚠️ {{ rec.colateral }}</p>
 
+              <!-- Ingredientes -->
               <div *ngIf="rec.ingredientes?.length" class="ingredientes-grid">
                 <div *ngFor="let ing of rec.ingredientes" class="ingrediente-pill link-hover" [ngClass]="{
-       'ok': ing.quantidadeInventario >= ing.quantidade,
-       'fail': ing.quantidadeInventario < ing.quantidade
-     }" (click)="abrirItemCatalogo(ing.id)">
+                  'ok': ing.quantidadeInventario >= ing.quantidade,
+                  'fail': ing.quantidadeInventario < ing.quantidade
+                }" (click)="abrirItemCatalogo(ing.id)">
+
                   <div class="ingrediente-thumb">
                     <img *ngIf="ing.imagem" [src]="ing.imagem" alt="{{ ing.nome }}" />
                     <span *ngIf="!ing.imagem">🧪</span>
                   </div>
+
                   <div class="flex-grow-1">
                     <span class="small">{{ ing.nome }}</span>
+                    <br />
+                    <small class="raridade {{ getRaridadeClass(ing.raridade || 'Comum') }}">
+                      {{ ing.raridade || 'Comum' }}
+                    </small>
+
+
                   </div>
+
                   <span class="small fw-bold">
                     {{ ing.quantidadeInventario }}/{{ ing.quantidade }}
                   </span>
                 </div>
-
               </div>
 
               <!-- Produção explícita -->

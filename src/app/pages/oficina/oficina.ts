@@ -60,6 +60,15 @@ export class Oficina implements OnInit {
       this.carregando = true;
       this.todasReceitas = await this.oficinaService.getPossiveisReceitas();
       this.processarItens(this.todasReceitas);
+
+      if (this.abas.length > 0) {
+        // seleciona a primeira aba que tiver receitas fabricáveis
+        const primeiraDisponivel = this.abas.find(a => this.getQuantidadePorAba(a) > 0);
+        if (primeiraDisponivel) {
+          this.abaAtiva = primeiraDisponivel;
+        }
+      }
+
     } catch (err) {
       console.error('[Oficina] Erro ao carregar receitas:', err);
     } finally {
@@ -82,8 +91,9 @@ export class Oficina implements OnInit {
       .map(([nome, itens]) => ({
         nome,
         itens,
-        expandido: estados.get(nome) ?? false,
+        expandido: false, // 👈 já deixa expandido por padrão
       }));
+
 
     this.categoriasFiltradas = [...this.categorias];
   }
@@ -186,7 +196,7 @@ export class Oficina implements OnInit {
   }
 
   getEmojiFallback(categoria?: string): string {
-    if (!categoria) return '📦'; // padrão
+    if (!categoria) return '📦';
 
     const mapa: Record<string, string> = {
       recursos: '🌿',
@@ -195,18 +205,31 @@ export class Oficina implements OnInit {
       outros: '📦',
     };
 
-    // verifica em qual aba a categoria se encaixa
     for (const aba of Object.keys(this.mapaAbas)) {
       if (this.mapaAbas[aba as keyof typeof this.mapaAbas].includes(categoria)) {
         return mapa[aba as keyof typeof mapa];
       }
     }
 
-    return '📦'; // fallback
+    return '📦';
   }
 
   abrirItemCatalogo(id: string | number) {
     this.router.navigate(['/item-catalogo', String(id)]);
   }
+
+  getQuantidadePorAba(aba: 'recursos' | 'equipamentos' | 'pocoes' | 'outros'): number {
+    const categoriasAba = this.mapaAbas[aba];
+    let count = 0;
+
+    this.categorias.forEach(cat => {
+      if (categoriasAba.includes(cat.nome)) {
+        count += cat.itens.length; // 👈 conta todos os itens, fabricáveis ou não
+      }
+    });
+
+    return count;
+  }
+
 
 }
