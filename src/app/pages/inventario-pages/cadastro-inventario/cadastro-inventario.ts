@@ -13,11 +13,12 @@ import { MatButtonModule } from '@angular/material/button';
 
 import { CatalogoDomain } from '../../../domain/CatalogoDomain';
 import { InventarioDomain } from '../../../domain/InventarioDomain';
+import { RegistroDomain } from '../../../domain/RegistroDomain';
 import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { AuthService } from '../../../core/auth/AuthService';
 import { IdUtils } from '../../../core/utils/IdUtils';
-
 import { Location } from '@angular/common';
+import { JogadorDomain } from '../../../domain/jogadorDomain';
 
 @Component({
   selector: 'app-cadastro-inventario',
@@ -41,80 +42,49 @@ export class CadastroInventario implements OnInit {
   selecionado: CatalogoDomain | null = null;
   filtro = '';
   quantidade = 1;
+  descricao = '';
   salvando = false;
   editando = false;
   inventarioAtual: InventarioDomain | null = null;
 
   private catalogoRepo = new BaseRepositoryV2<CatalogoDomain>('Catalogo');
   private inventarioRepo = new BaseRepositoryV2<InventarioDomain>('Inventario');
+  private registroRepo = new BaseRepositoryV2<RegistroDomain>('Registro');
+  private jogadoresRepo = new BaseRepositoryV2<JogadorDomain>('Personagem');
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private location: Location // 👈 agora reconhecido
+    private location: Location
   ) { }
 
   async ngOnInit() {
     try {
-      console.log('[CadastroInventario] ▶️ Iniciando carregamento...');
-
-      // 1️⃣ Catálogo local primeiro
       this.catalogoItens = await this.catalogoRepo.getLocal();
       this.catalogoFiltrado = this.catalogoItens;
 
-      // 2️⃣ Sync catálogo em paralelo
       this.catalogoRepo.sync().then(async (updated) => {
         if (updated) {
-          console.log('[CadastroInventario] Catálogo atualizado.');
           this.catalogoItens = await this.catalogoRepo.getLocal();
           this.catalogoFiltrado = this.catalogoItens;
         }
       });
 
-      // 3️⃣ Edição
       const idParam = this.route.snapshot.paramMap.get('id');
       if (idParam) {
         this.editando = true;
-
         const user = AuthService.getUser();
         if (!user?.email) throw new Error('Usuário não autenticado.');
 
         const locais = await this.inventarioRepo.getLocal();
-        this.inventarioAtual = locais.find(
-          (i) => String(i.id) === String(idParam) && i.jogador === user.email
-        ) || null;
-
-
-        if (this.inventarioAtual) {
-          await this.carregarItemSelecionado(this.inventarioAtual);
-        }
-
-        // Sync inventário
-        this.inventarioRepo.sync().then(async (updated) => {
-          if (updated) {
-            const atualizados = await this.inventarioRepo.getLocal();
-            const recarregado = atualizados.find(
-              (i) => String(i.id) === String(idParam) && i.jogador === user.email
-            );
-
-            if (recarregado) {
-              this.inventarioAtual = recarregado;
-              await this.carregarItemSelecionado(this.inventarioAtual);
-            }
-          }
-        });
-
-        // Fallback: força online
-        if (!this.inventarioAtual) {
-          const online = await this.inventarioRepo.forceFetch();
-          this.inventarioAtual = online.find(
+        this.inventarioAtual =
+          locais.find(
             (i) => String(i.id) === String(idParam) && i.jogador === user.email
           ) || null;
 
-
-          if (this.inventarioAtual) {
-            await this.carregarItemSelecionado(this.inventarioAtual);
-          }
+        if (this.inventarioAtual) {
+          await this.carregarItemSelecionado(this.inventarioAtual);
+          this.descricao = ''; // 🧹 limpa o campo no modo edição
         }
       }
     } catch (err) {
@@ -128,9 +98,10 @@ export class CadastroInventario implements OnInit {
       this.catalogoFiltrado = this.catalogoItens;
     }
 
-    this.selecionado = this.catalogoItens.find(
-      (c) => String(c.id) === String(inventario.item_catalogo)
-    ) || null;
+    this.selecionado =
+      this.catalogoItens.find(
+        (c) => String(c.id) === String(inventario.item_catalogo)
+      ) || null;
 
     this.quantidade = inventario.quantidade;
     this.filtro = this.selecionado?.nome || '';
@@ -138,7 +109,11 @@ export class CadastroInventario implements OnInit {
 
   filtrarItens() {
     const normalizar = (t: string) =>
-      (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+      (t || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
 
     const termo = normalizar(this.filtro || '');
     this.catalogoFiltrado = termo
@@ -156,13 +131,12 @@ export class CadastroInventario implements OnInit {
   }
 
   decrementar() {
-    this.quantidade = Math.max(1, this.quantidade - 1);
+    this.quantidade = Math.max(0, this.quantidade - 1);
   }
 
   cancelar() {
     this.location.back();
   }
-
 
   novoItem() {
     this.router.navigate(['/cadastro-item-catalogo']);
@@ -173,67 +147,141 @@ export class CadastroInventario implements OnInit {
 
     try {
       this.salvando = true;
+
       const user = AuthService.getUser();
       if (!user?.email) throw new Error('Usuário não autenticado');
+      const jogadorEmail = user.email;
 
-      // 🔎 Caso esteja editando e quantidade = 0 → remover item
-      if (this.editando && this.inventarioAtual && this.quantidade === 0) {
-        const confirmar = confirm(
-          `⚠️ Você definiu a quantidade como 0.\n\nDeseja remover "${this.selecionado?.nome}" do inventário?`
-        );
-        if (!confirmar) {
-          this.salvando = false;
-          return;
-        }
+      const jogador =
+        (await this.jogadoresRepo.getLocal()).find(
+          (j) => j.email === jogadorEmail
+        ) || null;
+      const personagem = jogador?.personagem || 'Você';
 
-        await this.inventarioRepo.delete(this.inventarioAtual.id);
-        alert('🗑️ Item removido do inventário!');
-        this.router.navigate(['/inventario-jogador']);
+      const unidade = this.selecionado?.unidade_medida || 'unidade(s)';
+      const itemNome = `${this.selecionado?.nome || 'Item desconhecido'}`;
+      const todos = await this.inventarioRepo.getLocal();
+
+      const existente = todos.find(
+        (i) =>
+          i.jogador === jogadorEmail &&
+          String(i.item_catalogo) === String(this.selecionado!.id)
+      );
+
+      const descricaoTrim = this.descricao.trim();
+
+      let inventarioFinal: InventarioDomain;
+      let registro: RegistroDomain;
+      let resumoUsuario = '';
+      let acaoRegistro = '';
+      let acaoUsuario = '';
+
+      // 🧾 Monta linha de descrição
+      const qtdAntes = existente ? existente.quantidade : 0;
+      const qtdDepois = this.editando
+        ? this.quantidade
+        : qtdAntes + this.quantidade;
+      const delta = qtdDepois - qtdAntes;
+
+      const novaLinhaDescricao =
+        `Quantidade: ${qtdAntes} → ${qtdDepois} (${delta >= 0 ? '+' : ''}${delta} ${unidade})` +
+        (descricaoTrim ? `\n${descricaoTrim}` : '');
+
+      // 📊 Define ação e mensagens
+      if (delta > 0 && !this.editando)
+        acaoUsuario = 'adicionará um item ao inventário';
+      else if (delta > 0 && this.editando)
+        acaoUsuario = 'editará um item ao inventário';
+      else if (delta < 0)
+        acaoUsuario = 'consumirá um item do inventário';
+      else if (qtdDepois === 0)
+        acaoUsuario = 'removerá o item do inventário';
+      else
+        acaoUsuario = 'atualizará o inventário';
+
+      resumoUsuario =
+        `🧍‍♂️ Você ${acaoUsuario}\n` +
+        `🎒 ${itemNome}: ${qtdAntes} → ${qtdDepois} (${delta >= 0 ? '+' : ''}${delta} ${unidade})\n` +
+        (descricaoTrim ? `📝 ${descricaoTrim}` : '');
+
+      // 🧾 Registro formal
+      if (delta > 0 && !this.editando)
+        acaoRegistro = 'adicionou um item ao inventário';
+      else if (delta > 0 && this.editando)
+        acaoRegistro = 'editou um item do inventário';
+      else if (delta < 0)
+        acaoRegistro = 'consumiu um item do inventário';
+      else if (qtdDepois === 0)
+        acaoRegistro = 'removeu o item do inventário';
+      else
+        acaoRegistro = 'atualizou o inventário';
+
+      // 🧠 Confirmação antes de salvar
+      const confirmar = confirm(
+        `${resumoUsuario}\n\nDeseja confirmar a operação?`
+      );
+      if (!confirmar) {
+        this.salvando = false;
         return;
       }
 
-      if (this.editando && this.inventarioAtual) {
-        const atualizado: InventarioDomain = {
-          ...this.inventarioAtual,
-          jogador: user.email,
+      // 🔧 Montagem do inventário final
+      const historicoAnterior = existente?.descricao?.trim() || '';
+      const novaDescricao = this.editando
+        ? novaLinhaDescricao +
+        (historicoAnterior ? `\n---\n${historicoAnterior}` : '')
+        : novaLinhaDescricao +
+        (historicoAnterior ? `\n---\n${historicoAnterior}` : '');
+
+      inventarioFinal = existente
+        ? {
+          ...existente,
+          quantidade: qtdDepois,
+          descricao: novaDescricao,
+        }
+        : {
+          id: IdUtils.generateULID(),
+          index: Date.now(),
+          jogador: jogadorEmail,
           item_catalogo: this.selecionado.id,
-          quantidade: Math.max(0, this.quantidade), // 🔒 nunca negativo
+          quantidade: qtdDepois,
+          descricao: novaDescricao,
         };
-        await this.inventarioRepo.update(atualizado);
+
+      registro = {
+        id: IdUtils.generateULID(),
+        jogador: jogadorEmail,
+        alvo: jogadorEmail,
+        tipo: 'inventario',
+        acao: acaoRegistro,
+        detalhes:
+          `📦 ${personagem} ${acaoRegistro}\n` +
+          `🎒 ${itemNome}: ${qtdAntes} → ${qtdDepois} (${delta >= 0 ? '+' : ''}${delta} ${unidade})\n` +
+          (descricaoTrim ? `📝 Descrição: ${descricaoTrim}` : ''),
+        data: new Date().toISOString(),
+      };
+
+      // ⚡ Executa tudo em uma única operação otimizada
+      const payload: any = {
+        create: { Registro: [registro] },
+      };
+
+      if (existente) {
+        // Atualiza o inventário existente
+        payload.updateById = { Inventario: [inventarioFinal] };
       } else {
-        // 🚫 Bloqueia salvar com quantidade zero
-        if (this.quantidade <= 0) {
-          alert('❌ Não é permitido adicionar um item com quantidade zero.');
-          this.salvando = false;
-          return;
-        }
-
-        const todos = await this.inventarioRepo.getLocal();
-
-        const existente = todos.find(
-          (i) => i.jogador === user.email && i.item_catalogo === this.selecionado!.id
-        );
-
-        if (existente) {
-          const atualizado: InventarioDomain = {
-            ...existente,
-            quantidade: (existente.quantidade || 0) + this.quantidade,
-          };
-          await this.inventarioRepo.update(atualizado);
-        } else {
-          const novo: InventarioDomain = {
-            id: IdUtils.generateULID(),
-            index: Date.now(),
-            jogador: user.email,
-            item_catalogo: this.selecionado.id,
-            quantidade: this.quantidade,
-          };
-          await this.inventarioRepo.create(novo);
-        }
+        // Cria novo inventário e registro juntos
+        payload.create.Inventario = [inventarioFinal];
       }
 
-      alert('✅ Item salvo no inventário!');
+      await BaseRepositoryV2.batch(payload);
+
+      alert(
+        `✅ Operação concluída!\n\n${personagem} ${acaoRegistro}\n🎒 ${itemNome}: ${qtdAntes} → ${qtdDepois} (${delta >= 0 ? '+' : ''}${delta} ${unidade})`
+      );
+
       this.router.navigate(['/inventario-jogador']);
+
     } catch (err) {
       console.error('[CadastroInventario] ❌ Erro ao salvar:', err);
       alert('❌ Erro ao salvar item.');
@@ -241,7 +289,6 @@ export class CadastroInventario implements OnInit {
       this.salvando = false;
     }
   }
-
 
   displayFn(item?: CatalogoDomain): string {
     return item ? item.nome : '';

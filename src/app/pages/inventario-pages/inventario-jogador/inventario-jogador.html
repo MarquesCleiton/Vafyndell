@@ -113,15 +113,6 @@
                         </ng-container>
                         <ng-template #editarIcon>✏️</ng-template>
                       </button>
-
-                      <!-- Excluir -->
-                      <button class="btn btn-sm btn-outline-danger" [disabled]="processando[inv.id] === 'excluir'"
-                        (click)="excluirItem(inv.id, $event)">
-                        <ng-container *ngIf="processando[inv.id] === 'excluir'; else excluirIcon">
-                          <span class="spinner-border spinner-border-sm"></span>
-                        </ng-container>
-                        <ng-template #excluirIcon>🗑️</ng-template>
-                      </button>
                     </div>
 
                   </div>

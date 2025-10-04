@@ -17,14 +17,8 @@
             <div class="mb-3">
               <label class="form-label text-light fw-bold">🏷️ Item *</label>
               <mat-form-field appearance="fill" class="w-100 input-dark compact-select dropdown-field">
-                <input type="text"
-                       matInput
-                       placeholder="Selecione ou pesquise..."
-                       [(ngModel)]="filtro"
-                       name="filtro"
-                       [matAutocomplete]="auto"
-                       (input)="filtrarItens()"
-                       [readonly]="editando" />
+                <input type="text" matInput placeholder="Selecione ou pesquise..." [(ngModel)]="filtro" name="filtro"
+                  [matAutocomplete]="auto" (input)="filtrarItens()" [readonly]="editando" />
 
                 <!-- 🔽 Seta indicativa -->
                 <button mat-icon-button matSuffix disabled class="dropdown-arrow">
@@ -40,7 +34,7 @@
                     <div class="d-flex align-items-center">
                       <ng-container *ngIf="c.imagem && c.imagem !== '-'; else noItemIcon">
                         <img [src]="c.imagem" class="me-2 rounded"
-                             style="width: 24px; height: 24px; object-fit: cover;">
+                          style="width: 24px; height: 24px; object-fit: cover;">
                       </ng-container>
                       <ng-template #noItemIcon>
                         <span class="me-2">📦</span>
@@ -75,10 +69,20 @@
               <label class="form-label text-light fw-bold mb-0 me-3">🔢 Quantidade *</label>
               <div class="quantidade-box">
                 <button type="button" class="btn btn-sm btn-outline-light" (click)="decrementar()">−</button>
-                <input type="number" class="quantidade-input" [(ngModel)]="quantidade" name="quantidade" min="0" required />
+                <input type="number" class="quantidade-input" [(ngModel)]="quantidade" name="quantidade" min="0"
+                  required />
                 <button type="button" class="btn btn-sm btn-outline-light" (click)="incrementar()">+</button>
               </div>
             </div>
+
+            <!-- 📝 Descrição da inclusão -->
+            <div class="mb-3">
+              <label class="form-label text-light fw-bold">📝 Descrição (opcional)</label>
+              <textarea class="form-control bg-dark text-light border-secondary" rows="3" [(ngModel)]="descricao"
+                name="descricao"
+                placeholder="Ex: Comprado no mercado, ganho em missão, achado nas ruínas..."></textarea>
+            </div>
+
           </div>
         </div>
       </form>

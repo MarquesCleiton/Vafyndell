@@ -1,12 +1,13 @@
-<div class="troca-wrapper d-flex flex-column min-vh-100 bg-dark text-light">
-  <div class="flex-grow-1 p-3 d-flex justify-content-center">
+<div class="troca-wrapper d-flex flex-column min-vh-100 bg-dark text-light pb-5 mb-5">
+  <div class="flex-grow-1 p-3 d-flex justify-content-center pb-5 mb-5">
     <div class="troca-container w-100">
       <div class="card detalhe-card shadow-lg border-0">
         <!-- Cabeçalho -->
-        <div class="card-body p-3 border-bottom d-flex align-items-center justify-content-between">
+        <div class="card-body p-3 border-bottom d-flex align-items-center gap-2">
           <h4 class="fw-bold mb-0 text-light">🔄 Troca de Itens</h4>
         </div>
 
+        <!-- Conteúdo -->
         <div class="card-body">
           <!-- Jogador destinatário -->
           <div class="mb-3">
@@ -22,12 +23,46 @@
             </mat-form-field>
           </div>
 
-          <!-- Seleção de itens -->
-          <div class="mb-3">
-            <label class="form-label text-light">📦 Adicionar Item</label>
-            <mat-form-field appearance="fill" class="w-100 input-dark compact-select dropdown-field">
+          <!-- Itens selecionados -->
+          <div *ngIf="itensTroca.length > 0" class="itens-selecionados">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <h5 class="fw-bold text-light mb-0">🧺 Itens Selecionados</h5>
+              <span class="badge bg-secondary">{{ itensTroca.length }}</span>
+            </div>
+
+            <div *ngFor="let it of itensTroca; let i = index"
+              class="item-card bg-dark rounded p-2 mb-2 d-flex align-items-center justify-content-between gap-2">
+              <div class="d-flex align-items-center gap-2 flex-grow-1">
+                <span class="fs-5">📦</span>
+                <span class="fw-semibold text-light">{{ it.item.itemDetalhe?.nome }}</span>
+              </div>
+
+              <div class="item-quantidade">
+                <button type="button"
+                  (click)="it.quantidade = ajustarQuantidadeMin(it.quantidade - 1, 1); atualizarQuantidade(it)">−</button>
+
+                <input type="number" [(ngModel)]="it.quantidade" (blur)="atualizarQuantidade(it)" min="1"
+                  [max]="it.item.quantidade" />
+
+                <button type="button"
+                  (click)="it.quantidade = ajustarQuantidadeMax(it.quantidade + 1, it.item.quantidade); atualizarQuantidade(it)">＋</button>
+              </div>
+
+
+              <button type="button" class="btn btn-sm btn-danger px-2" (click)="removerItem(i)">✖</button>
+            </div>
+          </div>
+
+          <!-- Adicionar novo item -->
+          <div class="novo-item bg-dark rounded p-2 mb-3 mt-3">
+            <mat-form-field appearance="fill" class="w-100 input-dark compact-select dropdown-field mb-2">
               <input type="text" matInput placeholder="Pesquisar item no inventário..." [(ngModel)]="filtroItem"
                 name="filtroItem" [matAutocomplete]="autoItem" (input)="filtrarItensInventario()" />
+
+              <button mat-icon-button matSuffix disabled class="dropdown-arrow">
+                <mat-icon>arrow_drop_down</mat-icon>
+              </button>
+
               <mat-autocomplete #autoItem="matAutocomplete" (optionSelected)="selecionarItem($event.option.value)">
                 <mat-option *ngFor="let i of inventarioFiltrado" [value]="i" class="bg-dark text-light">
                   <div class="d-flex align-items-center gap-2">
@@ -37,33 +72,34 @@
                 </mat-option>
               </mat-autocomplete>
             </mat-form-field>
-          </div>
 
-          <!-- Quantidade -->
-          <div *ngIf="itemSelecionado" class="d-flex align-items-center gap-2 mb-3">
-            <button type="button" class="btn btn-outline-light btn-sm" (click)="decrementar()">−</button>
-            <input type="number" [(ngModel)]="quantidade" (blur)="validarQuantidade()" min="1"
-              class="form-control quantidade-input" />
-            <button type="button" class="btn btn-outline-light btn-sm" (click)="incrementar()">＋</button>
-            <button type="button" class="btn btn-success ms-2" (click)="adicionarItem()">➕ Adicionar</button>
-          </div>
-
-          <!-- Lista de itens adicionados -->
-          <div *ngIf="itensTroca.length > 0" class="itens-selecionados">
-            <div *ngFor="let it of itensTroca; let i = index" class="item-card">
-              <span class="preview-item">📦 {{ it.item.itemDetalhe?.nome }} — x{{ it.quantidade }}</span>
-              <button type="button" class="btn btn-sm btn-danger" (click)="removerItem(i)">✖</button>
+            <div *ngIf="itemSelecionado" class="d-flex align-items-center justify-content-between mt-2">
+              <div class="quantidade-box">
+                <button type="button" class="btn btn-sm btn-outline-light" (click)="decrementar()">−</button>
+                <input type="number" class="quantidade-input" [(ngModel)]="quantidade"
+                  (input)="validarQuantidade(); filtrarItensInventario()"
+                  (blur)="validarQuantidade(); filtrarItensInventario()" [max]="itemSelecionado?.quantidade ?? 0"
+                  min="1" />
+                <button type="button" class="btn btn-sm btn-outline-light" (click)="incrementar()">＋</button>
+              </div>
+              <button type="button" class="btn btn-success ms-2" (click)="adicionarItem()">➕</button>
             </div>
+          </div>
+
+          <!-- Descrição -->
+          <div class="mb-3 mt-3">
+            <label class="form-label text-light">📝 Descrição da transferência (opcional)</label>
+            <textarea class="form-control input-dark auto-expand" rows="3" [(ngModel)]="descricaoTransferencia"
+              name="descricaoTransferencia"
+              placeholder="Ex: Entregue em missão, troca amigável, ajuda ao grupo..."></textarea>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- FAB confirmar -->
   <!-- FABs -->
   <div class="fab-stack">
-    <!-- Confirmar -->
     <button class="fab fab-success" (click)="confirmarTroca()"
       [disabled]="processando || !jogadorSelecionado || itensTroca.length===0">
       <ng-container *ngIf="!processando">📤</ng-container>
@@ -72,7 +108,6 @@
       </ng-container>
     </button>
 
-    <!-- Voltar -->
-    <button class="fab fab-secondary" (click)="cancelar()">⬅️</button>
+    <button class="fab fab-warning" (click)="cancelar()">⬅️</button>
   </div>
 </div>

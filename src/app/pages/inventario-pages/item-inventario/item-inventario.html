@@ -1,4 +1,5 @@
 <div class="inventario-detalhe-wrapper d-flex flex-column min-vh-100 bg-dark text-light pb-5 mb-5">
+
   <!-- Loading inicial -->
   <div *ngIf="carregando" class="text-center py-5">
     <div class="spinner-border text-light" role="status"></div>
@@ -12,64 +13,84 @@
 
         <!-- Cabeçalho -->
         <div class="card-body p-3 border-bottom d-flex align-items-center gap-2">
-          <button type="button" class="btn btn-outline-light btn-sm" (click)="cancelar()">
-            ⬅ Voltar
-          </button>
           <h4 class="fw-bold mb-0 text-capitalize text-light">
             🎒 {{ item.catalogo?.nome || 'Item desconhecido' }}
           </h4>
         </div>
 
-        <!-- Imagem ou fallback -->
+        <!-- Imagem -->
         <div class="position-relative">
           <ng-container *ngIf="item.catalogo?.imagem && item.catalogo?.imagem !== '-'; else noImagem">
-            <img [src]="item.catalogo?.imagem"
-                 class="card-img-top detalhe-img"
-                 alt="{{ item.catalogo?.nome }}" />
+            <img [src]="item.catalogo?.imagem" class="card-img-top detalhe-img" alt="{{ item.catalogo?.nome }}" />
           </ng-container>
           <ng-template #noImagem>
-            <div class="d-flex align-items-center justify-content-center bg-secondary text-dark detalhe-img fallback-icone">
+            <div
+              class="d-flex align-items-center justify-content-center bg-secondary text-dark detalhe-img fallback-icone">
               📦
             </div>
           </ng-template>
         </div>
 
-        <!-- Informações -->
+        <!-- Informações principais -->
         <div class="card-body">
-          <p class="text-light mb-1"><b>📂 Categoria:</b> {{ item.catalogo?.categoria || '—' }}</p>
+          <p class="text-light mb-1">
+            <b>📂 Categoria:</b> {{ item.catalogo?.categoria || '—' }}
+          </p>
           <p class="text-light mb-1"><b>🌱 Origem:</b> {{ item.catalogo?.origem || '—' }}</p>
           <p class="text-light mb-1"><b>💎 Raridade:</b> {{ item.catalogo?.raridade || '—' }}</p>
-          <p class="text-light mb-1">
-            <b>🔢 Quantidade:</b>
-            {{ item.inventario.quantidade }} {{ item.catalogo?.unidade_medida || '' }}
-          </p>
+          <p class="text-light mb-1"><b>🔢 Quantidade:</b> {{ item.inventario.quantidade }}</p>
           <p class="text-light mb-3">
             <b>⚖️ Peso total:</b>
             {{ (item.inventario.quantidade || 0) * (item.catalogo?.peso || 0) }} kg
           </p>
 
+          <!-- Link para catálogo -->
+          <p *ngIf="item.catalogo" class="mb-3">
+            <a class="text-info text-decoration-none" href="/#/item-catalogo/{{ item.catalogo.id }}">
+              ℹ️ Ver detalhes no catálogo
+            </a>
+          </p>
+
           <hr class="border-secondary" />
 
-          <p *ngIf="item.catalogo?.efeito" class="mb-1 text-info">
-            ✨ <b>Efeito:</b> {{ item.catalogo?.efeito }}
-          </p>
-          <p *ngIf="item.catalogo?.colateral" class="mb-1 text-danger">
-            ⚠️ <b>Colateral:</b> {{ item.catalogo?.colateral }}
-          </p>
-          <p *ngIf="item.catalogo?.descricao" class="fst-italic text-light descricao-text">
-            📝 <b>Descrição:</b> {{ item.catalogo?.descricao }}
-          </p>
+          <!-- Sessão expansível: Detalhes -->
+          <details class="detalhes-section mb-3" open>
+            <summary>📖 Detalhes do Item</summary>
+            <div class="p-2 ps-3 mt-2">
+              <p *ngIf="item.catalogo?.efeito" class="mb-1 text-info">
+                ✨ <b>Efeito:</b> {{ item.catalogo?.efeito }}
+              </p>
+              <p *ngIf="item.catalogo?.colateral" class="mb-1 text-danger">
+                ⚠️ <b>Colateral:</b> {{ item.catalogo?.colateral }}
+              </p>
+              <p *ngIf="item.catalogo?.descricao" class="mb-0 text-light fst-italic">
+                📝 <b>Descrição:</b> {{ item.catalogo?.descricao }}
+              </p>
+            </div>
+          </details>
+
+          <!-- Sessão expansível: Histórico -->
+          <details class="detalhes-section">
+            <summary>🧾 Histórico</summary>
+            <div class="p-2 ps-3 mt-2">
+              <p *ngIf="item.inventario.descricao; else semHistorico" class="descricao-text">
+                {{ item.inventario.descricao }}
+              </p>
+              <ng-template #semHistorico>
+                <p class="text-muted fst-italic">Sem histórico registrado.</p>
+              </ng-template>
+            </div>
+          </details>
         </div>
+
       </div>
     </div>
   </div>
 
   <!-- FABs -->
   <div class="fab-stack">
-    <!-- Cancelar -->
     <button class="fab fab-primary" (click)="cancelar()">⬅️</button>
 
-    <!-- Excluir -->
     <button class="fab fab-danger" [disabled]="processandoExcluir" (click)="excluirItem()">
       <ng-container *ngIf="!processandoExcluir">🗑️</ng-container>
       <ng-container *ngIf="processandoExcluir">
@@ -77,7 +98,6 @@
       </ng-container>
     </button>
 
-    <!-- Editar -->
     <button class="fab fab-warning" [disabled]="processandoEditar" (click)="editarItem()">
       <ng-container *ngIf="!processandoEditar">✏️</ng-container>
       <ng-container *ngIf="processandoEditar">

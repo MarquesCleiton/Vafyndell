@@ -9,10 +9,12 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatInputModule } from '@angular/material/input';
 import { MatOptionModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon'; // ✅ IMPORTAR AQUI
 
 import { CatalogoDomain } from '../../domain/CatalogoDomain';
 import { InventarioDomain } from '../../domain/InventarioDomain';
 import { JogadorDomain } from '../../domain/jogadorDomain';
+import { RegistroDomain } from '../../domain/RegistroDomain';
 import { AuthService } from '../../core/auth/AuthService';
 import { IdUtils } from '../../core/utils/IdUtils';
 import { BaseRepositoryV2 } from '../../repositories/BaseRepositoryV2';
@@ -32,6 +34,7 @@ interface InventarioDetalhado extends InventarioDomain {
     MatInputModule,
     MatOptionModule,
     MatButtonModule,
+    MatIconModule, // ✅ ADICIONAR AQUI
   ],
   templateUrl: './troca-de-itens.html',
   styleUrls: ['./troca-de-itens.css'],
@@ -56,7 +59,7 @@ export class TrocaDeItens implements OnInit {
   private jogadoresRepo = new BaseRepositoryV2<JogadorDomain>('Personagem');
   private inventarioRepo = new BaseRepositoryV2<InventarioDomain>('Inventario');
   private catalogoRepo = new BaseRepositoryV2<CatalogoDomain>('Catalogo');
-
+  descricaoTransferencia: string = '';
   constructor(
     private router: Router,
     private route: ActivatedRoute,
@@ -68,13 +71,14 @@ export class TrocaDeItens implements OnInit {
     if (!user?.email) throw new Error('Usuário não autenticado');
     this.emailLogado = user.email;
 
-    // Jogadores (removendo o próprio usuário)
-    this.jogadores = (await this.jogadoresRepo.getLocal()).filter(
-      j => j.email !== this.emailLogado
-    );
+    // 🔹 Apenas jogadores reais (exclui NPCs e o próprio)
+    this.jogadores = (await this.jogadoresRepo.getLocal())
+      .filter(j => j.email !== this.emailLogado)
+      .filter(j => j.nome_do_jogador !== 'NPC');
+
     this.jogadoresFiltrados = [...this.jogadores];
 
-    // Inventário + catálogo
+    // 🔹 Carrega inventário e catálogo
     const [inventario, catalogo] = await Promise.all([
       this.inventarioRepo.getLocal(),
       this.catalogoRepo.getLocal(),
@@ -88,7 +92,7 @@ export class TrocaDeItens implements OnInit {
       }));
     this.inventarioFiltrado = [...this.inventario];
 
-    // Se veio com ID pré-selecionado
+    // 🔹 Item pré-selecionado
     const idItem = this.route.snapshot.paramMap.get('id');
     if (idItem) {
       const encontrado = this.inventario.find(i => String(i.id) === idItem);
@@ -100,9 +104,6 @@ export class TrocaDeItens implements OnInit {
     }
   }
 
-  // =========================================================
-  // Jogadores
-  // =========================================================
   filtrarJogadores() {
     const termo = this.filtroJogador.toLowerCase().trim();
     this.jogadoresFiltrados = termo
@@ -115,49 +116,36 @@ export class TrocaDeItens implements OnInit {
     this.filtroJogador = j.personagem;
   }
 
-  // =========================================================
-  // Inventário
-  // =========================================================
   filtrarItensInventario() {
     const termo = this.filtroItem.toLowerCase().trim();
-
     this.inventarioFiltrado = this.inventario
       .map(i => {
-        // calcula quanto ainda sobra considerando o que já foi escolhido
         const jaAdicionado = this.itensTroca
           .filter(t => t.item.id === i.id)
           .reduce((sum, t) => sum + t.quantidade, 0);
-
         const restante = i.quantidade - jaAdicionado;
-
-        // 🔑 se já foi todo para a troca, não retorna mais
         return restante > 0 ? { ...i, quantidade: restante } : null;
       })
-      .filter((i): i is InventarioDetalhado => i !== null) // remove os null
+      .filter((i): i is InventarioDetalhado => i !== null)
       .filter(i => (termo ? i.itemDetalhe?.nome?.toLowerCase().includes(termo) : true));
   }
 
   adicionarItem() {
     if (!this.itemSelecionado) return;
-
     const existente = this.itensTroca.find(t => t.item.id === this.itemSelecionado!.id);
     if (existente) {
       existente.quantidade = Math.min(
         existente.quantidade + this.quantidade,
-        this.itemSelecionado.quantidade + existente.quantidade // 🔑 soma corretamente
+        this.itemSelecionado.quantidade + existente.quantidade
       );
     } else {
       this.itensTroca.push({ item: this.itemSelecionado, quantidade: this.quantidade });
     }
-
     this.itemSelecionado = null;
     this.filtroItem = '';
     this.quantidade = 1;
-
-    // 🔑 Recalcula a lista disponível corretamente
     this.filtrarItensInventario();
   }
-
 
   selecionarItem(i: InventarioDetalhado) {
     this.itemSelecionado = i;
@@ -188,7 +176,7 @@ export class TrocaDeItens implements OnInit {
   }
 
   // =========================================================
-  // Confirmar troca
+  // Confirmar troca (alerta com unidade e registro padrão)
   // =========================================================
   async confirmarTroca() {
     if (!this.jogadorSelecionado) {
@@ -203,72 +191,137 @@ export class TrocaDeItens implements OnInit {
     this.processando = true;
 
     try {
-      const destinatario = this.jogadorSelecionado.email;
-      let todos = await this.inventarioRepo.getLocal();
+      const descricaoExtra = (this.descricaoTransferencia || '').trim();
 
+      const destinatario = this.jogadorSelecionado.email;
+      const destinatarioPersonagem = this.jogadorSelecionado.personagem;
+
+      const remetenteJogador =
+        (await this.jogadoresRepo.getLocal()).find(j => j.email === this.emailLogado);
+      const remetentePersonagem = remetenteJogador?.personagem || 'Desconhecido';
+
+      const todos = await this.inventarioRepo.getLocal();
       const updates: InventarioDomain[] = [];
       const creates: InventarioDomain[] = [];
-      const deletes: string[] = []; // 🔑 agora é por id
+      const deletes: string[] = [];
+      const logEnvio: string[] = [];
+      const logRecebimento: string[] = [];
 
       for (const troca of this.itensTroca) {
         const remetente = troca.item;
+        const itemNome = remetente.itemDetalhe?.nome || 'Item desconhecido';
+        const unidade = remetente.itemDetalhe?.unidade_medida || 'unidade';
         let quantidade = troca.quantidade;
+        if (quantidade > remetente.quantidade) quantidade = remetente.quantidade;
 
-        if (quantidade > remetente.quantidade) {
-          quantidade = remetente.quantidade;
-        }
+        const qtdAntesRem = remetente.quantidade;
+        const qtdDepoisRem = qtdAntesRem - quantidade;
 
-        // 🔽 Subtrai do remetente
-        const atualizadoRem = {
+        // 🔹 Histórico remetente
+        const novaLinhaRem =
+          `Quantidade: ${qtdAntesRem} → ${qtdDepoisRem} (-${quantidade} ${unidade})\n` +
+          `Transferido para ${destinatarioPersonagem}` +
+          (descricaoExtra ? `\n${descricaoExtra}` : '');
+
+        const historicoRem = remetente.descricao
+          ? `${novaLinhaRem}\n---\n${remetente.descricao.trim()}`
+          : novaLinhaRem;
+
+        const atualizadoRem: InventarioDomain = {
           ...remetente,
-          quantidade: remetente.quantidade - quantidade,
+          quantidade: qtdDepoisRem,
+          descricao: historicoRem,
         };
-        if (atualizadoRem.quantidade > 0) {
-          updates.push(atualizadoRem);
-        } else {
-          deletes.push(remetente.id); // 🔑 id em vez de index
-        }
 
-        // 🔼 Adiciona ao destinatário
+        if (atualizadoRem.quantidade > 0) updates.push(atualizadoRem);
+        else deletes.push(remetente.id);
+
+        // 🔹 Destinatário
         const existenteDest = todos.find(
           i => i.jogador === destinatario && i.item_catalogo === remetente.item_catalogo
         );
 
+        let qtdAntesDest = 0;
+        let qtdDepoisDest = 0;
+
         if (existenteDest) {
+          qtdAntesDest = existenteDest.quantidade;
+          qtdDepoisDest = existenteDest.quantidade + quantidade;
+          const novaLinhaDest =
+            `Quantidade: ${qtdAntesDest} → ${qtdDepoisDest} (+${quantidade} ${unidade})\n` +
+            `Recebido de ${remetentePersonagem}` +
+            (descricaoExtra ? `\n${descricaoExtra}` : '');
+          const historicoDest = existenteDest.descricao
+            ? `${novaLinhaDest}\n---\n${existenteDest.descricao.trim()}`
+            : novaLinhaDest;
+
           updates.push({
             ...existenteDest,
-            quantidade: existenteDest.quantidade + quantidade,
+            quantidade: qtdDepoisDest,
+            descricao: historicoDest,
           });
         } else {
+          qtdDepoisDest = quantidade;
+          const novaDescricao =
+            `Quantidade: 0 → ${qtdDepoisDest} (+${quantidade} ${unidade})\n` +
+            `Recebido de ${remetentePersonagem}` +
+            (descricaoExtra ? `\n${descricaoExtra}` : '');
           creates.push({
             id: IdUtils.generateULID(),
-            index: Date.now(), // se ainda quiser manter index incremental
+            index: Date.now(),
             jogador: destinatario,
             item_catalogo: remetente.item_catalogo,
-            quantidade,
+            quantidade: qtdDepoisDest,
+            descricao: novaDescricao,
           });
         }
+
+        logEnvio.push(`🎒 ${itemNome}: ${qtdAntesRem} → ${qtdDepoisRem} (-${quantidade} ${unidade})`);
+        logRecebimento.push(`🎒 ${itemNome}: ${qtdAntesDest} → ${qtdDepoisDest} (+${quantidade} ${unidade})`);
       }
 
-      if (updates.length) {
-        const updated = await this.inventarioRepo.updateBatch(updates);
-        todos = [
-          ...todos.filter(i => !updates.some(u => u.id === i.id)),
-          ...updated,
-        ];
-      }
+      // 🧾 Registros com descrição extra
+      const registroEnvio: RegistroDomain = {
+        id: IdUtils.generateULID(),
+        jogador: this.emailLogado,
+        alvo: destinatario,
+        tipo: 'transferencia',
+        acao: 'envio',
+        detalhes:
+          `📦 ${remetentePersonagem} transferiu itens para ${destinatarioPersonagem}\n` +
+          logEnvio.join('\n') +
+          (descricaoExtra ? `\n📝 ${descricaoExtra}` : ''),
+        data: new Date().toISOString(),
+      };
 
-      if (creates.length) {
-        const created = await this.inventarioRepo.createBatch(creates);
-        todos = [...todos, ...created];
-      }
+      const registroReceb: RegistroDomain = {
+        id: IdUtils.generateULID(),
+        jogador: destinatario,
+        alvo: this.emailLogado,
+        tipo: 'transferencia',
+        acao: 'recebimento',
+        detalhes:
+          `🎁 ${destinatarioPersonagem} recebeu itens de ${remetentePersonagem}\n` +
+          logRecebimento.join('\n') +
+          (descricaoExtra ? `\n📝 ${descricaoExtra}` : ''),
+        data: new Date().toISOString(),
+      };
 
-      if (deletes.length) {
-        await this.inventarioRepo.deleteBatch(deletes);
-        todos = todos.filter(i => !deletes.includes(i.id));
-      }
+      await BaseRepositoryV2.batch({
+        updateById: { Inventario: updates },
+        create: {
+          Inventario: creates,
+          Registro: [registroEnvio, registroReceb],
+        },
+        deleteById: { Inventario: deletes.map(id => ({ id })) },
+      });
 
-      alert('✅ Troca realizada com sucesso!');
+      const mensagemAlerta =
+        `🎁 Você transferiu itens para ${destinatarioPersonagem}\n` +
+        logEnvio.join('\n') +
+        (descricaoExtra ? `\n📝 ${descricaoExtra}` : '');
+
+      alert(mensagemAlerta);
       this.cancelar();
     } catch (err) {
       console.error('[TrocaDeItens] Erro na troca:', err);
@@ -278,8 +331,49 @@ export class TrocaDeItens implements OnInit {
     }
   }
 
-
   cancelar() {
     this.location.back();
   }
+
+  ajustarQuantidade(index: number, delta: number) {
+    const item = this.itensTroca[index];
+    const max = item.item.quantidade;
+    const novaQtd = Math.min(Math.max(1, item.quantidade + delta), max);
+    this.itensTroca[index].quantidade = novaQtd;
+  }
+
+  validarQuantidadeTroca(index: number) {
+    const item = this.itensTroca[index];
+    const max = item.item.quantidade;
+    if (item.quantidade > max) item.quantidade = max;
+    if (item.quantidade < 1) item.quantidade = 1;
+  }
+
+  atualizarDisponiveis() {
+    this.filtrarItensInventario();
+  }
+
+  ajustarQuantidadeMin(valor: number, minimo: number): number {
+    return Math.max(valor, minimo);
+  }
+
+  ajustarQuantidadeMax(valor: number, maximo?: number): number {
+    return Math.min(valor, maximo ?? valor);
+  }
+
+  atualizarQuantidade(it: { item: InventarioDetalhado; quantidade: number }) {
+    // 🔹 Garante que a quantidade nunca passe do limite
+    const max = it.item.quantidade;
+    if (it.quantidade > max) {
+      it.quantidade = max;
+    }
+    if (it.quantidade < 1) {
+      it.quantidade = 1;
+    }
+
+    // 🔹 Atualiza imediatamente o inventário filtrado
+    this.filtrarItensInventario();
+  }
+
+
 }

@@ -4,4 +4,5 @@ export interface InventarioDomain {
   item_catalogo: string;
   quantidade: number;
   index: number; // ← opcional, vem do Sheet
+  descricao?: string; // 🆕 motivo da inclusão (compra, achado, etc.)
 }
