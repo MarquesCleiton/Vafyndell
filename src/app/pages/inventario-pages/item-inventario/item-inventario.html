@@ -45,11 +45,12 @@
           </p>
 
           <!-- Link para catálogo -->
-          <p *ngIf="item.catalogo" class="mb-3">
-            <a class="text-info text-decoration-none" href="/#/item-catalogo/{{ item.catalogo.id }}">
+          <p *ngIf="item?.catalogo" class="mb-3">
+            <a class="text-info text-decoration-none link-clicavel" (click)="abrirCatalogo(item.catalogo!.id)">
               ℹ️ Ver detalhes no catálogo
             </a>
           </p>
+
 
           <hr class="border-secondary" />
 

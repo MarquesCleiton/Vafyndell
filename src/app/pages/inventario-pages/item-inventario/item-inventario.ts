@@ -167,4 +167,10 @@ export class ItemInventario implements OnInit {
       this.processandoExcluir = false;
     }
   }
+
+  abrirCatalogo(id: string | number) {
+    if (!id) return;
+    this.router.navigate(['/item-catalogo', id]);
+  }
+
 }

@@ -105,3 +105,13 @@
 .fab-danger:hover {
   background: #e63e5b;
 }
+
+.link-clicavel {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.link-clicavel:hover {
+  color: #0dcaf0; /* Azul claro ao passar o mouse */
+  text-decoration: underline;
+}
