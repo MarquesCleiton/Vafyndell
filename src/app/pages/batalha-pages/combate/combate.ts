@@ -122,10 +122,16 @@ export class Combate implements OnInit {
     try {
       let danoAplicado = this.dano;
 
-      // Estado atual da vítima
-      let caAtual = this.vitimaSelecionada.classe_de_armadura || 0;
+      // Estado da vítima antes do ataque
+      const vidaBase = JogadorUtils.getVidaBase(this.vitimaSelecionada);
+      const vidaAntes = JogadorUtils.getVidaAtual(this.vitimaSelecionada);
+      const armaduraAntes = this.vitimaSelecionada.classe_de_armadura || 0;
+
+      // Copia dos valores atuais
+      let caAtual = armaduraAntes;
       let danoTomadoAtual = this.vitimaSelecionada.dano_tomado || 0;
 
+      // Aplicação do dano
       if (caAtual > 0) {
         if (danoAplicado <= caAtual) {
           // Todo o dano é absorvido pela armadura
@@ -142,24 +148,24 @@ export class Combate implements OnInit {
         this.vitimaSelecionada.dano_tomado = danoTomadoAtual + danoAplicado;
       }
 
-      // 📌 Calcula informações derivadas
-      const vidaBase = JogadorUtils.getVidaBase(this.vitimaSelecionada);
-      const vidaAtual = JogadorUtils.getVidaAtual(this.vitimaSelecionada);
+      // Estado final da vítima
+      const vidaDepois = JogadorUtils.getVidaAtual(this.vitimaSelecionada);
+      const armaduraDepois = this.vitimaSelecionada.classe_de_armadura || 0;
       const morto = JogadorUtils.estaMorto(this.vitimaSelecionada);
 
-      // 📌 Monta detalhes elegantes
+      // 📌 Monta os detalhes com antes/depois
       let detalhes =
         `⚔️ ${this.ofensorSelecionado.personagem} atacou ${this.vitimaSelecionada.personagem}\n` +
         `💥 Dano causado: ${this.dano}\n` +
-        `🛡️ Armadura restante: ${this.vitimaSelecionada.classe_de_armadura}\n` +
-        `❤️ Vida atual: ${vidaAtual}/${vidaBase}`;
+        `🛡️ Armadura: ${armaduraAntes} → ${armaduraDepois}\n` +
+        `❤️ Vida: ${vidaAntes}/${vidaBase} → ${vidaDepois}/${vidaBase}`;
 
       if (this.efeitos?.trim()) {
         detalhes += `\n✨ Efeitos adicionais: ${this.efeitos}`;
       }
 
       // 🚨 Eventos especiais
-      if (caAtual > 0 && this.vitimaSelecionada.classe_de_armadura === 0) {
+      if (armaduraAntes > 0 && armaduraDepois === 0) {
         detalhes += `\n💔 A armadura de ${this.vitimaSelecionada.personagem} foi destruída!`;
       }
       if (morto) {
@@ -177,7 +183,6 @@ export class Combate implements OnInit {
         data: new Date().toISOString(),
       };
 
-
       // ✅ Tudo em 1 batch (Personagem + Registro)
       const result = await BaseRepositoryV2.batch({
         updateById: { Personagem: [{ ...this.vitimaSelecionada }] },
@@ -185,7 +190,6 @@ export class Combate implements OnInit {
       });
 
       console.log('⚔️ Combate registrado (batch):', result);
-
       alert('✅ Registro de batalha salvo!\n\n' + detalhes);
 
       this.router.navigate(['/batalha']);
@@ -196,4 +200,5 @@ export class Combate implements OnInit {
       this.salvando = false;
     }
   }
+
 }

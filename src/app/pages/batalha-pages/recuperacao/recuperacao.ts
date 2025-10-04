@@ -80,86 +80,96 @@ export class Recuperacao implements OnInit {
     this.router.navigate(['/batalha']);
   }
 
-  async registrarRecuperacao(form: NgForm) {
-    if (!this.jogador) return;
+async registrarRecuperacao(form: NgForm) {
+  if (!this.jogador) return;
 
-    this.salvando = true;
-    try {
-      const vidaBase = JogadorUtils.getVidaBase(this.jogador);
-      const vidaAtual = JogadorUtils.getVidaAtual(this.jogador);
-      const vidaMaxRecuperavel = vidaBase - vidaAtual;
+  this.salvando = true;
+  try {
+    const vidaBase = JogadorUtils.getVidaBase(this.jogador);
+    const vidaAntes = JogadorUtils.getVidaAtual(this.jogador);
+    const armaduraAntes = this.jogador.classe_de_armadura || 0;
 
-      // validações
-      if (vidaMaxRecuperavel <= 0 && this.recuperar > 0) {
-        alert(`⚠️ ${this.jogador.personagem} já está com a vida cheia!`);
-        return;
-      }
+    const vidaMaxRecuperavel = vidaBase - vidaAntes;
 
-      if (this.recuperar > vidaMaxRecuperavel) {
-        alert(`⚠️ Não é possível recuperar mais do que ${vidaMaxRecuperavel} de vida!`);
-        return;
-      }
-
-      if (this.recuperar <= 0 && this.armadura <= 0 && !this.descricao.trim()) {
-        alert('⚠️ Nenhuma alteração realizada. Ajuste a vida, armadura ou informe uma descrição.');
-        return;
-      }
-
-      // aplica cura
-      const vidaRecuperada = Math.min(this.recuperar, vidaMaxRecuperavel);
-      if (vidaRecuperada > 0) {
-        this.jogador.dano_tomado = Math.max(
-          0,
-          (this.jogador.dano_tomado || 0) - vidaRecuperada
-        );
-      }
-
-      // aplica armadura
-      if (this.armadura > 0) {
-        this.jogador.classe_de_armadura =
-          (this.jogador.classe_de_armadura || 0) + this.armadura;
-      }
-
-      // 📌 Calcula valores após atualização
-      const vidaFinal = JogadorUtils.getVidaAtual(this.jogador);
-      const armaduraFinal = this.jogador.classe_de_armadura || 0;
-
-      // 📌 Monta detalhes elegantes
-      let detalhes =
-        `💊 ${this.jogador.personagem} se recuperou!\n` +
-        (vidaRecuperada > 0 ? `❤️ Vida restaurada: +${vidaRecuperada} → ${JogadorUtils.getVidaAtual(this.jogador)}/${vidaBase}\n` : '') +
-        (this.armadura > 0 ? `🛡️ Armadura reforçada: +${this.armadura} → ${this.jogador.classe_de_armadura}\n` : '') +
-        (this.descricao?.trim() ? `📝 ${this.descricao}` : '');
-
-
-      // 📌 Cria registro
-      const registro: RegistroDomain = {
-        id: IdUtils.generateULID(),
-        jogador: this.jogador.email,
-        alvo: this.jogador.email,
-        tipo: 'recuperacao',
-        acao: 'cura',
-        detalhes,
-        data: new Date().toISOString(),
-      };
-
-      // ✅ Tudo em 1 batch (Personagem + Registro)
-      const result = await BaseRepositoryV2.batch({
-        updateById: { Personagem: [{ ...this.jogador }] },
-        create: { Registro: [registro] }
-      });
-
-      console.log('💊 Recuperação registrada (batch):', result);
-
-      alert('✅ Recuperação salva!\n\n' + detalhes);
-
-      this.router.navigate(['/batalha']);
-    } catch (err) {
-      console.error('[Recuperacao] Erro ao registrar (batch):', err);
-      alert('❌ Erro ao registrar recuperação.');
-    } finally {
-      this.salvando = false;
+    // validações
+    if (vidaMaxRecuperavel <= 0 && this.recuperar > 0) {
+      alert(`⚠️ ${this.jogador.personagem} já está com a vida cheia!`);
+      return;
     }
+
+    if (this.recuperar > vidaMaxRecuperavel) {
+      alert(`⚠️ Não é possível recuperar mais do que ${vidaMaxRecuperavel} de vida!`);
+      return;
+    }
+
+    if (this.recuperar <= 0 && this.armadura <= 0 && !this.descricao.trim()) {
+      alert('⚠️ Nenhuma alteração realizada. Ajuste a vida, armadura ou informe uma descrição.');
+      return;
+    }
+
+    // aplica cura
+    const vidaRecuperada = Math.min(this.recuperar, vidaMaxRecuperavel);
+    if (vidaRecuperada > 0) {
+      this.jogador.dano_tomado = Math.max(
+        0,
+        (this.jogador.dano_tomado || 0) - vidaRecuperada
+      );
+    }
+
+    // aplica armadura
+    if (this.armadura > 0) {
+      this.jogador.classe_de_armadura =
+        (this.jogador.classe_de_armadura || 0) + this.armadura;
+    }
+
+    // 📊 Calcula valores após a recuperação
+    const vidaDepois = JogadorUtils.getVidaAtual(this.jogador);
+    const armaduraDepois = this.jogador.classe_de_armadura || 0;
+
+    // 🧾 Monta detalhes elegantes (antes → depois + ganho)
+    let detalhes = `💖 ${this.jogador.personagem} se recuperou!\n`;
+
+    if (vidaRecuperada > 0) {
+      const ganhoVida = vidaDepois - vidaAntes;
+      detalhes += `❤️ Vida: ${vidaAntes}/${vidaBase} → ${vidaDepois}/${vidaBase} (+${ganhoVida})\n`;
+    }
+
+    if (this.armadura > 0) {
+      const ganhoArmadura = armaduraDepois - armaduraAntes;
+      detalhes += `🛡️ Armadura: ${armaduraAntes} → ${armaduraDepois} (+${ganhoArmadura})\n`;
+    }
+
+    if (this.descricao?.trim()) {
+      detalhes += `📝 ${this.descricao}`;
+    }
+
+    // 📜 Cria registro
+    const registro: RegistroDomain = {
+      id: IdUtils.generateULID(),
+      jogador: this.jogador.email,
+      alvo: this.jogador.email,
+      tipo: 'recuperacao',
+      acao: 'cura',
+      detalhes,
+      data: new Date().toISOString(),
+    };
+
+    // ✅ Tudo em 1 batch (Personagem + Registro)
+    const result = await BaseRepositoryV2.batch({
+      updateById: { Personagem: [{ ...this.jogador }] },
+      create: { Registro: [registro] }
+    });
+
+    console.log('💊 Recuperação registrada (batch):', result);
+
+    alert('✅ Recuperação salva!\n\n' + detalhes);
+    this.router.navigate(['/batalha']);
+  } catch (err) {
+    console.error('[Recuperacao] Erro ao registrar (batch):', err);
+    alert('❌ Erro ao registrar recuperação.');
+  } finally {
+    this.salvando = false;
   }
+}
 
 }
