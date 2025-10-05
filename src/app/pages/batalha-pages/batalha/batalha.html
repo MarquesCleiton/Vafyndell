@@ -1,116 +1,236 @@
 <div class="batalha-wrapper d-flex flex-column min-vh-100 bg-dark text-light">
-  <!-- Conteúdo -->
-  <div class="flex-grow-1 p-2 overflow-auto d-flex justify-content-center">
+
+  <!-- Abas -->
+  <ul class="nav nav-tabs bg-dark border-bottom px-3" role="tablist">
+    <li class="nav-item">
+      <button
+        class="nav-link"
+        [class.active]="abaAtiva === 'campo'"
+        (click)="selecionarAba('campo')">
+        ⚔️ Campo de Batalha
+      </button>
+    </li>
+    <li class="nav-item">
+      <button
+        class="nav-link"
+        [class.active]="abaAtiva === 'historico'"
+        (click)="selecionarAba('historico')">
+        📜 Histórico
+      </button>
+    </li>
+  </ul>
+
+  <!-- ===============================
+       ⚔️ ABA 1 - CAMPO DE BATALHA
+       =============================== -->
+  <div *ngIf="abaAtiva === 'campo'" class="flex-grow-1 p-3 d-flex justify-content-center overflow-auto">
     <div class="batalha-container w-100">
-      
+
       <!-- Loading -->
       <div *ngIf="carregando" class="text-center py-5">
         <div class="spinner-border text-light" role="status"></div>
         <p class="mt-2">Carregando jogadores...</p>
       </div>
 
-      <!-- Lista -->
-      <div *ngIf="!carregando && jogadoresFiltrados.length > 0">
-        <div *ngFor="let j of jogadoresFiltrados" 
-             class="card catalogo-card mb-2 shadow-sm p-2"
+      <!-- Filtro -->
+      <div class="mb-3">
+        <input type="text"
+               class="form-control search-bar rounded-pill px-3"
+               placeholder="🔍 Buscar personagem..."
+               [(ngModel)]="filtro"
+               (input)="aplicarFiltro()" />
+      </div>
+
+      <!-- Jogadores -->
+      <h5 class="fw-bold text-primary mb-2">🧙 Jogadores</h5>
+      <div *ngIf="jogadoresNormais.length > 0; else vazioJogadores">
+        <div *ngFor="let j of jogadoresNormais"
+             class="card jogador-card mb-2 shadow-sm p-3"
              (click)="abrirDetalhes(j)">
-
           <div class="d-flex align-items-center">
-            <!-- Coluna 1: Imagem -->
-            <div class="me-3 d-flex align-items-center justify-content-center bg-dark rounded"
-                 style="width: 55px; height: 55px; overflow: hidden;">
-
-              <!-- Se estiver morto, mostra caveira -->
+            <!-- Imagem -->
+            <div class="me-3 d-flex align-items-center justify-content-center bg-dark rounded img-container">
               <span *ngIf="JogadorUtils.estaMorto(j)" class="fs-3">💀</span>
-
-              <!-- Se tiver imagem válida e não estiver morto -->
               <img *ngIf="j.imagem && j.imagem !== '-' && !JogadorUtils.estaMorto(j)"
-                   [src]="j.imagem"
-                   alt="{{ j.personagem }}"
-                   style="width: 100%; height: 100%; object-fit: cover;" />
-
-              <!-- Se não tiver imagem -->
-              <span *ngIf="(!j.imagem || j.imagem === '-') && !JogadorUtils.estaMorto(j)" 
-                    class="text-secondary">👤</span>
+                   [src]="j.imagem" class="img-fluid" alt="{{ j.personagem }}" />
+              <span *ngIf="(!j.imagem || j.imagem === '-') && !JogadorUtils.estaMorto(j)">👤</span>
             </div>
 
-            <!-- Coluna 2: Nome + classificação/tipo -->
+            <!-- Dados -->
             <div class="flex-grow-1">
-              <h6 class="text-light fw-bold mb-1">{{ j.personagem }}</h6>
+              <h6 class="fw-bold text-light mb-1">{{ j.personagem }}</h6>
               <small class="text-secondary">
                 {{ j.classificacao || 'Jogador' }}
                 <span *ngIf="j.tipo">| {{ j.tipo }}</span>
               </small>
             </div>
 
-            <!-- Coluna 3: Vida/armadura + botões -->
+            <!-- Status -->
             <div class="d-flex flex-column align-items-end ms-2" (click)="$event.stopPropagation()">
-
-              <!-- Vida + Armadura -->
               <div class="d-flex mb-1 align-items-center">
                 <div class="me-3 text-danger fw-bold">
                   ❤️ {{ JogadorUtils.getVidaAtual(j) }}/{{ JogadorUtils.getVidaBase(j) }}
                 </div>
                 <div class="text-info">🛡️ {{ j.classe_de_armadura }}</div>
               </div>
-
-              <!-- Dano -->
               <div class="text-warning small mb-1">
                 💥 Dano: {{ j.dano_tomado || 0 }}
               </div>
 
               <!-- Botões -->
-              <div class="d-flex">
-                <!-- Excluir -->
-                <div class="me-1">
-                  <button *ngIf="!j.email" 
-                          class="btn btn-sm btn-outline-danger"
-                          [disabled]="processando[j.id] === 'excluir'" 
-                          (click)="excluirNpcDaBatalha(j)">
-                    <ng-container *ngIf="processando[j.id] === 'excluir'; else excluirIcon">
-                      <span class="spinner-border spinner-border-sm"></span>
-                    </ng-container>
-                    <ng-template #excluirIcon>🗑️</ng-template>
-                  </button>
-                  <div *ngIf="j.email" style="width:32px; height:32px;"></div>
-                </div>
+              <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-outline-success"
+                        [disabled]="processando[j.id] === 'recuperar'"
+                        (click)="acaoRecuperacao(j)">
+                  <ng-container *ngIf="processando[j.id] === 'recuperar'; else recupIcon">
+                    <span class="spinner-border spinner-border-sm"></span>
+                  </ng-container>
+                  <ng-template #recupIcon>💊</ng-template>
+                </button>
 
-                <!-- Recuperar -->
-                <div class="me-1">
-                  <button class="btn btn-sm btn-outline-success"
-                          [disabled]="processando[j.id] === 'recuperar'"
-                          (click)="acaoRecuperacao(j)">
-                    <ng-container *ngIf="processando[j.id] === 'recuperar'; else recuperarIcon">
-                      <span class="spinner-border spinner-border-sm"></span>
-                    </ng-container>
-                    <ng-template #recuperarIcon>💊</ng-template>
-                  </button>
-                </div>
+                <button class="btn btn-sm btn-outline-light"
+                        [disabled]="processando[j.id] === 'espada'"
+                        (click)="acaoEspada(j)">
+                  <ng-container *ngIf="processando[j.id] === 'espada'; else espIcon">
+                    <span class="spinner-border spinner-border-sm"></span>
+                  </ng-container>
+                  <ng-template #espIcon>⚔️</ng-template>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-                <!-- Espada -->
-                <div>
-                  <button class="btn btn-sm btn-outline-light"
-                          [disabled]="processando[j.id] === 'espada'"
-                          (click)="acaoEspada(j)">
-                    <ng-container *ngIf="processando[j.id] === 'espada'; else espadaIcon">
-                      <span class="spinner-border spinner-border-sm"></span>
-                    </ng-container>
-                    <ng-template #espadaIcon>⚔️</ng-template>
-                  </button>
+      <ng-template #vazioJogadores>
+        <div class="text-muted small mb-3">Nenhum jogador encontrado.</div>
+      </ng-template>
+
+      <!-- Inimigos -->
+      <h5 class="fw-bold text-danger mt-4 mb-2">🐍 Bestiais e Inimigos</h5>
+      <div *ngIf="bestiais.length > 0; else vazioBestiais">
+        <div *ngFor="let j of bestiais"
+             class="card jogador-card mb-2 shadow-sm p-3"
+             (click)="abrirDetalhes(j)">
+          <div class="d-flex align-items-center">
+            <!-- Imagem -->
+            <div class="me-3 d-flex align-items-center justify-content-center bg-dark rounded img-container">
+              <span *ngIf="JogadorUtils.estaMorto(j)" class="fs-3">💀</span>
+              <img *ngIf="j.imagem && j.imagem !== '-' && !JogadorUtils.estaMorto(j)"
+                   [src]="j.imagem" class="img-fluid" alt="{{ j.personagem }}" />
+              <span *ngIf="(!j.imagem || j.imagem === '-') && !JogadorUtils.estaMorto(j)">👤</span>
+            </div>
+
+            <!-- Dados -->
+            <div class="flex-grow-1">
+              <h6 class="fw-bold text-light mb-1">{{ j.personagem }}</h6>
+              <small class="text-secondary">
+                {{ j.classificacao || 'Inimigo' }}
+                <span *ngIf="j.tipo">| {{ j.tipo }}</span>
+              </small>
+            </div>
+
+            <!-- Status -->
+            <div class="d-flex flex-column align-items-end ms-2" (click)="$event.stopPropagation()">
+              <div class="d-flex mb-1 align-items-center">
+                <div class="me-3 text-danger fw-bold">
+                  ❤️ {{ JogadorUtils.getVidaAtual(j) }}/{{ JogadorUtils.getVidaBase(j) }}
+                </div>
+                <div class="text-info">🛡️ {{ j.classe_de_armadura }}</div>
+              </div>
+              <div class="text-warning small mb-1">
+                💥 Dano: {{ j.dano_tomado || 0 }}
+              </div>
+
+              <!-- Botões -->
+              <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-outline-success"
+                        [disabled]="processando[j.id] === 'recuperar'"
+                        (click)="acaoRecuperacao(j)">
+                  <ng-container *ngIf="processando[j.id] === 'recuperar'; else recupInimigo">
+                    <span class="spinner-border spinner-border-sm"></span>
+                  </ng-container>
+                  <ng-template #recupInimigo>💊</ng-template>
+                </button>
+
+                <button class="btn btn-sm btn-outline-light"
+                        [disabled]="processando[j.id] === 'espada'"
+                        (click)="acaoEspada(j)">
+                  <ng-container *ngIf="processando[j.id] === 'espada'; else espadaInimigo">
+                    <span class="spinner-border spinner-border-sm"></span>
+                  </ng-container>
+                  <ng-template #espadaInimigo>⚔️</ng-template>
+                </button>
+
+                <button class="btn btn-sm btn-outline-danger"
+                        [disabled]="processando[j.id] === 'excluir'"
+                        (click)="excluirNpcDaBatalha(j)">
+                  <ng-container *ngIf="processando[j.id] === 'excluir'; else exclIcon">
+                    <span class="spinner-border spinner-border-sm"></span>
+                  </ng-container>
+                  <ng-template #exclIcon>🗑️</ng-template>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #vazioBestiais>
+        <div class="text-muted small">Nenhum inimigo encontrado.</div>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- ===============================
+       📜 ABA 2 - HISTÓRICO
+       =============================== -->
+  <div *ngIf="abaAtiva === 'historico'" class="flex-grow-1 p-3 d-flex justify-content-center overflow-auto">
+    <div class="registro-container w-100">
+
+      <h4 class="fw-bold mb-3">📜 Histórico de Batalha e Recuperação</h4>
+
+      <input type="text"
+             class="form-control search-bar rounded-pill px-3 mb-3"
+             placeholder="🔍 Pesquisar no histórico..."
+             [(ngModel)]="filtroHistorico"
+             (input)="aplicarFiltroHistorico()" />
+
+      <div *ngIf="carregandoHistorico" class="text-center py-5">
+        <div class="spinner-border text-light" role="status"></div>
+        <p class="mt-2">Carregando histórico...</p>
+      </div>
+
+      <div *ngIf="!carregandoHistorico && secoesHistoricoFiltradas.length === 0" class="text-center text-muted py-5">
+        Nenhum registro encontrado.
+      </div>
+
+      <div *ngIf="!carregandoHistorico">
+        <div *ngFor="let secao of secoesHistoricoFiltradas" class="mb-3">
+          <button class="btn-categoria w-100 text-start d-flex justify-content-between align-items-center"
+                  (click)="toggleSecao(secao)">
+            <span class="fw-bold">📅 {{ formatarData(secao.data) }}</span>
+            <span>{{ secao.expandido ? '−' : '+' }}</span>
+          </button>
+
+          <div *ngIf="secao.expandido" class="mt-2">
+            <div class="row row-cols-1 g-2">
+              <div class="col" *ngFor="let registro of secao.itens">
+                <div class="registro-card card shadow-sm p-3 text-light"
+                     [style.border-left]="'6px solid ' + (registro.cor || '#666')">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold mb-0">{{ registro.icone }} {{ registro.tipo | titlecase }}</h6>
+                    <small class="registro-hora">{{ registro.data | date:'HH:mm' }}</small>
+                  </div>
+                  <p class="small descricao-text fst-italic mb-0" style="white-space: pre-line;">
+                    {{ registro.detalhes }}
+                  </p>
                 </div>
               </div>
             </div>
           </div>
-
         </div>
       </div>
-
-      <!-- Vazio -->
-      <div *ngIf="!carregando && jogadoresFiltrados.length === 0" 
-           class="text-center text-muted py-5">
-        Nenhum jogador encontrado.
-      </div>
-
     </div>
   </div>
 </div>

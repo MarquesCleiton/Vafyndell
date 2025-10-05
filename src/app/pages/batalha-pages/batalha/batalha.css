@@ -1,187 +1,135 @@
-/* ======================
-   WRAPPER & CONTAINER
-   ====================== */
+/* ======== Layout Base ======== */
 .batalha-wrapper {
-  display: flex;
-  flex-direction: column;
+  background: #121212;
+  color: #fff;
 }
 
 .batalha-container {
   width: 100%;
-  max-width: 900px; /* 🔑 largura máxima padronizada */
-  margin: 0 auto;   /* 🔑 centraliza */
+  max-width: 900px;
+  margin: 0 auto;
 }
 
-/* ======================
-   CARD
-   ====================== */
-.catalogo-card {
-  background: #1e1e1e;
-  border-radius: 12px;
+/* ======== Abas ======== */
+.nav-tabs {
+  border-bottom: 1px solid #333;
+}
+
+.nav-link {
+  color: #ccc;
   border: none;
-  transition: transform 0.2s ease;
-}
-.catalogo-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-}
-
-
-
-/* ===== Card estilo catálogo (tema dark) ===== */
-.catalogo-card {
-  background: #1e1e1e;
-  border: 1px solid #333;
-  border-radius: 12px;
-  transition: all 0.2s ease-in-out;
-}
-.catalogo-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-}
-
-/* ===== Status (vida e armadura) ===== */
-.status-line {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  border-bottom: 3px solid transparent;
   font-weight: 600;
-}
-.status-line .text-danger {
-  color: #ff4d6d !important; /* vermelho suave */
-}
-.status-line .text-info {
-  color: #4da6ff !important; /* azul mais suave que neon */
+  transition: all 0.2s ease;
 }
 
-/* ===== Botões ===== */
-.jogador-card button {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  font-size: 1rem;
-}
-
-.jogador-card .btn-outline-danger {
-  border-color: #ff4d6d;
-  color: #ff4d6d;
-}
-.jogador-card .btn-outline-danger:hover {
-  background: #ff4d6d;
+.nav-link.active {
   color: #fff;
+  border-bottom: 3px solid #a78bfa;
+  background-color: transparent;
 }
 
-.jogador-card .btn-outline-light {
+.nav-link:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ======== Busca ======== */
+.search-bar {
+  background: #1e1e1e;
+  color: #fff;
+  border: 1px solid #444;
+}
+.search-bar:focus {
+  border-color: #666;
+  box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+}
+
+/* ======== Cards ======== */
+.jogador-card {
+  background: #1e1e1e;
+  border-radius: 12px;
+  border: 1px solid #333;
+  transition: all 0.2s ease;
+}
+.jogador-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.img-container {
+  width: 55px;
+  height: 55px;
+  overflow: hidden;
+}
+
+.img-fluid {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ======== Botões ======== */
+.btn-outline-light {
   border-color: #bbb;
   color: #bbb;
 }
-.jogador-card .btn-outline-light:hover {
+.btn-outline-light:hover {
   background: #bbb;
   color: #1e1e1e;
 }
 
-/* ===== Texto ===== */
-.text-secondary {
-  color: #bfbfbf !important; /* mais visível que muted */
-}
-
-/* ===== Ajuste imagem ===== */
-.catalogo-card img {
-  border-radius: 6px;
-}
-
-/* Card principal */
-.detalhe-card {
-  background: #1e1e1e;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* Inputs escuros */
-.input-dark input {
-  color: #f8f9fa !important;
-}
-
-.input-dark .mat-mdc-form-field-outline {
-  color: #6c757d !important;
-}
-
-/* Preview de combate */
-.preview-card {
-  background: rgba(108, 117, 125, 0.15);
-  border-radius: 0.5rem;
-  padding: 0.75rem 1rem;
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-.preview-card img {
-  border-radius: 0.5rem;
-  border: 1px solid #6c757d;
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-}
-
-/* Quantidade/Dano box */
-.quantidade-box {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.quantidade-input {
-  width: 70px;
-  text-align: center;
-  font-weight: bold;
-  border: 1px solid #6c757d;
-  border-radius: 0.4rem;
-  background: #212529;
-  color: #f8f9fa;
-  padding: 0.25rem;
-}
-
-/* Botões */
-.btn-save {
-  background: #198754;
-  color: #fff;
-  font-weight: 600;
-  transition: all 0.2s ease-in-out;
-}
-
-.btn-save:hover {
-  background: #157347;
-  transform: scale(1.03);
-}
-
-.btn-outline-light {
-  border-color: #adb5bd;
-}
-
-.btn-outline-light:hover {
-  background: #adb5bd;
-  color: #212529;
-}
-
-/* Botão de cancelar */
-.btn-outline-secondary {
-  border-color: #6c757d;
-}
-
-.btn-outline-secondary:hover {
-  background: #6c757d;
-  color: #fff;
-}
-
-.jogador-card .btn-outline-success {
+.btn-outline-success {
   border-color: #28a745;
   color: #28a745;
 }
-.jogador-card .btn-outline-success:hover {
+.btn-outline-success:hover {
   background: #28a745;
   color: #fff;
 }
 
+.btn-outline-danger {
+  border-color: #ff4d6d;
+  color: #ff4d6d;
+}
+.btn-outline-danger:hover {
+  background: #ff4d6d;
+  color: #fff;
+}
+
+/* ======== Histórico ======== */
+.registro-card {
+  background: #1e1e1e;
+  border-radius: 10px;
+  border: 1px solid #333;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.registro-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Cabeçalhos de Data */
+.btn-categoria {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #fff;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+.btn-categoria:hover {
+  background: #333;
+}
+
+/* Texto */
+.descricao-text {
+  color: #eee;
+  line-height: 1.5;
+}
+
+.registro-hora {
+  color: #bbb;
+  font-size: 0.85rem;
+}
