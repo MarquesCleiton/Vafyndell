@@ -1,16 +1,35 @@
 <div class="registro-wrapper d-flex flex-column min-vh-100 bg-dark text-light">
-
-  <!-- Barra de pesquisa -->
+  <!-- 🔍 Barra de pesquisa -->
   <div class="p-3 bg-black border-bottom position-sticky top-0" style="z-index: 10;">
-    <input type="text" class="form-control search-bar rounded-pill px-3"
-           placeholder="🔍 Pesquisar registros..."
-           [(ngModel)]="filtro" (input)="aplicarFiltro()" />
+    <input
+      type="text"
+      class="form-control search-bar rounded-pill px-3 mb-2"
+      placeholder="🔍 Pesquisar registros..."
+      [(ngModel)]="filtro"
+      (input)="aplicarFiltro()"
+    />
+
+    <!-- 🎭 Filtros -->
+    <div class="d-flex flex-column gap-2">
+      <select
+        class="form-select filtro-visao"
+        [(ngModel)]="filtroVisao"
+        (change)="aplicarFiltro()"
+      >
+        <option value="todos">Todos</option>
+        <option
+          *ngFor="let j of outrosJogadores"
+          [value]="j.email"
+        >
+          {{ getEmoji(j) }} {{ j.personagem }}
+        </option>
+      </select>
+    </div>
   </div>
 
-  <!-- Conteúdo -->
+  <!-- 📜 Conteúdo -->
   <div class="flex-grow-1 p-3 d-flex justify-content-center">
     <div class="registro-container w-100">
-
       <h4 class="fw-bold mb-3">📜 Registro de Jogo</h4>
 
       <!-- Loading -->
@@ -20,94 +39,38 @@
       </div>
 
       <!-- Vazio -->
-      <div *ngIf="!carregando && secoesFiltradas.length === 0"
-           class="text-center text-muted py-5">
+      <div *ngIf="!carregando && secoesFiltradas.length === 0" class="text-center text-muted py-5">
         Nenhum registro encontrado.
       </div>
 
-      <!-- Seções por data -->
+      <!-- Seções -->
       <div *ngIf="!carregando">
         <div *ngFor="let secao of secoesFiltradas" class="mb-3">
-
-          <!-- Cabeçalho da seção -->
-          <button class="btn-categoria w-100 text-start d-flex justify-content-between align-items-center"
-                  (click)="toggleSecao(secao)">
-            <span class="fw-bold">📅 {{ formatarData(secao.data) }}</span>
+          <button class="btn-categoria w-100 text-start d-flex justify-content-between align-items-center" (click)="toggleSecao(secao)">
+            <span class="fw-bold " >📅 {{ formatarData(secao.data) }}</span>
             <span>{{ secao.expandido ? '−' : '+' }}</span>
           </button>
 
-          <!-- Itens -->
           <div *ngIf="secao.expandido" class="mt-2">
             <div class="row row-cols-1 g-2">
-              <div class="col" *ngFor="let registro of secao.itens">
-                <div class="registro-card card shadow-sm p-3">
-
-                  <!-- Cabeçalho do registro -->
+              <div class="col " *ngFor="let registro of secao.itens">
+                <div
+                  class="text-light registro-card card shadow-sm p-3"
+                  [style.border-left]="'6px solid ' + (registro.cor || '#666')"
+                >
                   <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="fw-bold mb-0"
-                        [ngClass]="{
-                          'titulo-ataque': registro.acao === 'ataque',
-                          'titulo-recuperacao': registro.acao === 'cura',
-                          'titulo-default': registro.acao !== 'ataque' && registro.acao !== 'cura'
-                        }">
-                      {{ registro.acao === 'ataque' ? '⚔️ Ataque' :
-                         (registro.acao === 'cura' ? '💊 Recuperação' : registro.acao) }}
-                    </h6>
+                    <h6 class="fw-bold mb-0">{{ registro.icone }} {{ registro.tipo | titlecase }}</h6>
                     <small class="registro-hora">{{ registro.data | date:'HH:mm' }}</small>
                   </div>
-
-                  <!-- Prévia -->
-                  <div class="d-flex align-items-center justify-content-center mb-2">
-
-                    <!-- Se ataque -->
-                    <ng-container *ngIf="registro.acao === 'ataque'; else recuperacaoView">
-                      <div class="d-flex align-items-center me-3">
-                        <ng-container *ngIf="registro.ofensor?.imagem && registro.ofensor?.imagem !== '-'; else noOfensorImg">
-                          <img [src]="registro.ofensor?.imagem" class="me-2 rounded registro-img">
-                        </ng-container>
-                        <ng-template #noOfensorImg><span class="me-2">👤</span></ng-template>
-                        <span class="fw-bold text-light">{{ registro.ofensor?.personagem || 'Desconhecido' }}</span>
-                      </div>
-
-                      <span class="fw-bold text-danger mx-2">✖</span>
-
-                      <div class="d-flex align-items-center">
-                        <ng-container *ngIf="registro.vitima?.imagem && registro.vitima?.imagem !== '-'; else noVitimaImg">
-                          <img [src]="registro.vitima?.imagem" class="me-2 rounded registro-img">
-                        </ng-container>
-                        <ng-template #noVitimaImg><span class="me-2">👤</span></ng-template>
-                        <span class="fw-bold text-light">{{ registro.vitima?.personagem || 'Desconhecido' }}</span>
-                      </div>
-                    </ng-container>
-
-                    <!-- Se recuperação -->
-                    <ng-template #recuperacaoView>
-                      <div class="d-flex align-items-center">
-                        <ng-container *ngIf="registro.vitima?.imagem && registro.vitima?.imagem !== '-'; else noRecuperaImg">
-                          <img [src]="registro.vitima?.imagem" class="me-2 rounded registro-img">
-                        </ng-container>
-                        <ng-template #noRecuperaImg><span class="me-2">👤</span></ng-template>
-                        <span class="fw-bold text-light">{{ registro.vitima?.personagem || 'Desconhecido' }}</span>
-                      </div>
-                      <span class="fw-bold text-success mx-2">➡️</span>
-                      <span class="fw-bold text-success">Recuperação</span>
-                    </ng-template>
-
-                  </div>
-
-                  <!-- Detalhes -->
-                  <p class="small descricao-text fst-italic mb-0"
-                     style="white-space: pre-line;">
+                  <p class="small descricao-text fst-italic mb-0" style="white-space: pre-line;">
                     {{ registro.detalhes }}
                   </p>
                 </div>
               </div>
             </div>
           </div>
-
         </div>
       </div>
-
     </div>
   </div>
 </div>

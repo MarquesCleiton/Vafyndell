@@ -78,7 +78,7 @@
                 <button type="button" class="btn btn-sm btn-outline-light" (click)="decrementar()">−</button>
                 <input type="number" class="quantidade-input" [(ngModel)]="quantidade"
                   (input)="validarQuantidade(); filtrarItensInventario()"
-                  (blur)="validarQuantidade(); filtrarItensInventario()" [max]="itemSelecionado?.quantidade ?? 0"
+                  (blur)="validarQuantidade(); filtrarItensInventario()" [max]="itemSelecionado ? itemSelecionado.quantidade : 0"
                   min="1" />
                 <button type="button" class="btn btn-sm btn-outline-light" (click)="incrementar()">＋</button>
               </div>

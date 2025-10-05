@@ -49,6 +49,7 @@ export class TrocaDeItens implements OnInit {
   inventarioFiltrado: InventarioDetalhado[] = [];
   filtroItem = '';
   itemSelecionado: InventarioDetalhado | null = null;
+
   quantidade = 1;
 
   itensTroca: { item: InventarioDetalhado; quantidade: number }[] = [];

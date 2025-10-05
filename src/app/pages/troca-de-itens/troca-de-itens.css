@@ -1,262 +1,61 @@
-/* ======================
-   CONTAINER PRINCIPAL
-   ====================== */
-.troca-container {
-  width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.detalhe-card {
-  background: #1e1e1e;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
-}
-
-/* ======================
-   BLOCO DE ITENS SELECIONADOS
-   ====================== */
-.itens-selecionados {
+/* Cards */
+.registro-card {
   background: #1e1e1e;
   border-radius: 10px;
-  padding: 14px;
-  margin-bottom: 18px;
-  border: 1px solid #2e2e2e;
-  overflow: visible;
-}
-
-.itens-selecionados h5 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 1rem;
-}
-
-/* ======================
-   ITEM CARD
-   ====================== */
-.item-card {
-  background: #212529;
   border: 1px solid #333;
-  border-radius: 10px;
-  padding: 10px 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  transition: all 0.2s ease;
-  overflow: visible;
-  margin-bottom: 8px;
+  margin-bottom: 0.75rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.registro-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.item-card:hover {
-  border-color: #0d6efd;
-  box-shadow: 0 0 10px rgba(13, 110, 253, 0.25);
-}
-
-/* ======================
-   INFORMAÇÕES DO ITEM
-   ====================== */
-.item-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
-}
-
-.item-info span {
-  color: #f8f9fa;
-  font-weight: 500;
-  font-size: 0.92rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ======================
-   QUANTIDADE
-   ====================== */
-.item-quantidade {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex-shrink: 0;
-}
-
-.item-quantidade button {
-  border: none;
-  background: #343a40;
-  color: #f8f9fa;
-  border-radius: 6px;
-  width: 28px;
-  height: 28px;
-  font-weight: bold;
-  font-size: 1rem;
-  transition: all 0.2s;
-}
-
-.item-quantidade button:hover {
-  background: #495057;
-  transform: scale(1.05);
-}
-
-.item-quantidade input {
-  width: 60px;
-  text-align: center;
-  font-weight: bold;
-  border: 1px solid #6c757d;
-  border-radius: 6px;
-  background: #212529;
-  color: #f8f9fa;
-  padding: 3px;
-  font-size: 0.9rem;
-}
-
-/* ======================
-   BOTÃO DE EXCLUSÃO
-   ====================== */
-.btn-danger {
-  background: linear-gradient(135deg, #dc3545, #b02a37);
-  color: #fff;
-  border: none;
+/* Cabeçalho seções */
+.btn-categoria {
+  background: #2a2a2a;
+  border: 1px solid #444;
   border-radius: 8px;
-  padding: 5px 8px;
-  font-size: 1rem;
-  flex-shrink: 0;
-  transition: all 0.2s;
+  padding: 8px 12px;
+  color: #fff;
+  font-weight: bold;
+}
+.btn-categoria:hover {
+  background: #333;
 }
 
-.btn-danger:hover {
-  background: linear-gradient(135deg, #e55363, #c23a46);
-  transform: scale(1.08);
+/* Hora */
+.registro-hora {
+  color: #ccc;
+  font-size: 0.85rem;
 }
 
-/* ======================
-   CAMPOS GERAIS
-   ====================== */
-.input-dark {
-  background: #1e1e1e !important;
-  border: 1px solid #444 !important;
-  border-radius: 6px;
-  color: #f8f9fa !important;
+/* Texto */
+.descricao-text {
+  line-height: 1.5;
+  color: #eee;
+}
+
+/* Filtros */
+.filtro-visao {
+  background: #111;
+  border: 1px solid #333;
+  color: #eee;
+  font-weight: 500;
+  border-radius: 8px;
   padding: 6px 10px;
 }
-
-.input-dark:focus {
-  border-color: #0d6efd !important;
-  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
-  outline: none !important;
-}
-
-/* ======================
-   TEXTAREA
-   ====================== */
-textarea.auto-expand {
-  min-height: 80px;
-  resize: vertical;
-  background: #1e1e1e;
-  border: 1px solid #444;
-  color: #f8f9fa;
-  border-radius: 6px;
-  padding: 8px 10px;
-}
-
-textarea.auto-expand:focus {
-  border-color: #0d6efd;
-  outline: none;
-  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-}
-
-/* ======================
-   ADIÇÃO DE ITENS
-   ====================== */
-.novo-item {
-  border: 1px solid #333;
-  background: #1e1e1e;
-  border-radius: 10px;
-  padding: 10px;
-}
-
-.quantidade-box {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.quantidade-input {
-  width: 60px;
-  text-align: center;
-  font-weight: bold;
-  border: 1px solid #6c757d;
-  border-radius: 4px;
-  background: #212529;
-  color: #f8f9fa;
-  padding: 0.25rem;
-  font-size: 0.9rem;
-}
-
-/* ======================
-   FABs
-   ====================== */
-.fab-stack {
-  position: fixed;
-  bottom: 70px;
-  right: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  z-index: 1000;
-}
-
-.fab {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  font-size: 1.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
-  transition: transform 0.2s ease;
-}
-
-.fab:hover {
-  transform: scale(1.08);
-}
-
-.fab-success {
-  background: linear-gradient(135deg, #28a745, #218838);
+.filtro-visao option {
+  background: #222;
   color: #fff;
 }
 
-.fab-warning {
-  background: linear-gradient(135deg, #ffc107, #e0a800);
-  color: #000;
+/* Campo de busca */
+.search-bar {
+  background: #111;
+  color: #fff;
+  border: 1px solid #333;
 }
-
-/* ======================
-   RESPONSIVIDADE
-   ====================== */
-@media (max-width: 480px) {
-  .item-card {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 10px;
-  }
-
-  .item-info {
-    justify-content: center;
-    margin-bottom: 8px;
-  }
-
-  .item-quantidade {
-    justify-content: center;
-    margin-bottom: 8px;
-  }
-
-  .btn-danger {
-    align-self: center;
-  }
+.search-bar::placeholder {
+  color: #aaa;
 }
