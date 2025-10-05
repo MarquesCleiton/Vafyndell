@@ -118,35 +118,32 @@ export class TrocaDeItens implements OnInit {
   }
 
   filtrarItensInventario() {
-    const termo = this.filtroItem.toLowerCase().trim();
+    const termo = this.filtroItem.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     this.inventarioFiltrado = this.inventario
       .map(i => {
-        const jaAdicionado = this.itensTroca
-          .filter(t => t.item.id === i.id)
-          .reduce((sum, t) => sum + t.quantidade, 0);
-        const restante = i.quantidade - jaAdicionado;
-        return restante > 0 ? { ...i, quantidade: restante } : null;
+        const jaAdicionado = this.itensTroca.some(t => t.item.id === i.id);
+        return !jaAdicionado ? i : null;
       })
       .filter((i): i is InventarioDetalhado => i !== null)
-      .filter(i => (termo ? i.itemDetalhe?.nome?.toLowerCase().includes(termo) : true));
+      .filter(i =>
+        termo
+          ? (i.itemDetalhe?.nome || "")
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .includes(termo)
+          : true
+      );
   }
 
   adicionarItem() {
     if (!this.itemSelecionado) return;
-    const existente = this.itensTroca.find(t => t.item.id === this.itemSelecionado!.id);
-    if (existente) {
-      existente.quantidade = Math.min(
-        existente.quantidade + this.quantidade,
-        this.itemSelecionado.quantidade + existente.quantidade
-      );
-    } else {
-      this.itensTroca.push({ item: this.itemSelecionado, quantidade: this.quantidade });
-    }
+    this.itensTroca.push({ item: this.itemSelecionado, quantidade: 1 });
     this.itemSelecionado = null;
     this.filtroItem = '';
-    this.quantidade = 1;
     this.filtrarItensInventario();
   }
+
 
   selecionarItem(i: InventarioDetalhado) {
     this.itemSelecionado = i;
@@ -179,6 +176,7 @@ export class TrocaDeItens implements OnInit {
   // =========================================================
   // Confirmar troca (alerta com unidade e registro padrão)
   // =========================================================
+  // 🔹 Dentro do método confirmarTroca()
   async confirmarTroca() {
     if (!this.jogadorSelecionado) {
       alert('⚠️ Selecione um jogador destinatário!');
@@ -189,13 +187,31 @@ export class TrocaDeItens implements OnInit {
       return;
     }
 
+    // 🔹 Novo trecho: montar resumo para confirmação
+    const descricaoExtra = (this.descricaoTransferencia || '').trim();
+    const destinatarioPersonagem = this.jogadorSelecionado.personagem;
+
+    let resumo = `🎁 Confirme a transferência para ${destinatarioPersonagem}\n\n`;
+    for (const troca of this.itensTroca) {
+      const item = troca.item.itemDetalhe;
+      const nome = item?.nome || 'Item desconhecido';
+      const unidade = item?.unidade_medida || 'un.';
+      const antes = troca.item.quantidade;
+      const depois = antes - troca.quantidade;
+      resumo += `📦 ${nome}: ${antes} → ${depois} (-${troca.quantidade} ${unidade})\n`;
+    }
+    if (descricaoExtra) resumo += `\n📝 ${descricaoExtra}\n`;
+    resumo += `\nDeseja realmente confirmar a transferência?`;
+
+    // 🔹 Confirmação
+    const confirmado = confirm(resumo);
+    if (!confirmado) return;
+
+    // 🔹 Continua o código original (sem modificações abaixo)
     this.processando = true;
 
     try {
-      const descricaoExtra = (this.descricaoTransferencia || '').trim();
-
       const destinatario = this.jogadorSelecionado.email;
-      const destinatarioPersonagem = this.jogadorSelecionado.personagem;
 
       const remetenteJogador =
         (await this.jogadoresRepo.getLocal()).find(j => j.email === this.emailLogado);
@@ -332,6 +348,7 @@ export class TrocaDeItens implements OnInit {
     }
   }
 
+
   cancelar() {
     this.location.back();
   }
@@ -376,5 +393,8 @@ export class TrocaDeItens implements OnInit {
     this.filtrarItensInventario();
   }
 
+  getRestante(it: { item: InventarioDetalhado; quantidade: number }): number {
+    return Math.max(0, it.item.quantidade - it.quantidade);
+  }
 
 }
