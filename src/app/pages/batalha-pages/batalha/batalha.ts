@@ -45,7 +45,13 @@ export class Batalha implements OnInit {
   private repoJogadores = new BaseRepositoryV2<JogadorDomain>('Personagem');
   private repoRegistros = new BaseRepositoryV2<RegistroDomain>('Registro');
 
-  constructor(private router: Router) {}
+  secoesExpandidas = {
+    jogadores: true,
+    bestiais: true,
+  };
+
+
+  constructor(private router: Router) { }
 
   async ngOnInit() {
     await Promise.all([this.carregarJogadores(), this.carregarHistorico()]);
@@ -80,11 +86,11 @@ export class Batalha implements OnInit {
     this.jogadoresFiltrados = !termo
       ? [...this.jogadores]
       : this.jogadores.filter(j =>
-          this.normalizarTexto(j.personagem).includes(termo) ||
-          this.normalizarTexto(j.nome_do_jogador).includes(termo) ||
-          this.normalizarTexto(j.classificacao).includes(termo) ||
-          this.normalizarTexto(j.tipo).includes(termo)
-        );
+        this.normalizarTexto(j.personagem).includes(termo) ||
+        this.normalizarTexto(j.nome_do_jogador).includes(termo) ||
+        this.normalizarTexto(j.classificacao).includes(termo) ||
+        this.normalizarTexto(j.tipo).includes(termo)
+      );
   }
 
   get jogadoresNormais(): JogadorDomain[] {
@@ -232,4 +238,10 @@ export class Batalha implements OnInit {
       return data;
     }
   }
+
+toggleSecaoCampo(tipo: 'jogadores' | 'bestiais') {
+  this.secoesExpandidas[tipo] = !this.secoesExpandidas[tipo];
+}
+
+
 }
