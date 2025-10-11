@@ -44,7 +44,8 @@
         <!-- Imagem -->
         <div class="position-relative">
           <ng-container *ngIf="jogador.imagem && jogador.imagem !== '-'; else noImagem">
-            <img [src]="jogador.imagem" class="card-img-top detalhe-img" alt="Imagem do personagem" (click)="abrirImagem(jogador.imagem)"/>
+            <img [src]="jogador.imagem" class="card-img-top detalhe-img" alt="Imagem do personagem"
+              (click)="abrirImagem(jogador.imagem)" />
           </ng-container>
           <ng-template #noImagem>
             <div class="d-flex align-items-center justify-content-center bg-secondary text-dark detalhe-img"
@@ -58,16 +59,30 @@
 
           <!-- Infos gerais -->
           <ul class="info-list mb-3">
+            <li>🏅 <span>Nível:</span> {{ jogador.nivel }}</li>
             <li>⭐ XP: {{ jogador.xp }}</li>
-            <li>❤️ Vida:
-              <span [ngClass]="{ 'text-danger fw-bold': jogador.vida_atual! <= 0 }">{{ jogador.vida_atual }}</span>
+            <li>🍀 Sorte: {{ jogador.pontos_de_sorte }}</li> <!-- 🆕 -->
+            <hr class="my-2 opacity-25" />
+
+            <li>
+              ❤️ Vida:
+              <span [ngClass]="{
+      'text-danger fw-bold': jogador.vida_atual! <= 0,
+      'text-warning fw-bold': jogador.vida_atual! > 0 && jogador.vida_atual! < jogador.pontos_de_vida! * 0.5,
+      'fw-bold': jogador.vida_atual! >= jogador.pontos_de_vida! * 0.5
+    }">
+                {{ jogador.vida_atual }}
+              </span>
               / {{ jogador.pontos_de_vida }}
             </li>
-            <li>🛡️ Armadura: {{ jogador.classe_de_armadura }}</li>
             <li>💔 Dano tomado: {{ jogador.dano_tomado }}</li>
+            <li>🛡️ Armadura: {{ jogador.classe_de_armadura }}</li>
+            <li>🔰 Escudo: {{ jogador.escudo }}</li> <!-- 🆕 -->
+            <hr class="my-2 opacity-25" />
             <li>✨ Fator de cura: {{ jogador.fator_cura }}</li>
             <li>🚶‍♂️ Deslocamento: {{ jogador.deslocamento }}</li>
           </ul>
+
 
           <!-- Atributos -->
           <h6 class="fw-bold mt-3 text-light">📊 Atributos</h6>
@@ -181,8 +196,5 @@
 </div>
 
 <!-- Modal de Imagem -->
-<app-image-modal
-  [imagem]="imagemSelecionada"
-  [aberto]="modalAberto"
-  (fecharModal)="modalAberto = false">
+<app-image-modal [imagem]="imagemSelecionada" [aberto]="modalAberto" (fecharModal)="modalAberto = false">
 </app-image-modal>

@@ -41,6 +41,9 @@ export class Combate implements OnInit {
 
   ofensorSelecionado: JogadorDomain | null = null;
   vitimaSelecionada: JogadorDomain | null = null;
+  tipoDanoSelecionado: 'escolha' | 'vida' | 'armadura' | 'escudo' = 'escolha';
+
+  public JogadorUtils = JogadorUtils;
 
   dano = 0;
   efeitos = '';
@@ -113,85 +116,167 @@ export class Combate implements OnInit {
   async registrarCombate(form: NgForm) {
     if (form.invalid || !this.ofensorSelecionado || !this.vitimaSelecionada) return;
 
-    if (this.dano <= 0) {
-      alert('⚠️ Informe um valor de dano válido.');
+    const tipo = this.tipoDanoSelecionado;
+    const danoInformado = this.dano > 0;
+    const efeitoInformado = this.efeitos.trim().length > 0;
+
+    // ✅ Validações principais
+    if (tipo === 'escolha' && !efeitoInformado) {
+      alert('⚠️ Escolha o tipo de dano ou descreva um efeito adicional.');
       return;
     }
 
+    if (tipo !== 'escolha' && !danoInformado) {
+      alert('⚠️ Informe um valor de dano válido para o tipo selecionado.');
+      return;
+    }
+
+    // 🌟 Caso seja apenas efeito
+    if (tipo === 'escolha' && efeitoInformado) {
+      const registroEfeito: RegistroDomain = {
+        id: IdUtils.generateULID(),
+        jogador: this.ofensorSelecionado.email,
+        alvo: this.vitimaSelecionada.email,
+        tipo: 'batalha',
+        acao: 'efeito',
+        detalhes:
+          `✨ ${this.ofensorSelecionado.personagem} aplicou um efeito em ${this.vitimaSelecionada.personagem}:\n` +
+          `${this.efeitos}`,
+        data: new Date().toISOString(),
+      };
+
+      await BaseRepositoryV2.batch({ create: { Registro: [registroEfeito] } });
+      alert('✅ Efeito adicional registrado com sucesso!');
+      this.router.navigate(['/batalha']);
+      return;
+    }
+
+    // ⚙️ Simulação prévia do combate (antes de aplicar)
+    let danoAplicado = this.dano;
+
+    const vidaBase = JogadorUtils.getVidaBase(this.vitimaSelecionada);
+    const vidaAntes = JogadorUtils.getVidaAtual(this.vitimaSelecionada);
+    const armaduraAntes = this.vitimaSelecionada.classe_de_armadura || 0;
+    const escudoAntes = this.vitimaSelecionada.escudo || 0;
+    const danoTomadoAntes = this.vitimaSelecionada.dano_tomado || 0;
+
+    let escudoAtual = escudoAntes;
+    let armaduraAtual = armaduraAntes;
+    let danoTomadoAtual = danoTomadoAntes;
+
+    // 🧩 Simulação sem aplicar ainda
+    if (tipo === 'vida') {
+      danoTomadoAtual += danoAplicado;
+    } else if (tipo === 'armadura') {
+      const sobra = danoAplicado - armaduraAtual;
+      armaduraAtual = Math.max(armaduraAtual - danoAplicado, 0);
+      if (sobra > 0) danoTomadoAtual += sobra;
+    } else if (tipo === 'escudo') {
+      if (danoAplicado <= escudoAtual) {
+        escudoAtual -= danoAplicado; // absorve tudo
+      } else {
+        const sobraEscudo = danoAplicado - escudoAtual;
+        escudoAtual = 0;
+
+        const armaduraOriginal = armaduraAtual; // ✅ guarda o valor antes de alterar
+
+        if (sobraEscudo <= armaduraOriginal) {
+          armaduraAtual = armaduraOriginal - sobraEscudo;
+        } else {
+          const sobraArmadura = sobraEscudo - armaduraOriginal;
+          armaduraAtual = 0;
+          danoTomadoAtual += sobraArmadura; // ✅ agora a sobra real vai pra vida
+        }
+      }
+    }
+
+    // 🔍 Calcula impacto final com base no dano real sofrido
+    const danoNaVida = Math.max(danoTomadoAtual - danoTomadoAntes, 0);
+    // ✅ Aplica só o dano real causado nesta rodada
+    const vidaDepois =
+      danoNaVida > 0
+        ? Math.max(vidaAntes - danoNaVida, 0)
+        : vidaAntes;
+
+
+    const morto = vidaDepois <= 0;
+
+    // 🧾 Monta o resumo de prévia
+    const diffEscudo = escudoAtual - escudoAntes;
+    const diffArmadura = armaduraAtual - armaduraAntes;
+    const diffVida = vidaDepois - vidaAntes;
+
+    let resumo =
+      `⚔️ ${this.ofensorSelecionado.personagem} atacará ${this.vitimaSelecionada.personagem}\n\n` +
+      `💥 Dano: ${this.dano} (${tipo.toUpperCase()})\n` +
+      `🔰 Escudo: ${escudoAntes} → ${escudoAtual}${diffEscudo < 0 ? ` (${diffEscudo})` : ''}\n` +
+      `🛡️ Armadura: ${armaduraAntes} → ${armaduraAtual}${diffArmadura < 0 ? ` (${diffArmadura})` : ''}\n` +
+      `❤️ Vida: ${vidaAntes}/${vidaBase} → ${vidaDepois}/${vidaBase}${diffVida < 0 ? ` (${diffVida})` : ''}\n`;
+
+    if (this.efeitos?.trim()) resumo += `\n✨ Efeitos adicionais: ${this.efeitos}`;
+
+    if (escudoAntes > 0 && escudoAtual === 0)
+      resumo += `\n⚡ O escudo de ${this.vitimaSelecionada.personagem} será rompido!`;
+    if (armaduraAntes > 0 && armaduraAtual === 0)
+      resumo += `\n💔 A armadura de ${this.vitimaSelecionada.personagem} será destruída!`;
+    if (morto)
+      resumo += `\n☠️ ${this.vitimaSelecionada.personagem} cairá em combate!`;
+
+    // ❓Confirma antes de aplicar
+    const confirmar = confirm(`📜 PRÉVIA DO ATAQUE\n\n${resumo}\n\nDeseja confirmar o ataque?`);
+    if (!confirmar) return;
+
+    // ⚔️ Agora aplica de verdade
     this.salvando = true;
     try {
-      let danoAplicado = this.dano;
 
-      // Estado da vítima antes do ataque
-      const vidaBase = JogadorUtils.getVidaBase(this.vitimaSelecionada);
-      const vidaAntes = JogadorUtils.getVidaAtual(this.vitimaSelecionada);
-      const armaduraAntes = this.vitimaSelecionada.classe_de_armadura || 0;
-
-      // Copia dos valores atuais
-      let caAtual = armaduraAntes;
-      let danoTomadoAtual = this.vitimaSelecionada.dano_tomado || 0;
-
-      // Aplicação do dano
-      if (caAtual > 0) {
-        if (danoAplicado <= caAtual) {
-          // Todo o dano é absorvido pela armadura
-          this.vitimaSelecionada.classe_de_armadura = caAtual - danoAplicado;
-          danoAplicado = 0;
-        } else {
-          // Parte quebra a armadura, o excedente vira dano
-          this.vitimaSelecionada.classe_de_armadura = 0;
-          danoAplicado -= caAtual;
-          this.vitimaSelecionada.dano_tomado = danoTomadoAtual + danoAplicado;
-        }
-      } else {
-        // Sem armadura → dano vai direto
-        this.vitimaSelecionada.dano_tomado = danoTomadoAtual + danoAplicado;
+      // 🔒 Evita dano além da vida máxima
+      if (danoTomadoAtual > vidaBase) {
+        danoTomadoAtual = vidaBase;
       }
 
-      // Estado final da vítima
-      const vidaDepois = JogadorUtils.getVidaAtual(this.vitimaSelecionada);
-      const armaduraDepois = this.vitimaSelecionada.classe_de_armadura || 0;
-      const morto = JogadorUtils.estaMorto(this.vitimaSelecionada);
+      this.vitimaSelecionada.escudo = Math.max(0, escudoAtual);
+      this.vitimaSelecionada.classe_de_armadura = Math.max(0, armaduraAtual);
+      this.vitimaSelecionada.dano_tomado = Math.max(0, danoTomadoAtual);
 
-      // 📌 Monta os detalhes com antes/depois
+      const vidaFinal = Math.max(vidaBase - this.vitimaSelecionada.dano_tomado, 0);
+
+      // 📉 diferenças
+      const diffEscudoFinal = this.vitimaSelecionada.escudo - escudoAntes;
+      const diffArmaduraFinal = this.vitimaSelecionada.classe_de_armadura - armaduraAntes;
+      const diffVidaFinal = vidaFinal - vidaAntes;
+
       let detalhes =
         `⚔️ ${this.ofensorSelecionado.personagem} atacou ${this.vitimaSelecionada.personagem}\n` +
-        `💥 Dano causado: ${this.dano}\n` +
-        `🛡️ Armadura: ${armaduraAntes} → ${armaduraDepois}\n` +
-        `❤️ Vida: ${vidaAntes}/${vidaBase} → ${vidaDepois}/${vidaBase}`;
+        `💥 Dano: ${this.dano} (${tipo.toUpperCase()})\n` +
+        `🔰 Escudo: ${escudoAntes} → ${this.vitimaSelecionada.escudo}${diffEscudoFinal < 0 ? ` (${diffEscudoFinal})` : ''}\n` +
+        `🛡️ Armadura: ${armaduraAntes} → ${this.vitimaSelecionada.classe_de_armadura}${diffArmaduraFinal < 0 ? ` (${diffArmaduraFinal})` : ''}\n` +
+        `❤️ Vida: ${vidaAntes}/${vidaBase} → ${vidaFinal}/${vidaBase}${diffVidaFinal < 0 ? ` (${diffVidaFinal})` : ''}`;
 
-      if (this.efeitos?.trim()) {
-        detalhes += `\n✨ Efeitos adicionais: ${this.efeitos}`;
-      }
-
-      // 🚨 Eventos especiais
-      if (armaduraAntes > 0 && armaduraDepois === 0) {
+      if (this.efeitos?.trim()) detalhes += `\n✨ Efeitos adicionais: ${this.efeitos}`;
+      if (escudoAntes > 0 && this.vitimaSelecionada.escudo === 0)
+        detalhes += `\n⚡ O escudo de ${this.vitimaSelecionada.personagem} foi rompido!`;
+      if (armaduraAntes > 0 && this.vitimaSelecionada.classe_de_armadura === 0)
         detalhes += `\n💔 A armadura de ${this.vitimaSelecionada.personagem} foi destruída!`;
-      }
-      if (morto) {
+      if (morto)
         detalhes += `\n☠️ ${this.vitimaSelecionada.personagem} caiu em combate!`;
-      }
 
-      // 📌 Cria registro
       const registro: RegistroDomain = {
         id: IdUtils.generateULID(),
-        jogador: this.ofensorSelecionado.email,             // 👈 email do ofensor
-        alvo: this.vitimaSelecionada.email,                 // 👈 email da vítima
+        jogador: this.ofensorSelecionado.email,
+        alvo: this.vitimaSelecionada.email,
         tipo: 'batalha',
         acao: 'ataque',
         detalhes,
         data: new Date().toISOString(),
       };
 
-      // ✅ Tudo em 1 batch (Personagem + Registro)
-      const result = await BaseRepositoryV2.batch({
+      await BaseRepositoryV2.batch({
         updateById: { Personagem: [{ ...this.vitimaSelecionada }] },
-        create: { Registro: [registro] }
+        create: { Registro: [registro] },
       });
 
-      console.log('⚔️ Combate registrado (batch):', result);
       alert('✅ Registro de batalha salvo!\n\n' + detalhes);
-
       this.router.navigate(['/batalha']);
     } catch (err) {
       console.error('[Combate] Erro ao registrar (batch):', err);
@@ -200,5 +285,7 @@ export class Combate implements OnInit {
       this.salvando = false;
     }
   }
+
+
 
 }

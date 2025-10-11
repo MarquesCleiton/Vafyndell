@@ -15,7 +15,7 @@
                     <div class="d-flex align-items-center">
                       <ng-container *ngIf="j.imagem && j.imagem !== '-'; else noOfensorIcon">
                         <img [src]="j.imagem" class="me-2 rounded"
-                             style="width: 24px; height: 24px; object-fit: cover;">
+                          style="width: 24px; height: 24px; object-fit: cover;">
                       </ng-container>
                       <ng-template #noOfensorIcon>
                         <span class="me-2">👤</span>
@@ -36,7 +36,7 @@
                     <div class="d-flex align-items-center">
                       <ng-container *ngIf="j.imagem && j.imagem !== '-'; else noVitimaIcon">
                         <img [src]="j.imagem" class="me-2 rounded"
-                             style="width: 24px; height: 24px; object-fit: cover;">
+                          style="width: 24px; height: 24px; object-fit: cover;">
                       </ng-container>
                       <ng-template #noVitimaIcon>
                         <span class="me-2">👤</span>
@@ -53,7 +53,8 @@
               <div class="d-flex align-items-center justify-content-around">
                 <!-- Ofensor -->
                 <div class="d-flex align-items-center">
-                  <ng-container *ngIf="ofensorSelecionado.imagem && ofensorSelecionado.imagem !== '-'; else noOfensorPreview">
+                  <ng-container
+                    *ngIf="ofensorSelecionado.imagem && ofensorSelecionado.imagem !== '-'; else noOfensorPreview">
                     <img [src]="ofensorSelecionado.imagem" class="me-2 rounded preview-img">
                   </ng-container>
                   <ng-template #noOfensorPreview>
@@ -70,7 +71,8 @@
 
                 <!-- Vítima -->
                 <div class="d-flex align-items-center">
-                  <ng-container *ngIf="vitimaSelecionada.imagem && vitimaSelecionada.imagem !== '-'; else noVitimaPreview">
+                  <ng-container
+                    *ngIf="vitimaSelecionada.imagem && vitimaSelecionada.imagem !== '-'; else noVitimaPreview">
                     <img [src]="vitimaSelecionada.imagem" class="me-2 rounded preview-img">
                   </ng-container>
                   <ng-template #noVitimaPreview>
@@ -83,6 +85,33 @@
                 </div>
               </div>
             </div>
+
+
+            <!-- Tipo de dano -->
+            <div *ngIf="vitimaSelecionada" class="mb-3">
+              <label class="form-label text-light fw-bold">🎯 Tipo de dano *</label>
+              <mat-form-field appearance="fill" class="w-100 input-dark compact-select text-light">
+                <mat-select [(ngModel)]="tipoDanoSelecionado" name="tipoDanoSelecionado" required
+                  placeholder="Selecione onde aplicar o dano">
+
+                  <mat-option value="escolha" class="text-light bg-dark">Escolha o local do dano...</mat-option>
+
+                  <mat-option *ngIf="(vitimaSelecionada.escudo || 0) > 0" [value]="'escudo'" class="text-light bg-dark">
+                    🔰 Escudo ({{ vitimaSelecionada.escudo }})
+                  </mat-option>
+
+                  <mat-option *ngIf="(vitimaSelecionada.classe_de_armadura || 0) > 0" [value]="'armadura'" class="text-light bg-dark">
+                    🛡️ Armadura ({{ vitimaSelecionada.classe_de_armadura }})
+                  </mat-option>
+
+                  <mat-option [value]="'vida'" class="text-light bg-dark">
+                    ❤️ Vida ({{ JogadorUtils.getVidaAtual(vitimaSelecionada) }}/{{
+                    JogadorUtils.getVidaBase(vitimaSelecionada) }})
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
 
             <!-- Dano -->
             <div class="d-flex align-items-center justify-content-between mb-3">
@@ -97,9 +126,8 @@
             <!-- Efeitos -->
             <div class="mb-3">
               <label class="form-label text-light fw-bold">✨ Efeitos adicionais</label>
-              <textarea class="form-control bg-dark text-light border-light compact-textarea"
-                        rows="2" [(ngModel)]="efeitos" name="efeitos"
-                        placeholder="Ex: sangramento, atordoamento..."></textarea>
+              <textarea class="form-control bg-dark text-light border-light compact-textarea" rows="2"
+                [(ngModel)]="efeitos" name="efeitos" placeholder="Ex: sangramento, atordoamento..."></textarea>
             </div>
 
             <!-- Botões -->

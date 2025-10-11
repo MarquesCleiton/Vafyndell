@@ -102,14 +102,32 @@ export class VisaoJogadores implements OnInit {
   }
 
   private setJogador(jogador: JogadorDomain) {
-    const vidaBase = jogador.pontos_de_vida || jogador.energia + jogador.constituicao;
-    const fatorCura = Math.floor(jogador.energia / 3);
-    const deslocamento = Math.floor(jogador.destreza / 3);
-    const vidaAtual = vidaBase - (jogador.dano_tomado || 0);
+    // Garante números padrão
+    jogador.escudo = jogador.escudo ?? 0;
+    jogador.pontos_de_sorte = jogador.pontos_de_sorte ?? 0;
 
-    this.jogador = { ...jogador, pontos_de_vida: vidaBase, vida_atual: vidaAtual, fator_cura: fatorCura, deslocamento };
+    // Vida base e cálculos derivados
+    const vidaBase =
+      jogador.pontos_de_vida && jogador.pontos_de_vida > 0
+        ? jogador.pontos_de_vida
+        : (jogador.energia || 0) + (jogador.constituicao || 0);
 
-    const calcMod = (valor: number) => Math.floor((valor - 10) / 2);
+    const fatorCura = Math.floor((jogador.energia || 0) / 3);
+    const deslocamento = Math.floor((jogador.destreza || 0) / 3);
+    const vidaAtual = Math.max(vidaBase - (jogador.dano_tomado || 0), 0);
+
+    this.jogador = {
+      ...jogador,
+      pontos_de_vida: vidaBase,
+      vida_atual: vidaAtual,
+      fator_cura: fatorCura,
+      deslocamento,
+    };
+
+    // Cálculo dos modificadores
+    const calcMod = (valor: number) => Math.floor(((valor || 0) - 10) / 2);
+
+    // Lista de atributos visuais
     this.atributos = [
       { label: 'Força', value: jogador.forca, mod: calcMod(jogador.forca), icon: '💪' },
       { label: 'Destreza', value: jogador.destreza, mod: calcMod(jogador.destreza), icon: '🤸‍♂️' },
@@ -120,6 +138,7 @@ export class VisaoJogadores implements OnInit {
       { label: 'Energia', value: jogador.energia, mod: calcMod(jogador.energia), icon: '⚡' },
     ];
   }
+
 
   /** 🔹 Cache first para Inventário */
   private async loadInventario(email: string) {
