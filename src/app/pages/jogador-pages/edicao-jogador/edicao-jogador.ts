@@ -13,7 +13,9 @@ type AtributoChave = keyof Pick<
   | 'forca' | 'destreza' | 'constituicao' | 'inteligencia'
   | 'sabedoria' | 'carisma' | 'energia'
   | 'classe_de_armadura' | 'nivel' | 'xp'
+  | 'pontos_de_sorte' | 'escudo'     // 🆕
 >;
+
 
 @Component({
   selector: 'app-edicao-jogador',
@@ -39,7 +41,10 @@ export class EdicaoJogador implements OnInit {
     { key: 'carisma' as AtributoChave, label: 'Carisma', icon: '😎' },
     { key: 'energia' as AtributoChave, label: 'Energia', icon: '⚡' },
     { key: 'classe_de_armadura' as AtributoChave, label: 'Armadura', icon: '🛡️' },
+    { key: 'escudo' as AtributoChave, label: 'Escudo', icon: '🔰' },         // 🆕
+    { key: 'pontos_de_sorte' as AtributoChave, label: 'Sorte', icon: '🍀' }, // 🆕
   ];
+
 
   // 🔢 Atributos calculados
   get vida() { return this.jogador ? (this.jogador.energia || 0) + (this.jogador.constituicao || 0) : 0; }

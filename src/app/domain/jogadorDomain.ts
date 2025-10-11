@@ -25,6 +25,10 @@ export interface JogadorDomain {
   descricao: string;
   ataques: string;
 
+  // 🆕 novos atributos
+  pontos_de_sorte?: number;
+  escudo?: number;
+
   // derivados (calculados, não salvos direto)
   fator_cura?: number;
   deslocamento?: number;

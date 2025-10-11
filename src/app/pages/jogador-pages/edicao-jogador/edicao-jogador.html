@@ -10,9 +10,8 @@
           <ng-container *ngIf="jogador.imagem; else uploadBox">
             <img [src]="jogador.imagem" class="w-100 rounded detalhe-img shadow-sm" alt="Preview" />
             <button type="button"
-                    class="btn btn-danger rounded-circle position-absolute d-flex align-items-center justify-content-center"
-                    style="top: 10px; right: 10px; width: 40px; height: 40px;"
-                    (click)="removerImagem()">✖</button>
+              class="btn btn-danger rounded-circle position-absolute d-flex align-items-center justify-content-center"
+              style="top: 10px; right: 10px; width: 40px; height: 40px;" (click)="removerImagem()">✖</button>
           </ng-container>
           <ng-template #uploadBox>
             <label class="upload-box">
@@ -30,15 +29,14 @@
             <!-- Nome -->
             <div class="mb-3">
               <label class="form-label text-light">🧙 Nome do Personagem *</label>
-              <input type="text" class="form-control input-dark"
-                     [(ngModel)]="jogador.personagem" name="personagem" required />
+              <input type="text" class="form-control input-dark" [(ngModel)]="jogador.personagem" name="personagem"
+                required />
             </div>
 
             <!-- Alinhamento -->
             <div class="mb-3">
               <label class="form-label text-light">⚖️ Alinhamento *</label>
-              <select class="form-select input-dark"
-                      [(ngModel)]="jogador.alinhamento" name="alinhamento" required>
+              <select class="form-select input-dark" [(ngModel)]="jogador.alinhamento" name="alinhamento" required>
                 <option value="" disabled>Selecione...</option>
                 <option>Leal e Bom (Lawful Good)</option>
                 <option>Neutro e Bom (Neutral Good)</option>
@@ -55,8 +53,7 @@
             <!-- Tipo de jogador -->
             <div class="mb-3">
               <label class="form-label text-light">🎭 Tipo de Jogador *</label>
-              <select class="form-select input-dark"
-                      [(ngModel)]="jogador.tipo_jogador" name="tipoJogador" required>
+              <select class="form-select input-dark" [(ngModel)]="jogador.tipo_jogador" name="tipoJogador" required>
                 <option value="" disabled>Selecione...</option>
                 <option>Aventureiro</option>
                 <option>Mestre</option>
@@ -72,18 +69,17 @@
                 </div>
                 <div class="atributo-controls">
                   <button type="button" class="btn btn-sm btn-outline-light"
-                          (click)="ajustarValor(attr.key, -1)">−</button>
+                    (click)="ajustarValor(attr.key, -1)">−</button>
 
-                  <input type="number" class="atributo-input"
-                         [ngModel]="getValor(attr.key)"
-                         (ngModelChange)="setValor(attr.key, $event)"
-                         name="{{attr.key}}" min="0" />
+                  <input type="number" class="atributo-input" [ngModel]="getValor(attr.key)"
+                    (ngModelChange)="setValor(attr.key, $event)" name="{{attr.key}}" min="0" />
 
                   <button type="button" class="btn btn-sm btn-outline-light"
-                          (click)="ajustarValor(attr.key, 1)">+</button>
+                    (click)="ajustarValor(attr.key, 1)">+</button>
                 </div>
               </div>
             </div>
+
 
             <!-- Atributos Calculados -->
             <h6 class="fw-bold mt-4 text-light">⚔️ Atributos Calculados</h6>
@@ -117,7 +113,7 @@
     <button class="fab fab-primary" (click)="cancelar()">
       ⬅️
     </button>
-    
+
     <!-- Salvar -->
     <!-- 👇 agora usa id="formJogador" -->
     <button type="submit" form="formJogador" class="fab fab-warning" [disabled]="salvando">

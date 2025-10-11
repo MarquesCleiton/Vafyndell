@@ -79,7 +79,10 @@ export class Jogador implements OnInit {
   }
 
   private setJogador(jogador: JogadorDomain) {
-    // Vida base: usa o cadastro, senão calcula
+    // Garante que sempre exista um número
+    jogador.escudo = jogador.escudo ?? 0;
+    jogador.pontos_de_sorte = jogador.pontos_de_sorte ?? 0;
+
     const vidaBase =
       jogador.pontos_de_vida && jogador.pontos_de_vida > 0
         ? jogador.pontos_de_vida
@@ -88,9 +91,8 @@ export class Jogador implements OnInit {
     const fatorCura = Math.floor((jogador.energia || 0) / 3);
     const deslocamento = Math.floor((jogador.destreza || 0) / 3);
 
-    // Vida atual segue a regra da armadura
     const vidaAtual =
-      (jogador.classe_de_armadura || 0) > 0
+      (jogador.classe_de_armadura || 0) + (jogador.escudo || 0) > 0
         ? vidaBase
         : vidaBase - (jogador.dano_tomado || 0);
 
@@ -102,7 +104,6 @@ export class Jogador implements OnInit {
       deslocamento,
     };
 
-    // função auxiliar para calcular modificador estilo D&D
     const calcMod = (valor: number) => Math.floor(((valor || 0) - 10) / 2);
 
     this.atributos = [
@@ -115,6 +116,8 @@ export class Jogador implements OnInit {
       { label: 'Energia', value: jogador.energia, mod: calcMod(jogador.energia), icon: '⚡' },
     ];
   }
+
+
 
   editarJogador() {
     this.router.navigate(['/edicao-jogador']);
