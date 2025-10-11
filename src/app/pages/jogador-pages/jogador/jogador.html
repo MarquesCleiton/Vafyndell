@@ -35,19 +35,31 @@
             <li>🏅 <span>Nível:</span> {{ jogador.nivel }}</li>
             <li>⭐ <span>XP:</span> {{ jogador.xp }}</li>
             <li>🍀 <span>Sorte:</span> {{ jogador.pontos_de_sorte }}</li>
+
+            <hr class="my-2 opacity-25" />
+
             <li>
               ❤️ <span>Vida:</span>
-              <span [ngClass]="{ 'text-danger fw-bold': jogador.vida_atual! <= 0 }">
+              <span [ngClass]="{
+      'text-danger fw-bold': jogador.vida_atual! <= 0,
+      'text-warning': jogador.vida_atual! > 0 && jogador.vida_atual! < jogador.pontos_de_vida! * 0.5,
+      '': jogador.vida_atual! >= jogador.pontos_de_vida! * 0.5
+    }">
                 {{ jogador.vida_atual }}
               </span>
               / {{ jogador.pontos_de_vida }}
             </li>
+
+            <li>💔 <span>Dano tomado:</span> {{ jogador.dano_tomado }}</li>
             <li>🛡️ <span>Armadura:</span> {{ jogador.classe_de_armadura }}</li>
             <li>🔰 <span>Escudo:</span> {{ jogador.escudo }}</li>
-            <li>💔 <span>Dano tomado:</span> {{ jogador.dano_tomado }}</li>
+
+            <hr class="my-2 opacity-25" />
+
             <li>✨ <span>Fator de cura:</span> {{ jogador.fator_cura }}</li>
             <li>🚶‍♂️ <span>Deslocamento:</span> {{ jogador.deslocamento }}</li>
           </ul>
+
 
 
           <!-- Atributos -->

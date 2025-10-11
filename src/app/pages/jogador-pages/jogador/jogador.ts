@@ -92,7 +92,7 @@ export class Jogador implements OnInit {
     const deslocamento = Math.floor((jogador.destreza || 0) / 3);
 
     const vidaAtual =
-      (jogador.classe_de_armadura || 0) + (jogador.escudo || 0) > 0
+      (jogador.classe_de_armadura || 0) > 0
         ? vidaBase
         : vidaBase - (jogador.dano_tomado || 0);
 
