@@ -18,4 +18,5 @@ export interface NpcDomain {
   xp: number;
   visivel_jogadores: boolean;
   email?: string; // quem cadastrou;
+  escudo?: 0,
 }

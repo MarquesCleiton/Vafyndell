@@ -13,8 +13,10 @@ type AtributoChave = keyof Pick<
   NpcDomain,
   | 'forca' | 'constituicao' | 'destreza'
   | 'sabedoria' | 'inteligencia' | 'energia'
-  | 'classe_armadura' | 'pontos_de_vida' | 'xp'
+  | 'classe_armadura' | 'pontos_de_vida'
+  | 'escudo' | 'xp'   // 👈 incluído aqui
 >;
+
 
 @Component({
   selector: 'app-cadastro-npc',
@@ -34,6 +36,7 @@ export class CadastroNpc implements OnInit, AfterViewInit {
     alinhamento: '',
     pontos_de_vida: 0,
     classe_armadura: 0,
+    escudo: 0,
     forca: 0,
     constituicao: 0,
     destreza: 0,
@@ -54,6 +57,7 @@ export class CadastroNpc implements OnInit, AfterViewInit {
     { key: 'xp' as AtributoChave, label: 'XP', icon: '⭐' },
     { key: 'pontos_de_vida' as AtributoChave, label: 'Vida', icon: '❤️' },
     { key: 'classe_armadura' as AtributoChave, label: 'Armadura', icon: '🛡️' },
+    { key: 'escudo' as AtributoChave, label: 'Escudo', icon: '🔰' }, // 👈 novo atributo
     { key: 'forca' as AtributoChave, label: 'Força', icon: '💪' },
     { key: 'constituicao' as AtributoChave, label: 'Constituição', icon: '🪨' },
     { key: 'destreza' as AtributoChave, label: 'Destreza', icon: '🤸‍♂️' },
@@ -61,6 +65,7 @@ export class CadastroNpc implements OnInit, AfterViewInit {
     { key: 'inteligencia' as AtributoChave, label: 'Inteligência', icon: '🧠' },
     { key: 'energia' as AtributoChave, label: 'Energia', icon: '⚡' },
   ];
+
 
   classificacoes = ['Inimigo', 'Bestial'];
   tipos = ['Comum', 'Elite', 'Mágico', 'Lendário'];
@@ -72,7 +77,7 @@ export class CadastroNpc implements OnInit, AfterViewInit {
     private route: ActivatedRoute,
     private el: ElementRef,
     private zone: NgZone
-  ) {}
+  ) { }
 
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');

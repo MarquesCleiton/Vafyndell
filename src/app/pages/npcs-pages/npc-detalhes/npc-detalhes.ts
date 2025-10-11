@@ -23,7 +23,6 @@ export class NpcDetalhes implements OnInit {
   processandoExcluir = false;
   processandoAdicionar = false;
 
-  // controle do modal
   imagemSelecionada: string | null = null;
   modalAberto = false;
 
@@ -34,7 +33,7 @@ export class NpcDetalhes implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private location: Location
-  ) { }
+  ) {}
 
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -45,13 +44,10 @@ export class NpcDetalhes implements OnInit {
 
     try {
       this.carregando = true;
-
-      // 1️⃣ cache first
       const locais = await this.npcRepo.getLocal();
       this.npc = locais.find(n => String(n.id) === id) || null;
 
       if (this.npc) {
-        // 2️⃣ sync paralelo
         this.npcRepo.sync().then(async updated => {
           if (updated) {
             const atualizados = await this.npcRepo.getLocal();
@@ -60,7 +56,6 @@ export class NpcDetalhes implements OnInit {
           }
         });
       } else {
-        // 3️⃣ fallback online
         const online = await this.npcRepo.forceFetch();
         this.npc = online.find(n => String(n.id) === id) || null;
       }
@@ -78,9 +73,8 @@ export class NpcDetalhes implements OnInit {
   editarNpc() {
     if (!this.npc) return;
     this.processandoEditar = true;
-
     setTimeout(() => {
-      this.router.navigate(['/cadastro-npc', this.npc!.id]); // 🚀 sem returnUrl
+      this.router.navigate(['/cadastro-npc', this.npc!.id]);
       this.processandoEditar = false;
     }, 300);
   }
@@ -92,7 +86,6 @@ export class NpcDetalhes implements OnInit {
 
     this.processandoExcluir = true;
     try {
-      // ✅ agora deleta por id
       await this.npcRepo.delete(this.npc.id);
       alert('✅ NPC excluído com sucesso!');
       this.router.navigate(['/npcs']);
@@ -110,13 +103,10 @@ export class NpcDetalhes implements OnInit {
 
     try {
       let jogadores = await this.jogadorRepo.getLocal();
-
-      // 🔄 sync em paralelo
       this.jogadorRepo.sync().then(async updated => {
         if (updated) jogadores = await this.jogadorRepo.getLocal();
       });
 
-      // gera nome incremental: "1 - Goblin", "2 - Goblin", etc
       const baseName = this.npc.nome.trim();
       const existentes = jogadores
         .map(j => {
@@ -128,6 +118,7 @@ export class NpcDetalhes implements OnInit {
 
       const proximoNumero = existentes.length > 0 ? Math.max(...existentes) + 1 : 1;
 
+      // ✅ agora inclui o ESCUDO herdado do NPC
       const novoNpcJogador: JogadorDomain = {
         id: IdUtils.generateULID(),
         email: '',
@@ -137,6 +128,7 @@ export class NpcDetalhes implements OnInit {
         alinhamento: this.npc.alinhamento || '',
         pontos_de_vida: this.npc.pontos_de_vida,
         classe_de_armadura: this.npc.classe_armadura,
+        escudo: this.npc.escudo || 0, // 👈 novo campo herdado
         forca: this.npc.forca,
         destreza: this.npc.destreza,
         constituicao: this.npc.constituicao,

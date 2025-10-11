@@ -9,8 +9,7 @@
           <img [src]="imagemBase64Temp || npc.imagem" class="w-100 rounded detalhe-img shadow-sm" alt="Preview" />
           <button type="button"
             class="btn btn-danger rounded-circle position-absolute d-flex align-items-center justify-content-center"
-            style="top: 10px; right: 10px; width: 40px; height: 40px;"
-            (click)="removerImagem()">✖</button>
+            style="top: 10px; right: 10px; width: 40px; height: 40px;" (click)="removerImagem()">✖</button>
         </ng-container>
 
         <ng-template #uploadBox>
@@ -66,7 +65,6 @@
           </div>
 
           <!-- Atributos Numéricos -->
-          <h6 class="fw-bold mt-4 text-light">📊 Atributos Numéricos</h6>
           <div class="atributos-grid-edit mb-3">
             <div class="atributo-item-edit" *ngFor="let attr of atributosNumericos">
               <div class="atributo-label text-center">
@@ -76,10 +74,8 @@
                 <button type="button" class="btn btn-sm btn-outline-light"
                   (click)="ajustarValor(attr.key, -1)">−</button>
 
-                <input type="number" class="atributo-input"
-                  [ngModel]="getValor(attr.key)"
-                  (ngModelChange)="setValor(attr.key, $event)"
-                  name="{{attr.key}}" min="0" />
+                <input type="number" class="atributo-input" [ngModel]="getValor(attr.key)"
+                  (ngModelChange)="setValor(attr.key, $event)" name="{{attr.key}}" min="0" />
 
                 <button type="button" class="btn btn-sm btn-outline-light"
                   (click)="ajustarValor(attr.key, 1)">+</button>
@@ -87,18 +83,19 @@
             </div>
           </div>
 
+
           <!-- Descrição -->
           <div class="mb-3">
             <label class="form-label text-light">📝 Descrição</label>
-            <textarea class="form-control input-dark auto-expand" rows="3"
-              [(ngModel)]="npc.descricao" name="descricao"></textarea>
+            <textarea class="form-control input-dark auto-expand" rows="3" [(ngModel)]="npc.descricao"
+              name="descricao"></textarea>
           </div>
 
           <!-- Ataques -->
           <div class="mb-3 mt-4">
             <label class="form-label text-light">⚔️ Ataques</label>
-            <textarea class="form-control input-dark auto-expand" rows="3"
-              [(ngModel)]="npc.ataques" name="ataques"></textarea>
+            <textarea class="form-control input-dark auto-expand" rows="3" [(ngModel)]="npc.ataques"
+              name="ataques"></textarea>
           </div>
         </div>
       </div>
