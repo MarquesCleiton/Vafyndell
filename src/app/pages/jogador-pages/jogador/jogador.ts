@@ -91,10 +91,8 @@ export class Jogador implements OnInit {
     const fatorCura = Math.floor((jogador.energia || 0) / 3);
     const deslocamento = Math.floor((jogador.destreza || 0) / 3);
 
-    const vidaAtual =
-      (jogador.classe_de_armadura || 0) > 0
-        ? vidaBase
-        : vidaBase - (jogador.dano_tomado || 0);
+    const vidaAtual = Math.max(vidaBase - (jogador.dano_tomado || 0), 0);
+
 
     this.jogador = {
       ...jogador,
