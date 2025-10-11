@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -24,7 +24,11 @@ interface RegistroComMeta extends RegistroDomain {
   templateUrl: './batalha.html',
   styleUrls: ['./batalha.css'],
 })
-export class Batalha implements OnInit {
+export class Batalha implements OnInit, OnDestroy {
+  // 🕒 Tempo de atualização automática (em segundos)
+  private readonly INTERVALO_SINCRONIA = 30;
+  private intervaloId: any = null;
+
   abaAtiva: 'campo' | 'historico' = 'campo';
 
   // Campo de batalha
@@ -50,11 +54,47 @@ export class Batalha implements OnInit {
     bestiais: true,
   };
 
-
-  constructor(private router: Router) { }
+  constructor(private router: Router) {}
 
   async ngOnInit() {
     await Promise.all([this.carregarJogadores(), this.carregarHistorico()]);
+    this.iniciarSincronizacaoAutomatica();
+  }
+
+  ngOnDestroy() {
+    if (this.intervaloId) {
+      clearInterval(this.intervaloId);
+      this.intervaloId = null;
+    }
+  }
+
+  // ==========================================================
+  // 🔄 SINCRONIZAÇÃO AUTOMÁTICA
+  // ==========================================================
+  private iniciarSincronizacaoAutomatica() {
+    this.intervaloId = setInterval(async () => {
+      if (document.visibilityState === 'visible' && navigator.onLine) {
+        console.log('[Batalha] 🔁 Sincronizando dados...');
+        const [syncJogadores, syncHistorico] = await Promise.all([
+          this.repoJogadores.sync(),
+          this.repoRegistros.sync(),
+        ]);
+
+        if (syncJogadores) {
+          const atualizados = await this.repoJogadores.getLocal();
+          this.jogadores = atualizados;
+          this.aplicarFiltro();
+          console.log('[Batalha] ✅ Jogadores atualizados');
+        }
+
+        if (syncHistorico) {
+          const atualizados = await this.repoRegistros.getLocal();
+          const filtrados = atualizados.filter(r => r.tipo === 'batalha' || r.tipo === 'recuperacao');
+          this.processarSecoesHistorico(filtrados);
+          console.log('[Batalha] ✅ Histórico atualizado');
+        }
+      }
+    }, this.INTERVALO_SINCRONIA * 1000);
   }
 
   // ==========================================================
@@ -86,11 +126,11 @@ export class Batalha implements OnInit {
     this.jogadoresFiltrados = !termo
       ? [...this.jogadores]
       : this.jogadores.filter(j =>
-        this.normalizarTexto(j.personagem).includes(termo) ||
-        this.normalizarTexto(j.nome_do_jogador).includes(termo) ||
-        this.normalizarTexto(j.classificacao).includes(termo) ||
-        this.normalizarTexto(j.tipo).includes(termo)
-      );
+          this.normalizarTexto(j.personagem).includes(termo) ||
+          this.normalizarTexto(j.nome_do_jogador).includes(termo) ||
+          this.normalizarTexto(j.classificacao).includes(termo) ||
+          this.normalizarTexto(j.tipo).includes(termo)
+        );
   }
 
   get jogadoresNormais(): JogadorDomain[] {
@@ -239,9 +279,7 @@ export class Batalha implements OnInit {
     }
   }
 
-toggleSecaoCampo(tipo: 'jogadores' | 'bestiais') {
-  this.secoesExpandidas[tipo] = !this.secoesExpandidas[tipo];
-}
-
-
+  toggleSecaoCampo(tipo: 'jogadores' | 'bestiais') {
+    this.secoesExpandidas[tipo] = !this.secoesExpandidas[tipo];
+  }
 }
