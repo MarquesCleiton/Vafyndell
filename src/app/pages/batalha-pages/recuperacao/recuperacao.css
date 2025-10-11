@@ -26,6 +26,7 @@
 }
 .status-line .vida { color: #dc3545; }
 .status-line .dano { color: #ffc107; }
+.status-line .escudo { color: #ffc107; }
 .status-line .armadura { color: #0dcaf0; }
 
 

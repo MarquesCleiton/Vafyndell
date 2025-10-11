@@ -148,3 +148,55 @@
   background: #333;
 }
 
+.status-linha {
+  gap: 0.8rem;
+  justify-content: flex-end;
+  font-size: 0.95rem;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  min-width: 0px;
+  justify-content: flex-end;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+}
+
+.text-danger {
+  color: #ef4444 !important; /* ❤️ Vida */
+}
+
+.text-primary {
+  color: #3b82f6 !important; /* 🛡️ Armadura */
+}
+
+.text-warning {
+  color: #facc15 !important; /* 🔰 Escudo */
+}
+
+
+.status-linha {
+  gap: 0.8rem;
+  justify-content: flex-end;
+  font-size: 0.95rem;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  min-width: 40px;
+  justify-content: flex-end;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+}
+
+.text-danger {
+  color: #ef4444 !important; /* ❤️ Vida */
+}
+
+.text-primary {
+  color: #3b82f6 !important; /* 🛡️ Armadura */
+}
+
+.text-warning {
+  color: #facc15 !important; /* 🔰 Escudo */
+}

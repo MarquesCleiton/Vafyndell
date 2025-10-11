@@ -11,7 +11,7 @@
             <div *ngIf="jogador" class="preview-card mb-3">
               <div class="d-flex align-items-center justify-content-center">
 
-                <!-- Imagem com fallback -->
+                <!-- Imagem -->
                 <ng-container *ngIf="jogador.imagem && jogador.imagem !== '-'; else noImg">
                   <img [src]="jogador.imagem" class="me-3 rounded"
                        style="width: 60px; height: 60px; object-fit: cover;">
@@ -27,13 +27,14 @@
                 <div>
                   <h5 class="fw-bold text-light mb-1">{{ jogador.personagem }}</h5>
 
-                  <!-- Status alinhado -->
+                  <!-- Status -->
                   <div class="status-line mt-2">
                     <span class="vida">
-                      ❤️ {{ JogadorUtils.getVidaAtual(jogador) }}/{{ JogadorUtils.getVidaBase(jogador) }}
+                      ❤️ {{ (JogadorUtils.getVidaBase(jogador) - (jogador.dano_tomado || 0)) }}/{{ JogadorUtils.getVidaBase(jogador) }}
                     </span>
-                    <span class="dano">💥 {{ jogador.dano_tomado || 0 }}</span>
                     <span class="armadura">🛡️ {{ jogador.classe_de_armadura || 0 }}</span>
+                    <span class="escudo">🔰 {{ jogador.escudo || 0 }}</span>
+                    <span class="dano">💥 {{ jogador.dano_tomado || 0 }}</span>
                   </div>
                 </div>
               </div>
@@ -61,12 +62,23 @@
               </div>
             </div>
 
+            <!-- Escudo -->
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <label class="form-label text-light fw-bold mb-0 me-3">🔰 Recuperar Escudo</label>
+              <div class="quantidade-box">
+                <button type="button" class="btn btn-sm btn-outline-light" (click)="decrementarEscudo()">−</button>
+                <input type="number" class="quantidade-input"
+                       [(ngModel)]="escudo" name="escudo" min="0" />
+                <button type="button" class="btn btn-sm btn-outline-light" (click)="incrementarEscudo()">+</button>
+              </div>
+            </div>
+
             <!-- Descrição -->
             <div class="mb-3">
               <label class="form-label text-light fw-bold">📝 Descrição</label>
               <textarea class="form-control bg-dark text-light border-light" rows="2"
                         [(ngModel)]="descricao" name="descricao"
-                        placeholder="Ex: Recuperação lenta, magia de cura..."></textarea>
+                        placeholder="Ex: recuperação de mana, poção de defesa..."></textarea>
             </div>
 
             <!-- Botões -->
