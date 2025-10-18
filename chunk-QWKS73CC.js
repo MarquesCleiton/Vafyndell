@@ -1,1 +1,0 @@
-var r=class{static getVidaBase(a){return a.pontos_de_vida>0?a.pontos_de_vida:a.energia+a.constituicao}static getVidaAtual(a){let e=this.getVidaBase(a),o=a.classe_de_armadura||0,t=a.dano_tomado||0;return o>0?e:e-t}static estaMorto(a){return this.getVidaAtual(a)<=0}};export{r as a};
