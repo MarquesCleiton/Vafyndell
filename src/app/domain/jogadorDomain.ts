@@ -59,17 +59,16 @@ export class JogadorUtils {
       : j.energia + j.constituicao;
   }
 
-  /** Vida atual do jogador:
-   *  - Se CA > 0 → vida cheia (sem desconto do dano)
-   *  - Se CA == 0 → desconta o dano da vida base
-   */
-  static getVidaAtual(j: JogadorDomain): number {
-    const vidaBase = this.getVidaBase(j);
-    const ca = j.classe_de_armadura || 0;
-    const dano = j.dano_tomado || 0;
+/** Vida atual do jogador (ou NPC):
+ *  - Baseia-se sempre em: (vidaBase - dano_tomado)
+ *  - vidaBase pode ser calculada (energia + constituição) ou fixa (pontos_de_vida)
+ */
+static getVidaAtual(j: JogadorDomain): number {
+  const vidaBase = this.getVidaBase(j);
+  const dano = j.dano_tomado || 0;
+  return Math.max(vidaBase - dano, 0);
+}
 
-    return ca > 0 ? vidaBase : vidaBase - dano;
-  }
 
   /** Verifica se o jogador está morto */
   static estaMorto(j: JogadorDomain): boolean {
