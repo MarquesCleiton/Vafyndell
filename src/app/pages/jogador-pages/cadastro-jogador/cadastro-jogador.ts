@@ -21,6 +21,9 @@ type AtributoChave = keyof Pick<
   | 'classe_de_armadura'
   | 'nivel'
   | 'xp'
+  | 'pontos_de_vida'
+  | 'fator_de_cura'
+  | 'deslocamento'
 >;
 
 @Component({
@@ -38,6 +41,8 @@ export class CadastroJogador {
     nome_do_jogador: '',
     personagem: '',
     pontos_de_vida: 0,
+    fator_de_cura: 0,
+    deslocamento: 0,
     alinhamento: '',
     classe_de_armadura: 0,
     forca: 0,
@@ -70,6 +75,9 @@ export class CadastroJogador {
     { key: 'carisma' as AtributoChave, label: 'Carisma', icon: '😎' },
     { key: 'energia' as AtributoChave, label: 'Energia', icon: '⚡' },
     { key: 'classe_de_armadura' as AtributoChave, label: 'Armadura', icon: '🛡️' },
+    { key: 'pontos_de_vida' as AtributoChave, label: 'Pontos de Vida', icon: '❤️' },
+    { key: 'fator_de_cura' as AtributoChave, label: 'Fator de Cura', icon: '✨' },
+    { key: 'deslocamento' as AtributoChave, label: 'Deslocamento', icon: '🏃' },
   ];
 
   salvando = false;
@@ -82,12 +90,6 @@ export class CadastroJogador {
   }
   get vidaTotal() {
     return this.vida + (this.jogador.classe_de_armadura || 0);
-  }
-  get fatorCura() {
-    return Math.floor((this.jogador.energia || 0) / 3);
-  }
-  get deslocamento() {
-    return Math.floor((this.jogador.destreza || 0) / 3);
   }
 
   // Ajustar valores
@@ -143,5 +145,5 @@ export class CadastroJogador {
     }
   }
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 }

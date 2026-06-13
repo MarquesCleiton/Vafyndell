@@ -13,7 +13,9 @@ type AtributoChave = keyof Pick<
   | 'forca' | 'destreza' | 'constituicao' | 'inteligencia'
   | 'sabedoria' | 'carisma' | 'energia'
   | 'classe_de_armadura' | 'nivel' | 'xp'
-  | 'pontos_de_sorte' | 'escudo'     // 🆕
+  | 'pontos_de_sorte' | 'escudo'
+  | 'pontos_de_vida'
+  | 'fator_de_cura' | 'deslocamento'
 >;
 
 
@@ -42,15 +44,16 @@ export class EdicaoJogador implements OnInit {
     { key: 'energia' as AtributoChave, label: 'Energia', icon: '⚡' },
     { key: 'classe_de_armadura' as AtributoChave, label: 'Armadura', icon: '🛡️' },
     { key: 'escudo' as AtributoChave, label: 'Escudo', icon: '🔰' },         // 🆕
-    { key: 'pontos_de_sorte' as AtributoChave, label: 'Sorte', icon: '🍀' }, // 🆕
+    { key: 'pontos_de_sorte' as AtributoChave, label: 'Sorte', icon: '🍀' },
+    { key: 'pontos_de_vida' as AtributoChave, label: 'Pontos de Vida', icon: '❤️' },
+    { key: 'fator_de_cura' as AtributoChave, label: 'Fator de Cura', icon: '✨' },
+    { key: 'deslocamento' as AtributoChave, label: 'Deslocamento', icon: '🏃' },
   ];
 
 
   // 🔢 Atributos calculados
   get vida() { return this.jogador ? (this.jogador.energia || 0) + (this.jogador.constituicao || 0) : 0; }
   get vidaTotal() { return this.jogador ? this.vida + (this.jogador.classe_de_armadura || 0) : 0; }
-  get fatorCura() { return this.jogador ? Math.floor((this.jogador.energia || 0) / 3) : 0; }
-  get deslocamento() { return this.jogador ? Math.floor((this.jogador.destreza || 0) / 3) : 0; }
 
   constructor(
     private router: Router,

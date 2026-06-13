@@ -16,7 +16,7 @@ import { ImageModal } from '../../image-modal/image-modal';
 })
 export class Jogador implements OnInit {
   jogador: (JogadorDomain & {
-    fator_cura?: number;
+    fator_de_cura?: number;
     vida_total?: number;
     deslocamento?: number;
     vida_atual?: number;
@@ -88,17 +88,17 @@ export class Jogador implements OnInit {
         ? jogador.pontos_de_vida
         : (jogador.energia || 0) + (jogador.constituicao || 0);
 
-    const fatorCura = Math.floor((jogador.energia || 0) / 3);
-    const deslocamento = Math.floor((jogador.destreza || 0) / 3);
+    const fatorCura = jogador.fator_de_cura || 0;
+    const deslocamento = jogador.deslocamento || 0;
 
-    const vidaAtual = Math.max(vidaBase - (jogador.dano_tomado || 0), 0);
+    const vidaAtual = vidaBase - (jogador.dano_tomado || 0);
 
 
     this.jogador = {
       ...jogador,
       pontos_de_vida: vidaBase,
       vida_atual: vidaAtual,
-      fator_cura: fatorCura,
+      fator_de_cura: fatorCura,
       deslocamento,
     };
 

@@ -13,7 +13,7 @@ import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 })
 export class JogadorDetalhesBatalha implements OnInit {
   jogador: (JogadorDomain & {
-    fator_cura?: number;
+    fator_de_cura?: number;
     vida_total?: number;
     deslocamento?: number;
     vida_atual?: number;
@@ -28,7 +28,7 @@ export class JogadorDetalhesBatalha implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router
-  ) {}
+  ) { }
 
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -71,18 +71,16 @@ export class JogadorDetalhesBatalha implements OnInit {
       ? jogador.pontos_de_vida
       : jogador.energia + jogador.constituicao;
 
-    const fatorCura = Math.floor(jogador.energia / 3);
-    const deslocamento = Math.floor(jogador.destreza / 3);
+    const fatorCura = jogador.fator_de_cura || 0;
+    const deslocamento = jogador.deslocamento || 0;
 
-    const vidaAtual = jogador.classe_de_armadura > 0
-      ? vidaBase
-      : vidaBase - (jogador.dano_tomado || 0);
+    const vidaAtual = vidaBase - (jogador.dano_tomado || 0);
 
     this.jogador = {
       ...jogador,
       pontos_de_vida: vidaBase,
       vida_atual: vidaAtual,
-      fator_cura: fatorCura,
+      fator_de_cura: fatorCura,
       deslocamento: deslocamento,
     };
 

@@ -1,182 +1,465 @@
-# 📱 Angular 20 PWA com HashLocationStrategy
+﻿# 🐉 Vafyndell
 
-Este projeto é um **PWA em Angular 20** configurado para usar **HashLocationStrategy**, evitando problemas de refresh em ambientes de hospedagem estática (como GitHub Pages e S3).
+> **Gerenciador de campanhas de RPG de mesa — offline-first, direto no seu navegador.**
 
----
-
-## ⚙️ Estrutura Principal
-
-### `main.ts`
-- Ponto de entrada da aplicação.
-- Usa `bootstrapApplication` para iniciar o `AppComponent` e registrar os **providers globais**.
-- Aqui configuramos também o `HashLocationStrategy`.
-
-### `app.ts`
-- Componente raiz da aplicação.
-- Define o seletor `app-root` que é injetado no `index.html`.
-- Importa o `RouterOutlet` para renderizar as páginas.
-- Template e estilos ficam em `app.html` e `app.css`.
-
-### `app.html`
-- Template base do componente raiz.
-- Contém o **layout principal** (ex.: menu de navegação e `<router-outlet>`).
-- O `<router-outlet>` é onde as páginas definidas nas rotas são carregadas.
-
-### `app.routes.ts`
-- Define as **rotas da aplicação**.
-- Exemplo:
-  ```ts
-  export const routes: Routes = [
-    { path: '', redirectTo: 'home', pathMatch: 'full' },
-    { path: 'home', loadComponent: () => import('./pages/home/home').then(m => m.Home) },
-    { path: 'login', loadComponent: () => import('./pages/login/login').then(m => m.Login) },
-  ];
-  ```
-
-### `Home` e `Login` (standalone components)
-- Páginas criadas com `ng generate component --standalone`.
-- Contêm seus próprios templates (`home.html`, `login.html`) e estilos (`home.css`, `login.css`).
-- São renderizadas dentro do `<router-outlet>`.
-
-### `HashLocationStrategy`
-- Configuração usada no `main.ts`:
-  ```ts
-  { provide: LocationStrategy, useClass: HashLocationStrategy }
-  ```
-- Faz com que as rotas usem `#/rota` em vez de `/rota`.
-- Evita erro 404 ao dar refresh em hospedagem estática.
-
-### PWA configs
-- Criados pelo `ng add @angular/pwa`.
-- **`manifest.webmanifest`** → define nome, ícone e cores do app instalado.
-- **`ngsw-config.json`** → configurações do service worker para cache e modo offline.
+Vafyndell é uma Progressive Web App (PWA) construída com Angular para centralizar e organizar todas as informações de uma campanha de RPG: personagens, inventários, sistema de batalha, árvores de habilidades, receitas de fabricação, anotações e muito mais. Funciona offline e sincroniza com o Google Sheets como banco de dados na nuvem.
 
 ---
 
-## 🖥️ Comandos Base
+## 📋 Sumário
 
-### Criar novo projeto
-```bash
-ng new pwa-sheets-helloworld --routing --style=css --standalone
+- [✨ Funcionalidades](#-funcionalidades)
+- [🏗️ Arquitetura](#️-arquitetura)
+- [🎮 Páginas do App](#-páginas-do-app)
+  - [🔐 Login](#-login)
+  - [🏠 Home](#-home)
+  - [🧙 Personagens](#-personagens)
+  - [🎒 Inventário](#-inventário)
+  - [📚 Catálogo de Itens](#-catálogo-de-itens)
+  - [🔨 Oficina (Crafting)](#-oficina-crafting)
+  - [👹 NPCs](#-npcs)
+  - [⚔️ Sistema de Batalha](#️-sistema-de-batalha)
+  - [📝 Anotações](#-anotações)
+  - [🌳 Árvores de Habilidade](#-árvores-de-habilidade)
+  - [🔁 Troca de Itens](#-troca-de-itens)
+  - [📜 Registro de Eventos](#-registro-de-eventos)
+- [🗄️ Banco de Dados Local](#️-banco-de-dados-local)
+- [🔄 Sincronização de Dados](#-sincronização-de-dados)
+- [🔐 Permissões](#-permissões)
+- [📦 Dependências](#-dependências)
+- [🚀 Como Rodar](#-como-rodar)
+
+---
+
+## ✨ Funcionalidades
+
+| Recurso | Descrição |
+|---|---|
+| 📡 **Offline-first** | Dados armazenados localmente no IndexedDB, disponíveis mesmo sem internet |
+| 🔄 **Sincronização automática** | Sync com Google Sheets a cada 30 segundos |
+| 🔐 **Autenticação Google** | Login seguro via OAuth 2.0 com JWT |
+| 🧩 **Sistema de permissões** | Controle separado entre jogadores e mestres |
+| 📊 **Trilha de auditoria** | Registro completo de todas as ações do jogo |
+| 🌲 **Árvore de habilidades** | Visualização em grafo (DAG) com Cytoscape.js |
+| 🧪 **Sistema de crafting** | Receitas com verificação de ingredientes disponíveis |
+| ⚔️ **Sistema de batalha** | Dano por tipo (Vida, Armadura, Escudo), cura e buffs |
+| 📱 **PWA** | Instalável no dispositivo, com Service Worker para uso offline |
+| 🖼️ **Modal de imagens** | Zoom e pan para visualizar imagens de personagens e NPCs |
+
+---
+
+## 🏗️ Arquitetura
+
+O app é construído com **Angular 20** usando componentes standalone e Signals. A camada de dados segue o padrão **cache-first + sync**:
+
+```
+┌─────────────────────────────────────────┐
+│              Angular App                │
+├─────────────┬───────────────────────────┤
+│  IndexedDB  │   Google Sheets (Backend) │
+│  (Cache)    │   via Apps Script API     │
+└─────────────┴───────────────────────────┘
+       ↑ cache-first ↑
+  BaseRepositoryV2 (padrão de repositório)
 ```
 
-### Rodar localmente
-```bash
-ng serve -o
+### 🔧 Camadas principais
+
+| Camada | Arquivo | Responsabilidade |
+|---|---|---|
+| **Auth** | `AuthService.ts` | Login Google OAuth, renovação de token, logout hard |
+| **Cache** | `IndexedDBClientV2.ts` | 12 object stores locais no browser |
+| **API** | `ScriptClientV3.ts` | Wrapper para o Google Apps Script com operações em lote |
+| **Repositório** | `BaseRepositoryV2.ts` | CRUD genérico com estratégia cache-first |
+| **Bootstrap** | `BootstrapService.ts` | Pré-carrega todas as 12 tabelas ao fazer login |
+
+### 🛠️ Serviços de domínio
+
+| Serviço | Função |
+|---|---|
+| `BootstrapService` | Carrega todos os dados com mensagens animadas ao iniciar |
+| `CaminhoService` | Gerencia os caminhos da skill tree |
+| `HabilidadeService` | Renderiza a skill tree com Cytoscape + Dagre |
+| `OficinaService` | Sistema de crafting com verificação de ingredientes |
+| `VisibilidadeService` | Controla visibilidade de itens e NPCs para jogadores vs mestre |
+
+---
+
+## 🎮 Páginas do App
+
+---
+
+### 🔐 Login
+
+**Rota:** `/login`
+
+Tela de entrada do aplicativo. O jogador faz login com sua conta Google via OAuth 2.0. Ao autenticar com sucesso, o `BootstrapService` pré-carrega todas as 12 tabelas de dados localmente com mensagens de carregamento animadas. Se o token expirar, o sistema executa um hard reset, limpando o localStorage e o IndexedDB antes de solicitar novo login.
+
+---
+
+### 🏠 Home
+
+**Rota:** `/home`
+
+Página inicial após o login, serve como hub de navegação para as demais seções do aplicativo.
+
+---
+
+### 🧙 Personagens
+
+**Rota:** `/jogador-pages/`
+
+Gerenciamento completo de fichas de personagem, com atributos no estilo D&D.
+
+#### 📄 Ficha do Jogador (`/jogador`)
+Painel do personagem atual logado. Exibe todos os atributos, valores derivados e o dano acumulado.
+
+| Atributos Base | Valores Derivados |
+|---|---|
+| Força, Destreza, Constituição | `fator_cura` = Energia ÷ 3 |
+| Inteligência, Sabedoria, Carisma | `deslocamento` = Destreza ÷ 3 |
+| Energia | `vida_atual` = PV máximo − dano tomado |
+
+**Ações disponíveis:** Editar ficha · Visualizar imagem do personagem
+
+#### ➕ Cadastrar Personagem (`/cadastro-jogador`)
+Formulário completo para criar um novo personagem com 10 atributos numéricos. ID gerado automaticamente via ULID.
+
+#### ✏️ Editar Personagem (`/edicao-jogador`)
+Edição de todos os campos da ficha, incluindo imagem. Validação completa dos campos.
+
+#### 👁️ Visão de Jogadores — Mestre (`/visao-jogadores`)
+Exclusivo para o mestre. Permite visualizar a ficha completa, inventário e skill tree de qualquer jogador da campanha em modo somente leitura.
+
+---
+
+### 🎒 Inventário
+
+**Rota:** `/inventario-pages/`
+
+Controle dos itens de cada personagem, com agrupamento por categoria e cálculo de peso total.
+
+#### 📦 Inventário do Jogador (`/inventario-jogador`)
+Lista todos os itens do personagem agrupados por categoria. Exibe peso total acumulado e possui busca por nome.
+
+#### ➕ Adicionar Item (`/cadastro-inventario`)
+Formulário com autocomplete para buscar itens do catálogo e adicionar ao inventário com quantidade e descrição (que serve como histórico da transação).
+
+#### 🔍 Detalhe do Item (`/item-inventario`)
+Exibe informações completas do item vindo do catálogo, com opção de exclusão.
+
+---
+
+### 📚 Catálogo de Itens
+
+**Rota:** `/catalogo-pages/`
+
+Biblioteca centralizada de todos os itens disponíveis na campanha.
+
+#### 📖 Catálogo (`/catalogo`)
+Lista navegável com filtro por abas e toggles de visibilidade por item. O mestre pode ocultar itens dos jogadores.
+
+| Campo | Opções |
+|---|---|
+| **Unidade** | g, kg, ml, L, cm, m, dose(s), frasco(s), unidade(s) |
+| **Categoria** | Poções, Recursos, Equipamentos, Tesouros, Venenos, Utilitários |
+| **Raridade** | Comum · Incomum · Raro · Épico · Lendário |
+| **Origem** | Fabricável · Natural |
+
+#### ➕ Cadastrar Item (`/cadastro-item-catalogo`)
+Criação e edição de itens do catálogo. Permite definir os ingredientes necessários para crafting (Fabricável).
+
+#### 🔍 Detalhe do Item (`/item-catalogo`)
+Exibe todas as propriedades do item, incluindo efeito principal, efeito colateral e as receitas em que o item é utilizado.
+
+---
+
+### 🔨 Oficina (Crafting)
+
+**Rota:** `/oficina`
+
+Sistema de fabricação de itens. Exibe todas as receitas disponíveis com verificação visual de viabilidade:
+
+- 🟢 **Verde** — o jogador possui todos os ingredientes necessários
+- 🔴 **Vermelho** — ingredientes faltando
+
+Ao fabricar um item, a oficina:
+1. Consome os ingredientes do inventário do jogador
+2. Adiciona o item fabricado ao inventário
+3. Registra a fabricação na trilha de auditoria
+
+---
+
+### 👹 NPCs
+
+**Rota:** `/npcs-pages/`
+
+Gerenciamento dos personagens não-jogadores da campanha, controlados pelo mestre.
+
+#### 📋 Lista de NPCs (`/npcs`)
+Exibe NPCs filtráveis por classificação (**Inimigo** / **Bestial**) e tipo (**Comum**, **Elite**, **Mágico**, **Lendário**). NPCs são ocultos por padrão — o mestre controla o que cada jogador pode ver.
+
+#### ➕ Cadastrar NPC (`/cadastro-npc`)
+Formulário completo com atributos de combate, imagem e controle de visibilidade. Estrutura de atributos similar à ficha de personagem.
+
+#### 🔍 Detalhes do NPC (`/npc-detalhes`)
+Exibe todas as informações do NPC. Permite ao mestre adicioná-lo ao campo de batalha ativo.
+
+---
+
+### ⚔️ Sistema de Batalha
+
+**Rota:** `/batalha-pages/`
+
+Sistema completo para gerenciar combates em tempo real, com sincronização automática a cada 30 segundos.
+
+#### 🗺️ Campo de Batalha (`/batalha`)
+Visão geral do combate com jogadores e NPCs separados em grupos. Auto-sync garante que todos vejam o mesmo estado da batalha.
+
+#### 🗡️ Registrar Combate (`/combate`)
+Interface para aplicar dano com seleção do tipo de dano:
+
+| Tipo | Efeito |
+|---|---|
+| **Vida** | Reduz HP diretamente |
+| **Armadura** | Reduz pontos de armadura |
+| **Escudo** | Reduz pontos de escudo |
+| **Efeito** | Aplica efeito especial sem dano direto |
+
+#### 💚 Recuperação (`/recuperacao`)
+Cura ou buffar personagens, restaurando HP, armadura ou escudo com tela de confirmação antes de aplicar.
+
+#### 📊 Detalhes na Batalha (`/jogador-detalhes-batalha`)
+Consulta rápida de todos os atributos e modificadores de um personagem durante o combate, sem sair da tela de batalha.
+
+---
+
+### 📝 Anotações
+
+**Rota:** `/anotacoes-pages/`
+
+Sistema de notas por personagem, ideal para registrar eventos da campanha, segredos descobertos e lore.
+
+#### 📋 Lista de Anotações (`/anotacoes`)
+Anotações agrupadas por data com busca por título, tags e autor. Cada nota pode ter imagem associada.
+
+#### ✏️ Criar/Editar Anotação (`/criar-anotacao`)
+Editor completo com campos de título, descrição, tags e upload de imagem (armazenada em base64). Anotações podem ser transferidas entre jogadores.
+
+---
+
+### 🌳 Árvores de Habilidade
+
+**Rota:** `/skilltree/` e `/skilltree-pages/`
+
+Sistema de progressão de personagem visualizado como um grafo direcionado (DAG).
+
+#### Estrutura
+
+```
+Caminho (ex: Guerreiro, Arcano, Ladino...)
+  └── Árvore (subárea dentro do caminho)
+        └── Habilidades (nós do grafo com dependências)
 ```
 
-### Adicionar suporte PWA
-```bash
-ng add @angular/pwa
-```
+#### 🌳 Visualização da Skill Tree (`/skilltree`)
+Renderização interativa do grafo de habilidades usando **Cytoscape.js** com layout **Dagre**. Permite navegar pelos caminhos e ver os pré-requisitos de cada habilidade.
 
-### Criar um novo componente (standalone)
-```bash
-ng generate component pages/home --standalone
-ng generate component pages/login --standalone
-```
+#### ✏️ Edição da Skill Tree (`/edicao-skilltree`)
+Interface para o mestre criar e editar habilidades, definir dependências entre nós e visualizar o resultado em tempo real.
 
-### Build de produção
-```bash
-ng build
-```
+#### 🎯 Habilidades do Jogador (`/skills-jogador`)
+Visualização das habilidades adquiridas pelo personagem do jogador logado.
 
-### Rodar com preview PWA (simular service worker)
-```bash
-npm install -g http-server
-http-server -p 8080 -c-1 dist/pwa-sheets-helloworld/browser
-```
+---
 
-### Atualizar Angular e CLI para última versão
-```bash
-ng update @angular/core @angular/cli
+### 🔁 Troca de Itens
+
+**Rota:** `/troca-de-itens`
+
+Permite transferir itens do inventário de um jogador para outro. A transferência é registrada com descrição na trilha de auditoria, mantendo o histórico completo de movimentação de itens.
+
+---
+
+### 📜 Registro de Eventos
+
+**Rota:** `/registro`
+
+Timeline completa de todos os eventos da campanha. Funciona como um log de auditoria imutável.
+
+| Tipo de Evento | O que registra |
+|---|---|
+| ⚔️ **Batalha** | Atacante, vítima, tipo e valor do dano |
+| 💊 **Recuperação** | Personagem curado, tipo e valor restaurado |
+| 🎒 **Inventário** | Item adicionado/removido/transferido |
+| 🔨 **Fabricação** | Item fabricado, ingredientes consumidos |
+
+Filtros disponíveis por tipo de evento, personagem e data.
+
+---
+
+## 🗄️ Banco de Dados Local
+
+O IndexedDB armazena 12 object stores localmente no browser (todas com `id` como chave primária):
+
+| Store | Conteúdo |
+|---|---|
+| `Catalogo` | Registro de todos os itens disponíveis |
+| `Inventario` | Vínculos jogador ↔ item com quantidade |
+| `Receitas` | Receitas de crafting e ingredientes |
+| `Personagem` | Fichas de jogadores |
+| `NPCs` | Fichas de NPCs |
+| `Anotacoes` | Notas dos personagens |
+| `Caminhos` | Caminhos da skill tree |
+| `Arvores` | Subárvores dentro de cada caminho |
+| `Habilidades` | Habilidades com dependências (DAG) |
+| `Habilidades_jogadores` | Habilidades adquiridas por personagem |
+| `Registro` | Trilha de auditoria de todos os eventos |
+| `Metadados` | Timestamps de sincronização |
+
+---
+
+## 🔄 Sincronização de Dados
+
+O app usa uma estratégia **cache-first com sync em background**:
+
+```
+1. 📦 Verificar cache local (IndexedDB)
+2. ✅ Exibir dados imediatamente se encontrados
+3. 🔍 Background: verificar metadados no servidor
+4. ↩️  Se servidor mais recente → buscar e atualizar cache
+5. ⚡ Se cache vazio → buscar servidor imediatamente
+6. 🔁 Repetir a cada 30 segundos automaticamente
 ```
 
 ---
 
-## 🚀 Como rodar
+## 🔐 Permissões
 
-Instale as dependências:
+| Ação | Jogador | Mestre |
+|---|:---:|:---:|
+| Ver própria ficha | ✅ | ✅ |
+| Ver fichas de outros | ❌ | ✅ |
+| Criar itens no catálogo | ❌ | ✅ |
+| Ocultar itens do catálogo | ❌ | ✅ |
+| Criar NPCs | ❌ | ✅ |
+| Ocultar NPCs | ❌ | ✅ |
+| Ver log de batalha | ✅ | ✅ |
+| Editar inventário de outros | ❌ | ❌ |
+| Editar skill tree | ❌ | ✅ |
+
+---
+
+## 📦 Dependências
+
+| Dependência | Versão | Uso |
+|---|---|---|
+| `@angular` | ^20.2.0 | Framework principal |
+| `@angular/material` | ^20.2.2 | Componentes UI (Material Design) |
+| `@angular/service-worker` | ^20.2.0 | PWA / Suporte offline |
+| `bootstrap` | ^5.3.8 | Layout e utilitários CSS |
+| `cytoscape` | ^3.33.1 | Renderização de grafos (skill tree) |
+| `cytoscape-dagre` | ^2.5.0 | Layout de DAG para skill tree |
+| `rxjs` | ~7.8.0 | Programação reativa |
+
+---
+
+## 🚀 Como Rodar
+
+### Pré-requisitos
+
+- Node.js 18+
+- Angular CLI 20+
+
+### Instalação
+
 ```bash
+# Clone o repositório
+git clone <url-do-repositorio>
+cd Vafyndell
+
+# Instale as dependências
 npm install
 ```
 
-Suba o servidor local:
+### Desenvolvimento
+
 ```bash
-ng serve -o
+# Inicia o servidor de desenvolvimento com proxy para o Google Apps Script
+npm start
 ```
 
-Acesse em:
-- `http://localhost:4200/#/home`
-- `http://localhost:4200/#/login`
+O app estará disponível em `http://localhost:4200`.
+
+### Build de Produção
+
+```bash
+# Gera build otimizado com Service Worker habilitado
+npm run build
+```
+
+### Testes
+
+```bash
+npm test
+```
 
 ---
 
-## 🔎 Resumindo
+<div align="center">
 
-- **main.ts** → motor de arranque (quem inicia o app e registra providers).
-- **app.ts** → componente raiz (a casca do app).
-- **app.html** → layout principal do app (menu + outlet).
-- **app.routes.ts** → mapa de navegação (rotas).
-- **Home/Login** → telas reais (carregadas no outlet).
-- **HashLocationStrategy** → garante que refresh funcione em hospedagem estática.
-- **PWA configs** → permitem instalar o app e usar offline.
+**Vafyndell** · Feito para aventureiros, por aventureiros 🗡️
 
-# 🚀 Deploy do Angular PWA no GitHub Pages
+</div>
+ploy
 
-Este guia explica como publicar o projeto **Vafyndell** no GitHub Pages usando o pacote `angular-cli-ghpages`.
-
----
-
-## 📦 Build de Produção
-
-Execute o build com o `--base-href` apontando para o repositório:
+Sempre que fizer alterações no código:
 
 ```bash
 ng build --base-href "https://marquesCleiton.github.io/Vafyndell/"
-```
-
-A saída será gerada em:
-
-```
-dist/vafyndell/browser
-```
-
----
-
-## 🌍 Deploy para GitHub Pages
-
-Use o `angular-cli-ghpages` para enviar os arquivos para a branch `gh-pages`:
-
-```bash
 npx angular-cli-ghpages --dir=dist/vafyndell/browser
 ```
+ploy
 
-Isso criará ou atualizará a branch `gh-pages` no repositório.
+Sempre que fizer alterações no código:
 
----
-
-## ⚙️ Configuração no GitHub
-
-1. Acesse o repositório: [Vafyndell](https://github.com/marquesCleiton/Vafyndell)
-2. Vá em **Settings > Pages**
-3. Em **Source**, selecione:
-   - **Branch**: `gh-pages`
-   - **Folder**: `/ (root)`
-
----
-
-## 🔎 URL Final
-
-Após alguns minutos, a aplicação estará disponível em:
-
+```bash
+ng build --base-href "https://marquesCleiton.github.io/Vafyndell/"
+npx angular-cli-ghpages --dir=dist/vafyndell/browser
 ```
-https://marquesCleiton.github.io/Vafyndell/
+ploy
+
+Sempre que fizer alterações no código:
+
+```bash
+ng build --base-href "https://marquesCleiton.github.io/Vafyndell/"
+npx angular-cli-ghpages --dir=dist/vafyndell/browser
 ```
+ploy
 
----
+Sempre que fizer alterações no código:
 
-## 🔄 Atualizando o Deploy
+```bash
+ng build --base-href "https://marquesCleiton.github.io/Vafyndell/"
+npx angular-cli-ghpages --dir=dist/vafyndell/browser
+```
+ploy
+
+Sempre que fizer alterações no código:
+
+```bash
+ng build --base-href "https://marquesCleiton.github.io/Vafyndell/"
+npx angular-cli-ghpages --dir=dist/vafyndell/browser
+```
+ploy
+
+Sempre que fizer alterações no código:
+
+```bash
+ng build --base-href "https://marquesCleiton.github.io/Vafyndell/"
+npx angular-cli-ghpages --dir=dist/vafyndell/browser
+```
+ploy
 
 Sempre que fizer alterações no código:
 

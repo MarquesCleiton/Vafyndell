@@ -29,9 +29,10 @@ export interface JogadorDomain {
   pontos_de_sorte?: number;
   escudo?: number;
 
-  // derivados (calculados, não salvos direto)
-  fator_cura?: number;
+  fator_de_cura?: number;
   deslocamento?: number;
+
+  // derivados (calculados, não salvos direto)
   vida_atual?: number;   // 👈 agora usamos só essa
 }
 
@@ -47,6 +48,9 @@ export type AtributosNumericos = Pick<
   | "carisma"
   | "energia"
   | "classe_de_armadura"
+  | "pontos_de_vida"
+  | "fator_de_cura"
+  | "deslocamento"
 >;
 
 export type AtributoChave = keyof AtributosNumericos;
@@ -66,7 +70,7 @@ export class JogadorUtils {
 static getVidaAtual(j: JogadorDomain): number {
   const vidaBase = this.getVidaBase(j);
   const dano = j.dano_tomado || 0;
-  return Math.max(vidaBase - dano, 0);
+  return vidaBase - dano;
 }
 
 

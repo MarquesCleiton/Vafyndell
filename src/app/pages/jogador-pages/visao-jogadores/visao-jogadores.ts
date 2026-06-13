@@ -30,7 +30,7 @@ interface CategoriaInventario {
   styleUrls: ['./visao-jogadores.css'],
 })
 export class VisaoJogadores implements OnInit {
-  jogador: (JogadorDomain & { fator_cura?: number; deslocamento?: number; vida_atual?: number }) | null = null;
+  jogador: (JogadorDomain & { fator_de_cura?: number; deslocamento?: number; vida_atual?: number }) | null = null;
   atributos: any[] = [];
   loading = true;
 
@@ -112,15 +112,15 @@ export class VisaoJogadores implements OnInit {
         ? jogador.pontos_de_vida
         : (jogador.energia || 0) + (jogador.constituicao || 0);
 
-    const fatorCura = Math.floor((jogador.energia || 0) / 3);
-    const deslocamento = Math.floor((jogador.destreza || 0) / 3);
-    const vidaAtual = Math.max(vidaBase - (jogador.dano_tomado || 0), 0);
+    const fatorCura = jogador.fator_de_cura || 0;
+    const deslocamento = jogador.deslocamento || 0;
+    const vidaAtual = vidaBase - (jogador.dano_tomado || 0);
 
     this.jogador = {
       ...jogador,
       pontos_de_vida: vidaBase,
       vida_atual: vidaAtual,
-      fator_cura: fatorCura,
+      fator_de_cura: fatorCura,
       deslocamento,
     };
 

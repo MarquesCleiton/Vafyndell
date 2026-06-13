@@ -195,7 +195,7 @@ export class Combate implements OnInit {
     // ✅ Aplica só o dano real causado nesta rodada
     const vidaDepois =
       danoNaVida > 0
-        ? Math.max(vidaAntes - danoNaVida, 0)
+        ? vidaAntes - danoNaVida
         : vidaAntes;
 
 
@@ -230,16 +230,11 @@ export class Combate implements OnInit {
     this.salvando = true;
     try {
 
-      // 🔒 Evita dano além da vida máxima
-      if (danoTomadoAtual > vidaBase) {
-        danoTomadoAtual = vidaBase;
-      }
-
       this.vitimaSelecionada.escudo = Math.max(0, escudoAtual);
       this.vitimaSelecionada.classe_de_armadura = Math.max(0, armaduraAtual);
       this.vitimaSelecionada.dano_tomado = Math.max(0, danoTomadoAtual);
 
-      const vidaFinal = Math.max(vidaBase - this.vitimaSelecionada.dano_tomado, 0);
+      const vidaFinal = vidaBase - this.vitimaSelecionada.dano_tomado;
 
       // 📉 diferenças
       const diffEscudoFinal = this.vitimaSelecionada.escudo - escudoAntes;
