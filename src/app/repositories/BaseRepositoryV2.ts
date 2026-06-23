@@ -8,11 +8,15 @@ export class BaseRepositoryV2<T extends { id: string }> {
   constructor(private tab: string) { }
   private get store() { return this.tab; }
 
-  private async getDb(): Promise<IndexedDBClientV2> {
+  private static async getDbStatic(): Promise<IndexedDBClientV2> {
     if (!BaseRepositoryV2.dbPromise) {
       BaseRepositoryV2.dbPromise = IndexedDBClientV2.create();
     }
     return BaseRepositoryV2.dbPromise;
+  }
+
+  private async getDb(): Promise<IndexedDBClientV2> {
+    return BaseRepositoryV2.getDbStatic();
   }
 
   // =========================================================
@@ -169,6 +173,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
 
   async forceFetch(): Promise<T[]> {
     console.log(`[BaseRepositoryV2:${this.tab}] 🌐 forceFetch iniciado`);
+    ScriptClientV3.clearCache(); // Limpa cache para garantir dados frescos
     const result = await ScriptClientV3.getAll([this.tab, 'Metadados']);
     console.log(`[BaseRepositoryV2:${this.tab}] ◀️ forceFetch result`, result);
 
@@ -189,18 +194,18 @@ export class BaseRepositoryV2<T extends { id: string }> {
       console.log(`[BaseRepositoryV2:${this.tab}] 📝 metadados atualizados →`, meta);
     }
 
-
     return list;
   }
 
   // Dentro de BaseRepositoryV2<T>
   static async multiFetch(tabs: string[]): Promise<Record<string, any[]>> {
     console.log(`[BaseRepositoryV2] 🌐 multiFetch iniciado →`, tabs);
+    ScriptClientV3.clearCache(); // Limpa cache para garantir dados frescos
 
     const result = await ScriptClientV3.getAll(tabs);
     console.log(`[BaseRepositoryV2] ◀️ multiFetch result`, result);
 
-    const db = await IndexedDBClientV2.create();
+    const db = await BaseRepositoryV2.getDbStatic();
     const map: Record<string, any[]> = {};
 
     for (const tab of tabs) {
@@ -261,7 +266,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
     const result = await ScriptClientV3.getAll('Metadados');
     const metasOnline: any[] = result?.['Metadados'] || [];
 
-    const db = await IndexedDBClientV2.create();
+    const db = await BaseRepositoryV2.getDbStatic();
     const tabsDesatualizadas: string[] = [];
     const statusMap: Record<string, boolean> = {};
 
@@ -287,6 +292,18 @@ export class BaseRepositoryV2<T extends { id: string }> {
       console.log(`[BaseRepositoryV2] ⚠️ multiSync → re-fetch de:`, tabsDesatualizadas);
       // 2ª chamada (apenas se necessário): busca todas as tabs desatualizadas juntas
       await BaseRepositoryV2.multiFetch(tabsDesatualizadas);
+
+      // Salvar os novos metadados locais para evitar re-fetch infinito!
+      for (const tab of tabsDesatualizadas) {
+        const onlineMeta = metasOnline.find((m: any) => String(m.id) === tab);
+        if (onlineMeta) {
+          await db.put(BaseRepositoryV2.META_STORE, {
+            id: tab,
+            UltimaModificacao: onlineMeta.UltimaModificacao,
+          } as any);
+          console.log(`[BaseRepositoryV2] 📝 metadados atualizados pós-multiSync para ${tab} →`, onlineMeta);
+        }
+      }
     } else {
       console.log(`[BaseRepositoryV2] ✅ multiSync → nada para atualizar`);
     }
@@ -307,22 +324,36 @@ export class BaseRepositoryV2<T extends { id: string }> {
     const result = await ScriptClientV3.batch(payload);
     console.log(`[BaseRepositoryV2] ◀️ batch result`, result);
 
-    const db = await IndexedDBClientV2.create();
+    const db = await BaseRepositoryV2.getDbStatic();
 
     // Persistir localmente tudo que for possível
     if (payload.create) {
       for (const tab of Object.keys(payload.create)) {
-        const list = (result?.create?.[tab] || []).map((it: any) => ({ ...it, id: String(it.id) }));
-        await db.bulkPut(tab, list);
-        console.log(`[BaseRepositoryV2] 💾 batch/create persistiu ${list.length} em ${tab}`);
+        const arr = result?.create?.[tab] || [];
+        const map = new Map(arr.map((r: any) => [String(r.id), r]));
+        const originalItems = payload.create[tab] || [];
+        const entities = originalItems.map(it => ({
+          ...it,
+          id: String(it.id),
+          ...(map.get(String(it.id)) || {})
+        }));
+        await db.bulkPut(tab, entities);
+        console.log(`[BaseRepositoryV2] 💾 batch/create persistiu ${entities.length} em ${tab}`);
       }
     }
 
     if (payload.updateById) {
       for (const tab of Object.keys(payload.updateById)) {
-        const list = (result?.updateById?.[tab] || []).map((it: any) => ({ ...it, id: String(it.id) }));
-        await db.bulkPut(tab, list);
-        console.log(`[BaseRepositoryV2] 💾 batch/update persistiu ${list.length} em ${tab}`);
+        const arr = result?.updateById?.[tab] || [];
+        const map = new Map(arr.map((r: any) => [String(r.id), r]));
+        const originalItems = payload.updateById[tab] || [];
+        const entities = originalItems.map(it => ({
+          ...it,
+          id: String(it.id),
+          ...(map.get(String(it.id)) || {})
+        }));
+        await db.bulkPut(tab, entities);
+        console.log(`[BaseRepositoryV2] 💾 batch/update persistiu ${entities.length} em ${tab}`);
       }
     }
 

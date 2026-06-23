@@ -9,11 +9,13 @@
   <!-- Tabs -->
   <ul class="nav nav-tabs bg-dark px-3" role="tablist">
     <!-- Aba Ocultos → só para Mestre -->
-    <li class="nav-item" *ngIf="ehMestre">
-      <button class="nav-link" [class.active]="abaAtiva === 'ocultos'" (click)="selecionarAba('ocultos')">
-        🙈 Ocultos
-      </button>
-    </li>
+    @if (ehMestre) {
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="abaAtiva === 'ocultos'" (click)="selecionarAba('ocultos')">
+          🙈 Ocultos
+        </button>
+      </li>
+    }
 
     <li class="nav-item">
       <button class="nav-link" [class.active]="abaAtiva === 'bestiais'" (click)="selecionarAba('bestiais')">
@@ -35,78 +37,100 @@
       <h4 class="fw-bold mb-3">👹 Feras & Vilões</h4>
 
       <!-- Loading -->
-      <div *ngIf="carregando" class="text-center py-5">
-        <div class="spinner-border text-light" role="status"></div>
-        <p class="mt-2">Carregando NPCs...</p>
-      </div>
+      @if (carregando) {
+        <div class="text-center py-5">
+          <div class="spinner-border text-light" role="status"></div>
+          <p class="mt-2">Carregando NPCs...</p>
+        </div>
+      }
 
       <!-- Vazio -->
-      <div *ngIf="!carregando && categoriasFiltradas.length === 0" class="text-center text-muted py-5">
-        Nenhum NPC encontrado.
-      </div>
+      @if (!carregando && categoriasFiltradas.length === 0) {
+        <div class="text-center text-muted py-5">
+          Nenhum NPC encontrado.
+        </div>
+      }
 
       <!-- Categorias (tipos) -->
-      <div *ngIf="!carregando">
-        <ng-container *ngFor="let cat of categoriasFiltradas">
-          <div class="mb-3">
+      @if (!carregando) {
+        <div>
+          @for (cat of categoriasFiltradas; track cat.nome) {
+            <div class="mb-3">
 
-            <!-- Cabeçalho da categoria -->
-            <button class="btn btn-categoria w-100 d-flex justify-content-between align-items-center"
-              (click)="toggleCategoria(cat)">
-              <span class="fw-bold">{{ cat.nome }}</span>
-              <span>{{ cat.expandido ? '−' : '+' }}</span>
-            </button>
+              <!-- Cabeçalho da categoria -->
+              <button class="btn btn-categoria w-100 d-flex justify-content-between align-items-center"
+                (click)="toggleCategoria(cat)">
+                <span class="fw-bold">{{ cat.nome }}</span>
+                <span>{{ cat.expandido ? '−' : '+' }}</span>
+              </button>
 
-            <!-- Lista de NPCs -->
-            <div *ngIf="cat.expandido" class="mt-2">
-              <div class="row row-cols-1 g-2">
-                <div class="col" *ngFor="let npc of cat.itens">
-                  <div class="card npc-card shadow-sm p-3" (click)="abrirItem(npc)" style="cursor: pointer;">
+              <!-- Lista de NPCs -->
+              @if (cat.expandido) {
+                <div class="mt-2">
+                  <div class="row row-cols-1 g-2">
+                    @for (npc of cat.itens; track npc.id) {
+                      <div class="col">
+                        <div class="card npc-card shadow-sm p-3" (click)="abrirItem(npc)" style="cursor: pointer;">
 
-                    <!-- Cabeçalho do NPC -->
-                    <div class="d-flex align-items-center mb-2">
-                      <div class="item-thumb me-3">
-                        <img *ngIf="npc.imagem && npc.imagem !== '-'" [src]="npc.imagem" alt="{{ npc.nome }}" />
-                        <span *ngIf="!npc.imagem || npc.imagem === '-'">👹</span>
+                          <!-- Cabeçalho do NPC -->
+                          <div class="d-flex align-items-center mb-2">
+                            <div class="item-thumb me-3">
+                              @if (npc.imagem && npc.imagem !== '-') {
+                                <img [src]="npc.imagem" alt="{{ npc.nome }}" />
+                              }
+                              @if (!npc.imagem || npc.imagem === '-') {
+                                <span>👹</span>
+                              }
+                            </div>
+
+                            <div>
+                              <h6 class="fw-bold text-white mb-1">{{ npc.nome }}</h6>
+                              <small class="text-secondary">
+                                {{ npc.tipo || '—' }} | {{ npc.alinhamento || 'Sem alinhamento' }}
+                              </small>
+                            </div>
+                          </div>
+
+                          <!-- Status -->
+                          <p class="small mb-1 text-info">
+                            ❤️ <b>{{ npc.pontos_de_vida }}</b>
+                            | 🛡️ <b>{{ npc.classe_armadura }}</b>
+                            | ⭐ <b>{{ npc.xp }}</b>
+                          </p>
+
+                          <!-- Descrição -->
+                          @if (npc.descricao) {
+                            <p class="text-white small descricao-text fst-italic">
+                              {{ npc.descricao }}
+                            </p>
+                          }
+
+                          <!-- 🔒 Botão só para o mestre -->
+                          @if (ehMestre) {
+                            <button
+                              class="btn btn-sm btn-outline-warning position-absolute bottom-0 end-0 m-2 d-flex align-items-center gap-1"
+                              (click)="toggleVisibilidade($event, npc)" [disabled]="loadingVisibilidade[npc.id]">
+                              @if (!loadingVisibilidade[npc.id]) {
+                                <span>
+                                  {{ npc.visivel_jogadores ? '🙈 Ocultar' : '🙉 Mostrar' }}
+                                </span>
+                              }
+                              @if (loadingVisibilidade[npc.id]) {
+                                <span class="spinner-border spinner-border-sm"></span>
+                              }
+                            </button>
+                          }
+                        </div>
                       </div>
-
-                      <div>
-                        <h6 class="fw-bold text-white mb-1">{{ npc.nome }}</h6>
-                        <small class="text-secondary">
-                          {{ npc.tipo || '—' }} | {{ npc.alinhamento || 'Sem alinhamento' }}
-                        </small>
-                      </div>
-                    </div>
-
-                    <!-- Status -->
-                    <p class="small mb-1 text-info">
-                      ❤️ <b>{{ npc.pontos_de_vida }}</b>
-                      | 🛡️ <b>{{ npc.classe_armadura }}</b>
-                      | ⭐ <b>{{ npc.xp }}</b>
-                    </p>
-
-                    <!-- Descrição -->
-                    <p *ngIf="npc.descricao" class="text-white small descricao-text fst-italic">
-                      {{ npc.descricao }}
-                    </p>
-
-                    <!-- 🔒 Botão só para o mestre -->
-                    <button *ngIf="ehMestre"
-                      class="btn btn-sm btn-outline-warning position-absolute bottom-0 end-0 m-2 d-flex align-items-center gap-1"
-                      (click)="toggleVisibilidade($event, npc)" [disabled]="loadingVisibilidade[npc.id]">
-                      <span *ngIf="!loadingVisibilidade[npc.id]">
-                        {{ npc.visivel_jogadores ? '🙈 Ocultar' : '🙉 Mostrar' }}
-                      </span>
-                      <span *ngIf="loadingVisibilidade[npc.id]" class="spinner-border spinner-border-sm"></span>
-                    </button>
+                    }
                   </div>
                 </div>
-              </div>
-            </div>
+              }
 
-          </div>
-        </ng-container>
-      </div>
+            </div>
+          }
+        </div>
+      }
 
     </div>
   </div>

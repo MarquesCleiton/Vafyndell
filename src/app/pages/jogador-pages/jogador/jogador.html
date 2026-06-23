@@ -13,16 +13,15 @@
 
         <!-- Imagem ou fallback -->
         <div class="position-relative">
-          <ng-container *ngIf="jogador.imagem && jogador.imagem !== '-'; else noImagem">
+          @if (jogador.imagem && jogador.imagem !== '-') {
             <img [src]="jogador.imagem" class="card-img-top detalhe-img" alt="Imagem do jogador"
               (click)="abrirImagem(jogador.imagem)" />
-          </ng-container>
-          <ng-template #noImagem>
+          } @else {
             <div
               class="d-flex align-items-center justify-content-center bg-secondary text-dark detalhe-img fallback-icone">
               👤
             </div>
-          </ng-template>
+          }
         </div>
 
         <!-- Conteúdo -->

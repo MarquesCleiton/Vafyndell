@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -28,6 +28,7 @@ interface CategoriaInventario {
   imports: [CommonModule, FormsModule, SkillTree, ImageModal],
   templateUrl: './visao-jogadores.html',
   styleUrls: ['./visao-jogadores.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class VisaoJogadores implements OnInit {
   jogador: (JogadorDomain & { fator_de_cura?: number; deslocamento?: number; vida_atual?: number }) | null = null;
@@ -56,7 +57,12 @@ export class VisaoJogadores implements OnInit {
   private catalogoRepo = new BaseRepositoryV2<CatalogoDomain>('Catalogo');
   private inventarioRepo = new BaseRepositoryV2<InventarioDomain>('Inventario');
 
-  constructor(private route: ActivatedRoute, private router: Router, private location: Location) { }
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private location: Location,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -75,6 +81,7 @@ export class VisaoJogadores implements OnInit {
       console.error('[VisaoJogadores] Erro:', err);
     } finally {
       this.loading = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -99,6 +106,8 @@ export class VisaoJogadores implements OnInit {
       const remoto = online.find(j => String(j.id) === String(id));
       if (remoto) this.setJogador(remoto);
     }
+    
+    this.cdr.markForCheck();
   }
 
   private setJogador(jogador: JogadorDomain) {
@@ -137,6 +146,7 @@ export class VisaoJogadores implements OnInit {
       { label: 'Carisma', value: jogador.carisma, mod: calcMod(jogador.carisma), icon: '😎' },
       { label: 'Energia', value: jogador.energia, mod: calcMod(jogador.energia), icon: '⚡' },
     ];
+    this.cdr.markForCheck();
   }
 
 
@@ -174,6 +184,7 @@ export class VisaoJogadores implements OnInit {
       }
     } finally {
       this.carregandoInventario = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -197,6 +208,7 @@ export class VisaoJogadores implements OnInit {
     }));
     this.categoriasFiltradas = [...this.categorias];
     this.calcularResumo();
+    this.cdr.markForCheck();
   }
 
   private calcularResumo() {
@@ -211,17 +223,20 @@ export class VisaoJogadores implements OnInit {
 
   selecionarAba(aba: 'jogador' | 'inventario' | 'habilidades') {
     this.abaAtiva = aba;
+    this.cdr.markForCheck();
   }
 
   selecionarAbaInventario(aba: string) {
     const key = aba.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     if (key === 'recursos' || key === 'equipamentos' || key === 'pocoes' || key === 'outros') {
       this.abaInventario = key as any;
+      this.cdr.markForCheck();
     }
   }
 
   selecionarAbaHabilidade(aba: string) {
     this.abaHabilidade = aba;
+    this.cdr.markForCheck();
   }
 
   pertenceAbaInventario(categoria?: string): boolean {
@@ -245,6 +260,7 @@ export class VisaoJogadores implements OnInit {
 
   toggleCategoria(cat: CategoriaInventario) {
     cat.expandido = !cat.expandido;
+    this.cdr.markForCheck();
   }
 
   voltar() {
@@ -254,5 +270,6 @@ export class VisaoJogadores implements OnInit {
   abrirImagem(src: string) {
     this.imagemSelecionada = src;
     this.modalAberto = true;
+    this.cdr.markForCheck();
   }
 }

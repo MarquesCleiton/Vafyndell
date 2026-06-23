@@ -86,10 +86,12 @@ export class CadastroJogador {
 
   // 🔢 Atributos calculados
   get vida() {
-    return (this.jogador.energia || 0) + (this.jogador.constituicao || 0);
+    return this.jogador.pontos_de_vida > 0
+      ? this.jogador.pontos_de_vida
+      : (this.jogador.energia || 0) + (this.jogador.constituicao || 0);
   }
   get vidaTotal() {
-    return this.vida + (this.jogador.classe_de_armadura || 0);
+    return this.vida;
   }
 
   // Ajustar valores

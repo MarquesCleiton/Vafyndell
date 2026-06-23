@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -25,6 +25,7 @@ type AtributoChave = keyof Pick<
   imports: [CommonModule, FormsModule],
   templateUrl: './edicao-jogador.html',
   styleUrls: ['./edicao-jogador.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class EdicaoJogador implements OnInit {
   jogador: JogadorDomain | null = null;
@@ -54,13 +55,19 @@ export class EdicaoJogador implements OnInit {
 
 
   // 🔢 Atributos calculados
-  get vida() { return this.jogador ? (this.jogador.energia || 0) + (this.jogador.constituicao || 0) : 0; }
+  get vida() {
+    if (!this.jogador) return 0;
+    return this.jogador.pontos_de_vida > 0
+      ? this.jogador.pontos_de_vida
+      : (this.jogador.energia || 0) + (this.jogador.constituicao || 0);
+  }
   // BUG-19 fix: vidaTotal não inclui armadura — armadura é uma camada separada de proteção, não vida
   get vidaTotal() { return this.vida; }
 
   constructor(
     private router: Router,
-    private location: Location
+    private location: Location,
+    private cdr: ChangeDetectorRef
   ) { }
 
   // Ajustar valores
@@ -71,6 +78,7 @@ export class EdicaoJogador implements OnInit {
     if (this.jogador) {
       this.jogador[campo] = Math.max(0, valor) as any;
       this.isDirty = true; // BUG-11 fix: marca form como modificado
+      this.cdr.markForCheck();
     }
   }
   ajustarValor(campo: AtributoChave, delta: number) {
@@ -84,13 +92,17 @@ export class EdicaoJogador implements OnInit {
       try {
         const file = input.files[0];
         this.jogador.imagem = await ImageUtils.toOptimizedBase64(file, 0.72, 1024);
+        this.cdr.markForCheck();
       } catch (err) {
         console.error('[EdicaoJogador] Erro ao otimizar imagem:', err);
       }
     }
   }
   removerImagem() {
-    if (this.jogador) this.jogador.imagem = '';
+    if (this.jogador) {
+      this.jogador.imagem = '';
+      this.cdr.markForCheck();
+    }
   }
 
   // Salvar edição
@@ -113,6 +125,7 @@ export class EdicaoJogador implements OnInit {
       alert('❌ Erro ao salvar jogador. Veja o console.');
     } finally {
       this.salvando = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -123,13 +136,19 @@ export class EdicaoJogador implements OnInit {
 
       // 1️⃣ Local first
       const local = (await this.repo.getLocal()).find(j => j.email === user.email);
-      if (local) this.jogador = local;
+      if (local) {
+        this.jogador = local;
+        this.cdr.markForCheck();
+      }
 
       // 2️⃣ Sync paralelo — BUG-11 fix: não sobrescreve se usuário já editou
       this.repo.sync().then(async updated => {
         if (updated && !this.isDirty) {
           const atualizado = (await this.repo.getLocal()).find(j => j.email === user.email);
-          if (atualizado) this.jogador = atualizado;
+          if (atualizado) {
+            this.jogador = atualizado;
+            this.cdr.markForCheck();
+          }
         }
       });
 
@@ -139,6 +158,7 @@ export class EdicaoJogador implements OnInit {
         const encontrado = online.find(j => j.email === user.email);
         if (encontrado) {
           this.jogador = encontrado;
+          this.cdr.markForCheck();
         } else {
           alert('Nenhum jogador encontrado. Vá para o cadastro primeiro.');
           this.router.navigate(['/cadastro-jogador']);
