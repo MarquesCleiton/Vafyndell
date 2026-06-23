@@ -131,7 +131,8 @@ export class CadastroInventario implements OnInit {
   }
 
   decrementar() {
-    this.quantidade = Math.max(0, this.quantidade - 1);
+    // BUG-12 fix: quantidade mínima é 1 (0 não tem semântica válida para adicionar item)
+    this.quantidade = Math.max(1, this.quantidade - 1);
   }
 
   cancelar() {

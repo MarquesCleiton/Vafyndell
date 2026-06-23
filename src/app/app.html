@@ -1,6 +1,6 @@
 <mat-sidenav-container class="app-container bg-dark text-light" *ngIf="!isLoginPage(); else loginOutlet">
   <!-- Menu lateral (desktop) -->
-  <mat-sidenav #sidenav [mode]="isDesktop ? 'side' : 'over'" class="sidenav bg-dark text-light" [opened]="isDesktop">
+  <mat-sidenav #sidenav [mode]="isDesktop() ? 'side' : 'over'" class="sidenav bg-dark text-light" [opened]="isDesktop()">
     <!-- Cabeçalho -->
     <div class="sidenav-header d-flex align-items-center gap-2 px-3 py-3 border-bottom">
       <span class="fw-bold app-title">Vafyndell</span>

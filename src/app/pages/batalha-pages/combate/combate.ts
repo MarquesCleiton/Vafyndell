@@ -64,12 +64,31 @@ export class Combate implements OnInit {
         this.todosJogadores = locais;
       }
 
-      // 2️⃣ Sync em paralelo
+      // 2️⃣ Sync em paralelo — não reseta seleções já feitas (BUG-07 fix)
       this.repo.sync().then(async updated => {
         if (updated) {
           console.log('[Combate] Jogadores atualizados após sync.');
           this.todosJogadores = await this.repo.getLocal();
-          this.prepararSelecoes();
+
+          // Atualiza referências dos objetos selecionados com dados frescos
+          // sem resetar a escolha do usuário
+          if (this.vitimaSelecionada) {
+            const vitimaAtualizada = this.todosJogadores.find(
+              j => String(j.id) === String(this.vitimaSelecionada!.id)
+            );
+            if (vitimaAtualizada) this.vitimaSelecionada = vitimaAtualizada;
+          }
+          if (this.ofensorSelecionado) {
+            const ofensorAtualizado = this.todosJogadores.find(
+              j => String(j.id) === String(this.ofensorSelecionado!.id)
+            );
+            if (ofensorAtualizado) this.ofensorSelecionado = ofensorAtualizado;
+          }
+
+          // Preenche seleções padrão apenas se ainda estiverem vazias
+          if (!this.vitimaSelecionada || !this.ofensorSelecionado) {
+            this.prepararSelecoes();
+          }
         }
       });
 

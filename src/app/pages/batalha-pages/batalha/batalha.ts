@@ -75,19 +75,18 @@ export class Batalha implements OnInit, OnDestroy {
     this.intervaloId = setInterval(async () => {
       if (document.visibilityState === 'visible' && navigator.onLine) {
         console.log('[Batalha] 🔁 Sincronizando dados...');
-        const [syncJogadores, syncHistorico] = await Promise.all([
-          this.repoJogadores.sync(),
-          this.repoRegistros.sync(),
-        ]);
 
-        if (syncJogadores) {
+        // P1 fix: multiSync consolida N tabs em 1 chamada GAS (antes eram 2 separadas)
+        const statusMap = await BaseRepositoryV2.multiSync(['Personagem', 'Registro']);
+
+        if (statusMap['Personagem']) {
           const atualizados = await this.repoJogadores.getLocal();
           this.jogadores = atualizados;
           this.aplicarFiltro();
           console.log('[Batalha] ✅ Jogadores atualizados');
         }
 
-        if (syncHistorico) {
+        if (statusMap['Registro']) {
           const atualizados = await this.repoRegistros.getLocal();
           const filtrados = atualizados.filter(r => r.tipo === 'batalha' || r.tipo === 'recuperacao');
           this.processarSecoesHistorico(filtrados);
@@ -166,7 +165,13 @@ export class Batalha implements OnInit, OnDestroy {
   }
 
   async excluirNpcDaBatalha(j: JogadorDomain) {
-    const confirmacao = confirm(`🗑️ Deseja remover "${j.personagem}" do campo de batalha?`);
+    // BUG-10 melhoria de UX: deixar claro que a removção é permanente nesta sessão
+    // (NPC é uma cópia em Personagem criada ao entrar na batalha — a ficha original em NPCs não é afetada)
+    const confirmacao = confirm(
+      `🗑️ Remover "${j.personagem}" do campo de batalha?\n\n` +
+      `⚠️ Esta ação remove o NPC permanentemente da batalha atual.\n` +
+      `A ficha original em "Feras & Vilões" não será afetada.`
+    );
     if (!confirmacao) return;
 
     this.processando[j.id] = 'excluir';

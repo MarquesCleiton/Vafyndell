@@ -247,6 +247,54 @@ export class BaseRepositoryV2<T extends { id: string }> {
   }
 
   // =========================================================
+  // 📌 Sync consolidado: 1 chamada GAS para N tabs (P1)
+  // =========================================================
+  /**
+   * Verifica metadados de múltiplas tabs em UMA chamada ao GAS.
+   * Re-fetcha apenas as tabs realmente desatualizadas (também em 1 chamada).
+   * Retorna um mapa { tab -> true (atualizada) | false (já estava ok) }
+   */
+  static async multiSync(tabs: string[]): Promise<Record<string, boolean>> {
+    console.log(`[BaseRepositoryV2] 🔄 multiSync iniciado →`, tabs);
+
+    // 1ª chamada: busca apenas Metadados
+    const result = await ScriptClientV3.getAll('Metadados');
+    const metasOnline: any[] = result?.['Metadados'] || [];
+
+    const db = await IndexedDBClientV2.create();
+    const tabsDesatualizadas: string[] = [];
+    const statusMap: Record<string, boolean> = {};
+
+    for (const tab of tabs) {
+      const onlineMeta = metasOnline.find((m: any) => String(m.id) === tab);
+      if (!onlineMeta) {
+        statusMap[tab] = false;
+        continue;
+      }
+
+      const localMeta = await db.get<{ id: string; UltimaModificacao: string }>(
+        BaseRepositoryV2.META_STORE, tab
+      );
+
+      const desatualizada =
+        !localMeta || localMeta.UltimaModificacao !== onlineMeta.UltimaModificacao;
+
+      statusMap[tab] = desatualizada;
+      if (desatualizada) tabsDesatualizadas.push(tab);
+    }
+
+    if (tabsDesatualizadas.length > 0) {
+      console.log(`[BaseRepositoryV2] ⚠️ multiSync → re-fetch de:`, tabsDesatualizadas);
+      // 2ª chamada (apenas se necessário): busca todas as tabs desatualizadas juntas
+      await BaseRepositoryV2.multiFetch(tabsDesatualizadas);
+    } else {
+      console.log(`[BaseRepositoryV2] ✅ multiSync → nada para atualizar`);
+    }
+
+    return statusMap;
+  }
+
+  // =========================================================
   // 📌 Batch multioperações em múltiplas abas
   // =========================================================
   static async batch(payload: {

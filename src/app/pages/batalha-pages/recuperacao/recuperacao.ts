@@ -41,11 +41,15 @@ export class Recuperacao implements OnInit {
       this.jogador = locais.find(j => String(j.id) === id) || null;
 
       if (this.jogador) {
+        // Race condition fix: sync atualiza referência mas não interrompe interação do usuário
         this.repo.sync().then(async updated => {
-          if (updated) {
+          if (updated && this.jogador) {
             const atualizados = await this.repo.getLocal();
             const atualizado = atualizados.find(j => String(j.id) === id);
-            if (atualizado) this.jogador = atualizado;
+            // Só atualiza se o usuário não tiver iniciado o preenchimento dos campos
+            if (atualizado && this.recuperar === 0 && this.armadura === 0 && this.escudo === 0) {
+              this.jogador = atualizado;
+            }
           }
         });
       } else {

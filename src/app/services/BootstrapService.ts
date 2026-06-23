@@ -1,4 +1,3 @@
-import { IndexedDBClientV2 } from "../core/db/IndexedDBClientV2";
 import { BaseRepositoryV2 } from "../repositories/BaseRepositoryV2";
 import { Injectable } from '@angular/core';
 
@@ -33,28 +32,10 @@ export class BootstrapService {
       i++;
     }, 1200);
 
-    // 🔽 fetch multi
-    const result = await BaseRepositoryV2.multiFetch(tabs);
+    // 🔽 multiFetch já faz clear() + bulkPut() internamente em cada tab
+    await BaseRepositoryV2.multiFetch(tabs);
 
     clearInterval(intervalId);
-
-    // Escreve no IndexedDB
-    const db = await IndexedDBClientV2.create();
-    for (const tab of tabs) {
-      const frases = [
-        `📖 Estudando os pergaminhos de ${tab}...`,
-        `⚒️ Forjando dados para ${tab}...`,
-        `🧪 Misturando poções em ${tab}...`,
-        `🐉 Invocando criaturas de ${tab}...`,
-      ];
-      onStatus?.(frases[Math.floor(Math.random() * frases.length)]);
-
-      await db.clear(tab);
-      if (result[tab]?.length) {
-        await db.bulkPut(tab, result[tab]);
-      }
-    }
-
     onStatus?.('✨ Mundo preparado!');
   }
 }

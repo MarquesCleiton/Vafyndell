@@ -1,4 +1,4 @@
-﻿# 🐉 Vafyndell
+# 🐉 Vafyndell
 
 > **Gerenciador de campanhas de RPG de mesa — offline-first, direto no seu navegador.**
 
@@ -411,55 +411,8 @@ npm test
 **Vafyndell** · Feito para aventureiros, por aventureiros 🗡️
 
 </div>
-ploy
 
-Sempre que fizer alterações no código:
-
-```bash
-ng build --base-href "https://marquesCleiton.github.io/Vafyndell/"
-npx angular-cli-ghpages --dir=dist/vafyndell/browser
-```
-ploy
-
-Sempre que fizer alterações no código:
-
-```bash
-ng build --base-href "https://marquesCleiton.github.io/Vafyndell/"
-npx angular-cli-ghpages --dir=dist/vafyndell/browser
-```
-ploy
-
-Sempre que fizer alterações no código:
-
-```bash
-ng build --base-href "https://marquesCleiton.github.io/Vafyndell/"
-npx angular-cli-ghpages --dir=dist/vafyndell/browser
-```
-ploy
-
-Sempre que fizer alterações no código:
-
-```bash
-ng build --base-href "https://marquesCleiton.github.io/Vafyndell/"
-npx angular-cli-ghpages --dir=dist/vafyndell/browser
-```
-ploy
-
-Sempre que fizer alterações no código:
-
-```bash
-ng build --base-href "https://marquesCleiton.github.io/Vafyndell/"
-npx angular-cli-ghpages --dir=dist/vafyndell/browser
-```
-ploy
-
-Sempre que fizer alterações no código:
-
-```bash
-ng build --base-href "https://marquesCleiton.github.io/Vafyndell/"
-npx angular-cli-ghpages --dir=dist/vafyndell/browser
-```
-ploy
+## 🚀 Deploy
 
 Sempre que fizer alterações no código:
 

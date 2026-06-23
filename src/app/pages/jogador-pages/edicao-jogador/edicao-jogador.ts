@@ -29,6 +29,8 @@ type AtributoChave = keyof Pick<
 export class EdicaoJogador implements OnInit {
   jogador: JogadorDomain | null = null;
   salvando = false;
+  // BUG-11 fix: flag para proteger o formulário de ser sobrescrito pelo sync em background
+  isDirty = false;
 
   private repo = new BaseRepositoryV2<JogadorDomain>('Personagem');
 
@@ -53,7 +55,8 @@ export class EdicaoJogador implements OnInit {
 
   // 🔢 Atributos calculados
   get vida() { return this.jogador ? (this.jogador.energia || 0) + (this.jogador.constituicao || 0) : 0; }
-  get vidaTotal() { return this.jogador ? this.vida + (this.jogador.classe_de_armadura || 0) : 0; }
+  // BUG-19 fix: vidaTotal não inclui armadura — armadura é uma camada separada de proteção, não vida
+  get vidaTotal() { return this.vida; }
 
   constructor(
     private router: Router,
@@ -65,7 +68,10 @@ export class EdicaoJogador implements OnInit {
     return this.jogador ? (this.jogador[campo] as number) || 0 : 0;
   }
   setValor(campo: AtributoChave, valor: number) {
-    if (this.jogador) this.jogador[campo] = Math.max(0, valor) as any;
+    if (this.jogador) {
+      this.jogador[campo] = Math.max(0, valor) as any;
+      this.isDirty = true; // BUG-11 fix: marca form como modificado
+    }
   }
   ajustarValor(campo: AtributoChave, delta: number) {
     this.setValor(campo, this.getValor(campo) + delta);
@@ -119,9 +125,9 @@ export class EdicaoJogador implements OnInit {
       const local = (await this.repo.getLocal()).find(j => j.email === user.email);
       if (local) this.jogador = local;
 
-      // 2️⃣ Sync paralelo
+      // 2️⃣ Sync paralelo — BUG-11 fix: não sobrescreve se usuário já editou
       this.repo.sync().then(async updated => {
-        if (updated) {
+        if (updated && !this.isDirty) {
           const atualizado = (await this.repo.getLocal()).find(j => j.email === user.email);
           if (atualizado) this.jogador = atualizado;
         }

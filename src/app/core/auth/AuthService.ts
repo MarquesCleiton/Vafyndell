@@ -1,4 +1,5 @@
 import { IndexedDBClientV2 } from "../db/IndexedDBClientV2";
+import { TokenUtils } from './TokenUtils';
 
 export interface User {
   name: string;
@@ -93,12 +94,10 @@ export class AuthService {
     if (!user) return false;
 
     try {
+      // Usa TokenUtils com margem de 5 min (300s) para clock skew
       const payload = this.parseJwt(user.idToken);
       const now = Math.floor(Date.now() / 1000);
-
-      // margem de 12h = 43.200 segundos
-      const gracePeriod = 30 * 60 * 60;
-
+      const gracePeriod = 5 * 60; // 5 minutos
       return payload.exp && Number(payload.exp) + gracePeriod > now;
     } catch {
       return false;
