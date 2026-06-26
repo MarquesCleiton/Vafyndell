@@ -275,6 +275,15 @@ export class Batalha implements OnInit, OnDestroy {
     return mapa[tipo] || '#9ca3af';
   }
 
+  // ── Apresentação ────────────────────────────────────────
+  /** Retorna o percentual de HP para a barra visual (0–100) */
+  calcHpPercent(j: JogadorDomain): number {
+    const base = JogadorUtils.getVidaBase(j);
+    if (!base || base <= 0) return 0;
+    const atual = JogadorUtils.getVidaAtual(j);
+    return Math.max(0, Math.min(100, (atual / base) * 100));
+  }
+
   formatarData(data: string): string {
     try {
       const d = data.includes('T') ? new Date(data) : new Date(data + 'T00:00:00');

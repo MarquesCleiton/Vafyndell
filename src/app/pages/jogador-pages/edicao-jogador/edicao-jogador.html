@@ -1,122 +1,133 @@
-<div class="jogador-edit-wrapper d-flex flex-column min-vh-100 bg-dark text-light">
-  <div class="flex-grow-1 p-3 d-flex justify-content-center">
-    <div class="jogador-edit-container w-100">
+<!-- =========================================================
+     EDIÇÃO DE JOGADOR — Eldritch Archive
+     ========================================================= -->
+<div class="sheet-wrapper">
+  <div class="sheet-scroll">
+    <div class="form-container">
 
-      <!-- 👇 id adicionado -->
       @if (jogador) {
         <form #form="ngForm" id="formJogador" (ngSubmit)="salvar(form)">
 
-          <!-- Upload imagem -->
-          <div class="position-relative text-center mb-3">
+          <!-- ── Upload de Imagem ── -->
+          <div class="upload-area">
             @if (jogador.imagem) {
-              <img [src]="jogador.imagem" class="w-100 rounded detalhe-img shadow-sm" alt="Preview" />
-              <button type="button"
-                class="btn btn-danger rounded-circle position-absolute d-flex align-items-center justify-content-center"
-                style="top: 10px; right: 10px; width: 40px; height: 40px;" (click)="removerImagem()">✖</button>
+              <img [src]="jogador.imagem" class="upload-img-preview" alt="Preview do personagem" />
+              <button type="button" class="upload-remove-btn" (click)="removerImagem()" title="Remover imagem">✖</button>
             } @else {
               <label class="upload-box">
-                <span class="fs-1">📷</span>
+                <span class="upload-box-icon">📷</span>
+                <span class="upload-box-text">ENVIAR IMAGEM</span>
                 <input type="file" class="d-none" (change)="onFileChange($event)" accept="image/*" />
               </label>
             }
           </div>
 
-          <!-- Card principal -->
-          <div class="card detalhe-card shadow-lg border-0">
-            <div class="card-body">
-              <h4 class="fw-bold mb-3 text-light">✏️ Edição de Personagem</h4>
+          <!-- ── Identidade ── -->
+          <h2 class="form-section-title">✏️ Edição de Personagem</h2>
+          <div class="divider-blade"></div>
 
-              <!-- Nome -->
-              <div class="mb-3">
-                <label class="form-label text-light">🧙 Nome do Personagem *</label>
-                <input type="text" class="form-control input-dark" [(ngModel)]="jogador.personagem" name="personagem"
-                  required />
-              </div>
+          <!-- Nome -->
+          <div class="field-group">
+            <label class="field-label">Nome do Personagem *</label>
+            <input
+              type="text"
+              class="field-input"
+              [(ngModel)]="jogador.personagem"
+              name="personagem"
+              required
+              placeholder="Ex: Klug Orin"
+            />
+          </div>
 
-              <!-- Alinhamento -->
-              <div class="mb-3">
-                <label class="form-label text-light">⚖️ Alinhamento *</label>
-                <select class="form-select input-dark" [(ngModel)]="jogador.alinhamento" name="alinhamento" required>
-                  <option value="" disabled>Selecione...</option>
-                  <option>Leal e Bom (Lawful Good)</option>
-                  <option>Neutro e Bom (Neutral Good)</option>
-                  <option>Caótico e Bom (Chaotic Good)</option>
-                  <option>Leal e Neutro (Lawful Neutral)</option>
-                  <option>Neutro (True Neutral)</option>
-                  <option>Caótico e Neutro (Chaotic Neutral)</option>
-                  <option>Leal e Mau (Lawful Evil)</option>
-                  <option>Neutro e Mau (Neutral Evil)</option>
-                  <option>Caótico e Mau (Chaotic Evil)</option>
-                </select>
-              </div>
+          <!-- Alinhamento -->
+          <div class="field-group">
+            <label class="field-label">Alinhamento *</label>
+            <select class="field-select" [(ngModel)]="jogador.alinhamento" name="alinhamento" required>
+              <option value="" disabled>Selecione...</option>
+              <option>Leal e Bom (Lawful Good)</option>
+              <option>Neutro e Bom (Neutral Good)</option>
+              <option>Caótico e Bom (Chaotic Good)</option>
+              <option>Leal e Neutro (Lawful Neutral)</option>
+              <option>Neutro (True Neutral)</option>
+              <option>Caótico e Neutro (Chaotic Neutral)</option>
+              <option>Leal e Mau (Lawful Evil)</option>
+              <option>Neutro e Mau (Neutral Evil)</option>
+              <option>Caótico e Mau (Chaotic Evil)</option>
+            </select>
+          </div>
 
-              <!-- Tipo de jogador -->
-              <div class="mb-3">
-                <label class="form-label text-light">🎭 Tipo de Jogador *</label>
-                <select class="form-select input-dark" [(ngModel)]="jogador.tipo_jogador" name="tipoJogador" required>
-                  <option value="" disabled>Selecione...</option>
-                  <option>Aventureiro</option>
-                  <option>Mestre</option>
-                </select>
-              </div>
+          <!-- Tipo de jogador -->
+          <div class="field-group">
+            <label class="field-label">Tipo de Jogador *</label>
+            <select class="field-select" [(ngModel)]="jogador.tipo_jogador" name="tipoJogador" required>
+              <option value="" disabled>Selecione...</option>
+              <option>Aventureiro</option>
+              <option>Mestre</option>
+            </select>
+          </div>
 
-              <!-- Atributos Numéricos -->
-              <h6 class="fw-bold mt-4 text-light">📊 Atributos Numéricos</h6>
-              <div class="atributos-grid-edit mb-3">
-                @for (attr of atributosNumericos; track attr.key) {
-                  <div class="atributo-item-edit">
-                    <div class="atributo-label text-center">
-                      {{ attr.icon }} {{ attr.label }}
-                    </div>
-                    <div class="atributo-controls">
-                      <button type="button" class="btn btn-sm btn-outline-light"
-                        (click)="ajustarValor(attr.key, -1)">−</button>
+          <div class="divider-blade"></div>
 
-                      <input type="number" class="atributo-input" [ngModel]="getValor(attr.key)"
-                        (ngModelChange)="setValor(attr.key, $event)" name="{{attr.key}}" min="0" />
-
-                      <button type="button" class="btn btn-sm btn-outline-light"
-                        (click)="ajustarValor(attr.key, 1)">+</button>
-                    </div>
-                  </div>
-                }
-              </div>
-
-
-              <!-- Atributos Calculados -->
-              <h6 class="fw-bold mt-4 text-light">⚔️ Atributos Calculados</h6>
-              <div class="atributos-grid mb-3">
-                <div class="atributo-item">
-                  <span>❤️ Vida</span> <b>{{ vida }}</b>
-                  <small>(Energia + Constituição)</small>
-                </div>
-                <div class="atributo-item">
-                  <span>💖 Vida Total</span> <b>{{ vidaTotal }}</b>
-                  <small>(Vida)</small>
+          <!-- ── Atributos Numéricos ── -->
+          <h2 class="section-title">Atributos Numéricos</h2>
+          <div class="edit-attrs-grid">
+            @for (attr of atributosNumericos; track attr.key) {
+              <div class="edit-attr-box">
+                <span class="edit-attr-label">{{ attr.icon }} {{ attr.label }}</span>
+                <div class="edit-attr-controls">
+                  <button type="button" class="edit-attr-btn" (click)="ajustarValor(attr.key, -1)">−</button>
+                  <input
+                    type="number"
+                    class="edit-attr-input"
+                    [ngModel]="getValor(attr.key)"
+                    (ngModelChange)="setValor(attr.key, $event)"
+                    [name]="attr.key"
+                    min="0"
+                  />
+                  <button type="button" class="edit-attr-btn" (click)="ajustarValor(attr.key, 1)">+</button>
                 </div>
               </div>
+            }
+          </div>
+
+          <div class="divider-blade" style="opacity:0.5"></div>
+
+          <!-- ── Atributos Calculados ── -->
+          <h2 class="section-title">Atributos Calculados</h2>
+          <div class="calc-attrs-grid">
+            <div class="calc-attr-box">
+              <span class="calc-attr-label">Vida</span>
+              <span class="calc-attr-value">{{ vida }}</span>
+              <span class="calc-attr-hint">Energia + Constituição</span>
+            </div>
+            <div class="calc-attr-box">
+              <span class="calc-attr-label">Vida Total</span>
+              <span class="calc-attr-value">{{ vidaTotal }}</span>
+              <span class="calc-attr-hint">Vida</span>
             </div>
           </div>
+
         </form>
       }
+
     </div>
   </div>
 
   <!-- FABs -->
   <div class="fab-stack">
-    <!-- Cancelar -->
-    <button class="fab fab-primary" (click)="cancelar()">
-      ⬅️
-    </button>
-
-    <!-- Salvar -->
-    <!-- 👇 agora usa id="formJogador" -->
-    <button type="submit" form="formJogador" class="fab fab-warning" [disabled]="salvando">
-      @if (!salvando) {
-        <span>💾</span>
-      } @else {
-        <span class="spinner-border spinner-border-sm"></span>
-      }
+    <!-- Cancelar (abaixo) -->
+    <button class="fab fab-back" (click)="cancelar()" title="Cancelar">⬅️</button>
+    <!-- Salvar (acima) -->
+    <button
+      type="submit"
+      form="formJogador"
+      class="fab fab-save"
+      [disabled]="salvando"
+      title="Salvar"
+    >
+      @if (!salvando) { 💾 }
+      @else { <span class="spinner-border spinner-border-sm"></span> }
     </button>
   </div>
+
 </div>

@@ -1,237 +1,284 @@
-<div class="visao-wrapper d-flex flex-column min-vh-100 bg-dark text-light">
-  <!-- Abas principais -->
-  <ul class="nav nav-tabs bg-dark px-3" role="tablist">
-    <li class="nav-item">
-      <button class="nav-link" [class.active]="abaAtiva === 'jogador'" (click)="selecionarAba('jogador')">
-        @if (jogador?.email) {
-          🧙 Jogador
-        } @else {
-          @switch (jogador?.classificacao) {
-            @case ('Inimigo') { 👹 Inimigo }
-            @case ('Bestial') { 🦖 Bestial }
-            @default { 👤 NPC }
-          }
+<!-- =========================================================
+     VISÃO DE JOGADORES — Eldritch Archive
+     Exibe ficha do jogador ou NPC, inventário e habilidades
+     ========================================================= -->
+<div class="sheet-wrapper">
+
+  <!-- ── Abas principais ── -->
+  <div class="sheet-tabs">
+    <button class="tab-btn" [class.active]="abaAtiva === 'jogador'" (click)="selecionarAba('jogador')">
+      @if (jogador?.email) { 🧙 Jogador }
+      @else {
+        @switch (jogador?.classificacao) {
+          @case ('Inimigo') { 👹 Inimigo }
+          @case ('Bestial') { 🦖 Bestial }
+          @default { 👤 NPC }
         }
-      </button>
-    </li>
-
-    <!-- Inventário só se for jogador -->
-    @if (jogador?.email) {
-      <li class="nav-item">
-        <button class="nav-link" [class.active]="abaAtiva === 'inventario'" (click)="selecionarAba('inventario')">
-          🎒 Inventário
-        </button>
-      </li>
-
-      <li class="nav-item">
-        <button class="nav-link" [class.active]="abaAtiva === 'habilidades'" (click)="selecionarAba('habilidades')">
-          🌳 Habilidades
-        </button>
-      </li>
-    }
-  </ul>
-
-
-  <div class="flex-grow-1 d-flex justify-content-center">
-    <div class="visao-container w-100">
-      <!-- Loading -->
-      @if (loading) {
-        <div class="text-center py-5">
-          <div class="spinner-border text-light" role="status"></div>
-          <p class="mt-2">Carregando...</p>
-        </div>
       }
+    </button>
 
-      <!-- Jogador -->
-      @if (!loading && jogador && abaAtiva === 'jogador') {
-        <div class="card detalhe-card shadow-lg border-0">
-          <!-- Imagem -->
-          <div class="position-relative">
-            @if (jogador.imagem && jogador.imagem !== '-') {
-              <img [src]="jogador.imagem" class="card-img-top detalhe-img" alt="Imagem do personagem"
-                (click)="abrirImagem(jogador.imagem)" />
-            } @else {
-              <div class="d-flex align-items-center justify-content-center bg-secondary text-dark detalhe-img"
-                style="height:200px; font-size:3rem;">👤</div>
-            }
-          </div>
+    @if (jogador?.email) {
+      <button class="tab-btn" [class.active]="abaAtiva === 'inventario'" (click)="selecionarAba('inventario')">
+        🎒 Inventário
+      </button>
+      <button class="tab-btn" [class.active]="abaAtiva === 'habilidades'" (click)="selecionarAba('habilidades')">
+        🌳 Habilidades
+      </button>
+    }
+  </div>
 
-          <div class="card-body pb-5">
-            <h4 class="fw-bold mb-1 text-light">{{ jogador.email ? '🧙' : '👹' }} {{ jogador.personagem }}</h4>
-            <p class="text-secondary mb-3">⚖️ {{ jogador.alinhamento || 'Sem alinhamento' }}</p>
+  <!-- Loading -->
+  @if (loading) {
+    <div class="sheet-scroll">
+      <div class="loading-state">
+        <div class="spinner-border text-warning" role="status"></div>
+        <p class="loading-text">Carregando...</p>
+      </div>
+    </div>
+  }
 
-            <!-- Infos gerais -->
-            <ul class="info-list mb-3">
-              <li>🏅 <span>Nível:</span> {{ jogador.nivel }}</li>
-              <li>⭐ XP: {{ jogador.xp }}</li>
-              <li>🍀 Sorte: {{ jogador.pontos_de_sorte }}</li> <!-- 🆕 -->
-              <hr class="my-2 opacity-25" />
+  <!-- ══════════════════════════════════════
+       ABA: JOGADOR / NPC
+       ══════════════════════════════════════ -->
+  @if (!loading && jogador && abaAtiva === 'jogador') {
+    <div class="sheet-scroll">
+      <div class="sheet-container">
 
-              <li>
-                ❤️ Vida:
-                <span [ngClass]="{
-                  'text-danger fw-bold': jogador.vida_atual! <= 0,
-                  'text-warning fw-bold': jogador.vida_atual! > 0 && jogador.vida_atual! < jogador.pontos_de_vida! * 0.5,
-                  'fw-bold': jogador.vida_atual! >= jogador.pontos_de_vida! * 0.5
-                }">
-                  {{ jogador.vida_atual }}
-                </span>
-                / {{ jogador.pontos_de_vida }}
-              </li>
-              <li>💔 Dano tomado: {{ jogador.dano_tomado }}</li>
-              <li>🛡️ Armadura: {{ jogador.classe_de_armadura }}</li>
-              <li>🔰 Escudo: {{ jogador.escudo }}</li> <!-- 🆕 -->
-              <hr class="my-2 opacity-25" />
-              <li>✨ Fator de cura: {{ jogador.fator_de_cura }}</li>
-              <li>🚶‍♂️ Deslocamento: {{ jogador.deslocamento }}</li>
-            </ul>
-
-
-            <!-- Atributos -->
-            <h6 class="fw-bold mt-3 text-light">📊 Atributos</h6>
-            <div class="atributos-grid compact mb-3">
-              @for (attr of atributos; track attr.label) {
-                <div class="atributo-item">
-                  {{ attr.icon }} <span>{{ attr.label }}</span>
-                  <b>{{ attr.value }}</b>
-                  <small class="text-light">({{ attr.mod >= 0 ? '+' + attr.mod : attr.mod }})</small>
-                </div>
+        <!-- ── Hero ── -->
+        <section class="hero-section">
+          <div class="avatar-frame">
+            <div class="avatar-img-wrap">
+              @if (jogador.imagem && jogador.imagem !== '-') {
+                <img [src]="jogador.imagem" [alt]="jogador.personagem" (click)="abrirImagem(jogador.imagem)" />
+              } @else {
+                <span class="avatar-placeholder-txt">{{ jogador.email ? '🧙' : '👹' }}</span>
               }
             </div>
-
-            <!-- Extra só para NPC -->
-            @if (!jogador.email) {
-              <div class="mt-3">
-                <h6 class="fw-bold text-light">📝 Descrição</h6>
-                @if (jogador.descricao) {
-                  <p class="descricao-text">{{ jogador.descricao }}</p>
-                }
-
-                @if (jogador.ataques) {
-                  <h6 class="fw-bold text-light mt-3">⚔️ Ataques</h6>
-                  <p class="ataques-text">{{ jogador.ataques }}</p>
-                }
-              </div>
+            @if (jogador.nivel) {
+              <div class="nivel-badge">{{ jogador.nivel }}</div>
             }
           </div>
-        </div>
-      }
 
-      <!-- Inventário -->
-      @if (!loading && jogador?.email && abaAtiva === 'inventario') {
-        <div class="inventario-container">
-          <!-- Abas internas -->
-          <ul class="nav nav-tabs bg-dark px-3 mb-3" role="tablist">
+          <div class="hero-info">
+            <h1 class="hero-nome">{{ jogador.personagem }}</h1>
+            <p class="hero-alinhamento">{{ jogador.alinhamento || 'Sem alinhamento' }}</p>
+            <p class="hero-xp">XP: {{ jogador.xp }}</p>
+          </div>
+        </section>
+
+        <!-- ── Bento: HP + Stats ── -->
+        <section class="bento-grid">
+          <div class="hp-card">
+            <span class="hp-label">Vida (HP)</span>
+            <span class="hp-value"
+              [class.text-warning]="jogador.vida_atual! > 0 && jogador.vida_atual! < jogador.pontos_de_vida! * 0.5"
+              [class.stat-dead]="jogador.vida_atual! <= 0">
+              {{ jogador.vida_atual }}/{{ jogador.pontos_de_vida }}
+            </span>
+            <div class="hp-track">
+              <div class="hp-fill"
+                [style.width.%]="(jogador.vida_atual! / jogador.pontos_de_vida!) * 100 | number:'1.0-0'">
+              </div>
+            </div>
+          </div>
+
+          <div class="stats-stack">
+            <div class="stat-row">
+              <div class="stat-row-left">
+                <span class="stat-row-icon">🛡️</span>
+                <span class="stat-row-label">Escudo</span>
+              </div>
+              <span class="stat-row-value">{{ jogador.escudo || 0 }}</span>
+            </div>
+            <div class="stat-row">
+              <div class="stat-row-left">
+                <span class="stat-row-icon">🔰</span>
+                <span class="stat-row-label">Armadura</span>
+              </div>
+              <span class="stat-row-value">{{ jogador.classe_de_armadura }}</span>
+            </div>
+            <div class="stat-row">
+              <div class="stat-row-left">
+                <span class="stat-row-icon">⚔️</span>
+                <span class="stat-row-label">Dano</span>
+              </div>
+              <span class="stat-row-value danger">{{ jogador.dano_tomado }}</span>
+            </div>
+          </div>
+        </section>
+
+        <div class="divider-blade"></div>
+
+        <!-- ── Atributos Secundários ── -->
+        <h2 class="section-title">Atributos Secundários</h2>
+        <section class="sec-attrs-grid">
+          <div class="sec-attr-box">
+            <span class="sec-attr-label">Sorte</span>
+            <span class="sec-attr-value">{{ jogador.pontos_de_sorte }}</span>
+          </div>
+          <div class="sec-attr-box">
+            <span class="sec-attr-label">Cura</span>
+            <span class="sec-attr-value">{{ jogador.fator_de_cura }}</span>
+          </div>
+          <div class="sec-attr-box">
+            <span class="sec-attr-label">Movimento</span>
+            <span class="sec-attr-value">{{ jogador.deslocamento }}</span>
+          </div>
+        </section>
+
+        <div class="divider-blade" style="opacity:0.5"></div>
+
+        <!-- ── Atributos Primários ── -->
+        <h2 class="section-title">Atributos Primários</h2>
+        <section class="prim-attrs-grid">
+          @for (attr of atributos; track attr.label) {
+            <div class="prim-attr-box" [class.col-span-2]="attr.label === 'Energia'">
+              <div class="prim-attr-left">
+                <p class="prim-attr-label">{{ attr.label }}</p>
+                <p class="prim-attr-value" [class.highlight]="attr.mod > 0">{{ attr.value }}</p>
+              </div>
+              <div class="stat-circle" [class.border-gold]="attr.mod > 0">
+                <span class="mod-value" [class.pos]="attr.mod >= 0">
+                  {{ attr.mod >= 0 ? '+' + attr.mod : attr.mod }}
+                </span>
+              </div>
+            </div>
+          }
+        </section>
+
+        <!-- ── Extras NPC ── -->
+        @if (!jogador.email) {
+          <div class="divider-blade" style="opacity:0.5"></div>
+
+          @if (jogador.descricao) {
+            <h2 class="section-title">Descrição</h2>
+            <div class="npc-text-block">{{ jogador.descricao }}</div>
+          }
+
+          @if (jogador.ataques) {
+            <h2 class="section-title" style="margin-top:16px">Ataques</h2>
+            <div class="npc-text-block ataques">{{ jogador.ataques }}</div>
+          }
+        }
+
+      </div>
+    </div>
+  }
+
+  <!-- ══════════════════════════════════════
+       ABA: INVENTÁRIO
+       ══════════════════════════════════════ -->
+  @if (!loading && jogador?.email && abaAtiva === 'inventario') {
+    <div class="sheet-scroll">
+      <div class="sheet-container">
+
+        <h2 class="section-title" style="text-align:left;margin-bottom:16px">🎒 Inventário</h2>
+
+        <!-- Resumo de peso -->
+        @if (!carregandoInventario && categoriasFiltradas.length > 0) {
+          <div class="inventario-resumo">
+            ⚖️ Peso total: <b>{{ resumo.pesoTotal | number:'1.0-2' }} kg</b>
+          </div>
+        }
+
+        <!-- Loading inventário -->
+        @if (carregandoInventario) {
+          <div class="loading-state">
+            <div class="spinner-border text-warning" role="status"></div>
+            <p class="loading-text">Carregando inventário...</p>
+          </div>
+        }
+
+        <!-- Vazio -->
+        @if (!carregandoInventario && categoriasFiltradas.length === 0) {
+          <div style="text-align:center;padding:40px 0;color:var(--outline);font-size:14px">
+            Nenhum item encontrado.
+          </div>
+        }
+
+        <!-- Abas internas -->
+        @if (!carregandoInventario) {
+          <div class="sheet-tabs" style="position:static;margin-bottom:16px;border-radius:4px">
             @for (aba of abasInventario; track aba) {
-              <li class="nav-item">
-                <button class="nav-link" [class.active]="abaInventario === aba.toLowerCase()"
-                  (click)="selecionarAbaInventario(aba)">
-                  {{ aba }}
-                </button>
-              </li>
+              <button class="tab-btn" [class.active]="abaInventario === aba.toLowerCase()"
+                (click)="selecionarAbaInventario(aba)">
+                {{ aba }}
+              </button>
             }
-          </ul>
-
-          <h4 class="fw-bold mb-3">🎒 Inventário</h4>
-
-          <!-- Resumo -->
-          @if (!carregandoInventario && categoriasFiltradas.length > 0) {
-            <div class="card resumo-card mb-4 p-3 shadow-sm">
-              <p class="mb-1 text-light">
-                ⚖️ Peso total: <b>{{ resumo.pesoTotal | number:'1.0-2' }} kg</b>
-              </p>
-            </div>
-          }
-
-          <!-- Loading -->
-          @if (carregandoInventario) {
-            <div class="text-center py-5">
-              <div class="spinner-border text-light" role="status"></div>
-              <p class="mt-2">Carregando inventário...</p>
-            </div>
-          }
-
-          <!-- Vazio -->
-          @if (!carregandoInventario && categoriasFiltradas.length === 0) {
-            <div class="text-center text-secondary py-5">
-              Nenhum item encontrado.
-            </div>
-          }
+          </div>
 
           <!-- Categorias -->
-          @if (!carregandoInventario) {
-            <div>
-              @for (cat of categoriasFiltradas; track cat.nome) {
-                @if (pertenceAbaInventario(cat.nome)) {
-                  <div class="mb-3">
-                    <button class="btn btn-categoria w-100 d-flex justify-content-between align-items-center"
-                      (click)="toggleCategoria(cat)">
-                      <span>{{ cat.nome }}</span><span>{{ cat.expandido ? '−' : '+' }}</span>
-                    </button>
-                    @if (cat.expandido) {
-                      <div class="mt-2">
-                        <div class="row row-cols-1 g-3">
-                          @for (inv of cat.itens; track inv.id) {
-                            <div class="col">
-                              <div class="card inventario-card h-100 p-3 shadow-sm">
-                                <div class="d-flex align-items-center mb-2">
-                                  <div class="item-thumb me-3">
-                                    @if (inv.itemDetalhe?.imagem && inv.itemDetalhe?.imagem !== '-') {
-                                      <img [src]="inv.itemDetalhe?.imagem" alt="{{ inv.itemDetalhe?.nome }}" />
-                                    } @else {
-                                      <span>📦</span>
-                                    }
-                                  </div>
-                                  <div>
-                                    <h6 class="fw-bold mb-1 text-light">{{ inv.itemDetalhe?.nome || 'Item desconhecido' }}</h6>
-                                    <small class="item-meta">
-                                      {{ inv.quantidade }} {{ inv.itemDetalhe?.unidade_medida || '' }} | ⚖️
-                                      {{ inv.itemDetalhe?.peso || 0 }} kg
-                                    </small>
-                                  </div>
-                                </div>
-                                @if (inv.itemDetalhe?.efeito) {
-                                  <p class="small mt-2 text-info">✨ {{ inv.itemDetalhe?.efeito }}</p>
-                                }
-                                @if (inv.itemDetalhe?.colateral) {
-                                  <p class="small text-danger">⚠️ {{ inv.itemDetalhe?.colateral }}</p>
-                                }
-                              </div>
-                            </div>
+          @for (cat of categoriasFiltradas; track cat.nome) {
+            @if (pertenceAbaInventario(cat.nome)) {
+              <div style="margin-bottom:12px">
+                <button class="cat-btn" (click)="toggleCategoria(cat)">
+                  <span>{{ cat.nome }}</span>
+                  <span class="cat-toggle">{{ cat.expandido ? '−' : '+' }}</span>
+                </button>
+
+                @if (cat.expandido) {
+                  <div class="inventario-lista">
+                    @for (inv of cat.itens; track inv.id) {
+                      <div class="item-card">
+                        <div class="item-thumb">
+                          @if (inv.itemDetalhe?.imagem && inv.itemDetalhe?.imagem !== '-') {
+                            <img [src]="inv.itemDetalhe?.imagem" [alt]="inv.itemDetalhe?.nome" />
+                          } @else {
+                            📦
+                          }
+                        </div>
+                        <div class="item-info">
+                          <h6>{{ inv.itemDetalhe?.nome || 'Item desconhecido' }}</h6>
+                          <span class="item-meta">
+                            {{ inv.quantidade }} {{ inv.itemDetalhe?.unidade_medida || '' }} | ⚖️ {{ inv.itemDetalhe?.peso || 0 }} kg
+                          </span>
+                          @if (inv.itemDetalhe?.efeito) {
+                            <p class="item-efeito">✨ {{ inv.itemDetalhe?.efeito }}</p>
+                          }
+                          @if (inv.itemDetalhe?.colateral) {
+                            <p class="item-colateral">⚠️ {{ inv.itemDetalhe?.colateral }}</p>
                           }
                         </div>
                       </div>
                     }
                   </div>
                 }
-              }
-            </div>
+              </div>
+            }
           }
-        </div>
-      }
+        }
 
-      <!-- Habilidades -->
-      @if (!loading && jogador?.email && abaAtiva === 'habilidades') {
-        <div>
-          @if (jogador?.email) {
-            <app-skilltree [jogadorId]="jogador?.email"></app-skilltree>
-          }
-        </div>
-      }
-
-      <!-- Nenhum encontrado -->
-      @if (!loading && !jogador) {
-        <div class="alert alert-warning mt-4">
-          Nenhum personagem encontrado.
-        </div>
-      }
+      </div>
     </div>
-  </div>
+  }
+
+  <!-- ══════════════════════════════════════
+       ABA: HABILIDADES
+       ══════════════════════════════════════ -->
+  @if (!loading && jogador?.email && abaAtiva === 'habilidades') {
+    <div class="sheet-scroll">
+      <div class="sheet-container">
+        @if (jogador?.email) {
+          <app-skilltree [jogadorId]="jogador?.email"></app-skilltree>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Nenhum encontrado -->
+  @if (!loading && !jogador) {
+    <div class="sheet-scroll">
+      <div class="sheet-container">
+        <div class="empty-alert">Nenhum personagem encontrado.</div>
+      </div>
+    </div>
+  }
 
   <!-- FAB Voltar -->
   <div class="fab-stack">
-    <button class="fab fab-primary" (click)="voltar()">⬅️</button>
+    <button class="fab fab-back" (click)="voltar()" title="Voltar">⬅️</button>
   </div>
+
 </div>
 
 <!-- Modal de Imagem -->
