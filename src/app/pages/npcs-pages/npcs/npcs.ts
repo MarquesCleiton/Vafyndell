@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -21,6 +21,7 @@ interface CategoriaNpc {
   imports: [CommonModule, FormsModule],
   templateUrl: './npcs.html',
   styleUrls: ['./npcs.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Npcs implements OnInit {
   categorias: CategoriaNpc[] = [];
@@ -40,7 +41,7 @@ export class Npcs implements OnInit {
 
   ehMestre = false;
 
-  constructor(private router: Router) { }
+  constructor(private router: Router, private cdr: ChangeDetectorRef) { }
 
   async ngOnInit() {
     this.carregando = true;
@@ -51,6 +52,7 @@ export class Npcs implements OnInit {
       console.error('[Npcs] Erro ao carregar NPCs:', err);
     } finally {
       this.carregando = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -58,7 +60,10 @@ export class Npcs implements OnInit {
   private async definirSeEhMestre() {
     const user = AuthService.getUser();
     if (user?.email) {
-      const jogadores = await this.jogadorRepo.getLocal();
+      let jogadores = await this.jogadorRepo.getLocal();
+      if (!jogadores.length) {
+        jogadores = await this.jogadorRepo.forceFetch();
+      }
       const jogadorAtual = jogadores.find((j) => j.email === user.email);
       this.ehMestre = jogadorAtual?.tipo_jogador === 'Mestre';
     }
@@ -74,6 +79,7 @@ export class Npcs implements OnInit {
         const atualizados = await this.repo.getLocal();
         this.todosNpcs = atualizados;
         this.processarCategorias(this.todosNpcs);
+        this.cdr.markForCheck();
       }
     });
 
@@ -81,6 +87,7 @@ export class Npcs implements OnInit {
       const online = await this.repo.forceFetch();
       this.todosNpcs = online;
       this.processarCategorias(this.todosNpcs);
+      this.cdr.markForCheck();
     }
   }
 
@@ -122,6 +129,7 @@ export class Npcs implements OnInit {
       }));
 
     this.categoriasFiltradas = [...this.categorias];
+    this.cdr.markForCheck();
   }
 
 
@@ -135,6 +143,7 @@ export class Npcs implements OnInit {
     const termo = this.normalizarTexto(this.filtro);
     if (!termo) {
       this.categoriasFiltradas = [...this.categorias];
+      this.cdr.markForCheck();
       return;
     }
 
@@ -148,6 +157,7 @@ export class Npcs implements OnInit {
         return { ...c, itens: itensFiltrados, expandido: itensFiltrados.length > 0 };
       })
       .filter((c) => c.itens.length > 0);
+    this.cdr.markForCheck();
   }
 
   private normalizarTexto(texto: string): string {
@@ -162,6 +172,7 @@ export class Npcs implements OnInit {
 
   toggleCategoria(cat: CategoriaNpc) {
     cat.expandido = !cat.expandido;
+    this.cdr.markForCheck();
   }
 
   abrirItem(npc: NpcDomain) {
@@ -187,6 +198,7 @@ export class Npcs implements OnInit {
       console.error('[Npcs] Erro ao alternar visibilidade:', err);
     } finally {
       this.loadingVisibilidade[npc.id] = false;
+      this.cdr.markForCheck();
     }
   }
 }

@@ -79,7 +79,11 @@ export class TrocaDeItens implements OnInit {
 
     this.jogadoresFiltrados = [...this.jogadores];
 
-    // 🔹 Carrega inventário e catálogo
+    // BUG-09 fix: sincronizar Inventario e Catalogo antes de montar a lista
+    // (evita transferir mais itens do que realmente possui em sessão multi-dispositivo)
+    await BaseRepositoryV2.multiSync(['Inventario', 'Catalogo']);
+
+    // 🔹 Carrega inventário e catálogo (agora sincronizados)
     const [inventario, catalogo] = await Promise.all([
       this.inventarioRepo.getLocal(),
       this.catalogoRepo.getLocal(),

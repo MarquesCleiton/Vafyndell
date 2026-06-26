@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
@@ -13,6 +13,7 @@ import { ImageModal } from '../../image-modal/image-modal';
   styleUrls: ['./jogador.css'],
   standalone: true,
   imports: [CommonModule, ImageModal],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Jogador implements OnInit {
   jogador: (JogadorDomain & {
@@ -32,7 +33,7 @@ export class Jogador implements OnInit {
   // ✅ agora padronizado com BaseRepositoryV2
   private repo = new BaseRepositoryV2<JogadorDomain>('Personagem');
 
-  constructor(private router: Router) { }
+  constructor(private router: Router, private cdr: ChangeDetectorRef) { }
 
   async ngOnInit() {
     console.log('[Jogador] Iniciando carregamento...');
@@ -53,7 +54,10 @@ export class Jogador implements OnInit {
         this.repo.sync().then(async updated => {
           if (updated) {
             const atualizado = (await this.repo.getLocal()).find(j => j.email === user.email);
-            if (atualizado) this.setJogador(atualizado);
+            if (atualizado) {
+              this.setJogador(atualizado);
+              this.cdr.markForCheck();
+            }
           }
         });
         return;
@@ -75,6 +79,7 @@ export class Jogador implements OnInit {
       this.router.navigate(['/login']);
     } finally {
       this.loading = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -124,5 +129,6 @@ export class Jogador implements OnInit {
   abrirImagem(src: string) {
     this.imagemSelecionada = src;
     this.modalAberto = true;
+    this.cdr.markForCheck();
   }
 }

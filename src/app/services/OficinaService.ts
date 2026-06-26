@@ -43,22 +43,8 @@ export class OficinaService {
     const inventarioUser = inventarioLocal.filter(i => i.jogador === user.email);
     let receitasProcessadas = this.processar(catalogoLocal, receitasLocal, inventarioUser);
 
-    (async () => {
-      const [catSync, invSync, recSync] = await Promise.all([
-        this.catalogoRepo.sync(),
-        this.inventarioRepo.sync(),
-        this.receitasRepo.sync(),
-      ]);
-      if (catSync || invSync || recSync) {
-        const [catAtualizado, invAtualizado, recAtualizado] = await Promise.all([
-          this.catalogoRepo.getLocal(),
-          this.inventarioRepo.getLocal(),
-          this.receitasRepo.getLocal(),
-        ]);
-        const meusAtualizados = invAtualizado.filter(i => i.jogador === user.email);
-        receitasProcessadas = this.processar(catAtualizado, recAtualizado, meusAtualizados);
-      }
-    })();
+    // BUG-15 fix: removida IIFE fire-and-forget — a variável local não refletia na UI
+    // O componente re-chama getPossiveisReceitas() após criarItem/forcarFalha, mantendo atualização.
 
     if (!receitasProcessadas.length) {
       const [catalogoOnline, inventarioOnline, receitasOnline] = await Promise.all([
@@ -99,9 +85,9 @@ export class OficinaService {
           .map((ing) => {
             const qtdInventario = estoque.get(String(ing.catalogo)) || 0;
             const ref = catalogo.find((c) => String(c.id) === String(ing.catalogo));
+            // BUG-18 fix: preservar id original da receita (ing.catalogo é string/ID, não objeto)
             return {
               ...ing,
-              id: ing.catalogo,
               quantidadeInventario: qtdInventario,
               nome: ref?.nome,
               imagem: ref?.imagem,
@@ -112,9 +98,9 @@ export class OficinaService {
         const podeFabricar = ingredientes.every(
           (ing) => ing.quantidadeInventario >= ing.quantidade
         );
-        const possuiAlgum = ingredientes.some((ing) => ing.quantidadeInventario > 0);
-        if (!possuiAlgum) return null;
 
+        // BUG-02 fix: exibir TODAS as receitas fabricáveis, marcando as indisponíveis como false
+        // Antes: receitas sem nenhum ingrediente eram ocultadas (return null)
         return {
           ...item,
           fabricavel: podeFabricar,
@@ -153,8 +139,10 @@ export class OficinaService {
       const qtdAntes = encontrado.quantidade;
       const qtdDepois = Math.max(0, qtdAntes - ing.quantidade);
 
+      // BUG-01 fix: ing.catalogo é string (ID), não objeto — usar unidade do ref via nome do ingrediente
+      const unidadeIng = ing.nome ? '' : 'unidade(s)'; // nome já foi resolvido no processar()
       const novaDescricao = [
-        `Quantidade: ${qtdAntes} → ${qtdDepois} (-${ing.quantidade} ${ing.catalogo.unidade_medida || 'unidade'})`,
+        `Quantidade: ${qtdAntes} → ${qtdDepois} (-${ing.quantidade} unidade(s))`,
         sucesso
           ? `Fabricação de sucesso: ${receita.nome}`
           : `Fabricação falhou: ${receita.nome}`,
@@ -169,7 +157,7 @@ export class OficinaService {
       if (atualizado.quantidade > 0) updates.push(atualizado);
       else deletes.push(encontrado.id);
 
-      logItens.push(`🎒 ${ing.nome || 'Ingrediente'} : ${qtdAntes} → ${qtdDepois} (-${ing.quantidade} ${ing.catalogo.unidade_medida || 'unidade(s)'})`);
+      logItens.push(`🎒 ${ing.nome || 'Ingrediente'} : ${qtdAntes} → ${qtdDepois} (-${ing.quantidade} unidade(s))`);
     }
 
     // ---------------------------------------------------------

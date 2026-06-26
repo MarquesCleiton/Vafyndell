@@ -9,11 +9,13 @@
   <!-- Tabs -->
   <ul class="nav nav-tabs bg-dark px-3" role="tablist">
     <!-- Aba Ocultos → só aparece para mestres -->
-    <li class="nav-item" role="presentation" *ngIf="ehMestre">
-      <button class="nav-link" [class.active]="abaAtiva === 'ocultos'" (click)="selecionarAba('ocultos')">
-        🙈 Ocultos
-      </button>
-    </li>
+    @if (ehMestre) {
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" [class.active]="abaAtiva === 'ocultos'" (click)="selecionarAba('ocultos')">
+          🙈 Ocultos
+        </button>
+      </li>
+    }
 
     <li class="nav-item" role="presentation">
       <button class="nav-link" [class.active]="abaAtiva === 'recursos'" (click)="selecionarAba('recursos')">
@@ -43,75 +45,101 @@
     <div class="catalogo-container w-100">
 
       <!-- Loading -->
-      <div *ngIf="carregando" class="text-center py-5">
-        <div class="spinner-border text-light" role="status"></div>
-        <p class="mt-2">Carregando catálogo...</p>
-      </div>
+      @if (carregando) {
+        <div class="text-center py-5">
+          <div class="spinner-border text-light" role="status"></div>
+          <p class="mt-2">Carregando catálogo...</p>
+        </div>
+      }
 
       <!-- Vazio -->
-      <div *ngIf="!carregando && categoriasFiltradas.length === 0" class="text-center text-muted py-5">
-        Nenhum item encontrado.
-      </div>
+      @if (!carregando && categoriasFiltradas.length === 0) {
+        <div class="text-center text-muted py-5">
+          Nenhum item encontrado.
+        </div>
+      }
 
       <!-- Categorias filtradas -->
-      <div *ngIf="!carregando">
-        <div *ngFor="let cat of categoriasFiltradas" class="mb-3"
-          [hidden]="abaAtiva !== 'ocultos' && !pertenceAba(cat.nome)">
+      @if (!carregando) {
+        <div>
+          @for (cat of categoriasFiltradas; track cat.nome) {
+            @if (abaAtiva === 'ocultos' || pertenceAba(cat.nome)) {
+              <div class="mb-3">
 
-          <!-- Cabeçalho da categoria -->
-          <button class="btn btn-categoria w-100 d-flex justify-content-between align-items-center"
-            (click)="toggleCategoria(cat)">
-            <span>{{ cat.nome || 'Outros' }}</span>
-            <span>{{ cat.expandido ? '−' : '+' }}</span>
-          </button>
+                <!-- Cabeçalho da categoria -->
+                <button class="btn btn-categoria w-100 d-flex justify-content-between align-items-center"
+                  (click)="toggleCategoria(cat)">
+                  <span>{{ cat.nome || 'Outros' }}</span>
+                  <span>{{ cat.expandido ? '−' : '+' }}</span>
+                </button>
 
-          <!-- Itens -->
-          <div *ngIf="cat.expandido" class="mt-2">
-            <div class="row row-cols-1 g-2">
-              <div class="col" *ngFor="let item of cat.itens">
-                <div class="card catalogo-card shadow-sm h-100 p-3 position-relative" (click)="abrirItem(item)">
+                <!-- Itens -->
+                @if (cat.expandido) {
+                  <div class="mt-2">
+                    <div class="row row-cols-1 g-2">
+                      @for (item of cat.itens; track item.id) {
+                        <div class="col">
+                          <div class="card catalogo-card shadow-sm h-100 p-3 position-relative" (click)="abrirItem(item)">
 
 
-                  <div class="d-flex align-items-center mb-2">
-                    <div class="item-thumb me-3">
-                      <img *ngIf="item.imagem && item.imagem !== '-'" [src]="item.imagem"
-                        alt="{{ item.nome || 'Item' }}" />
-                      <span *ngIf="!item.imagem || item.imagem === '-'" class="text-muted fs-4">
-                        {{ getEmojiFallback(item.categoria) }}
-                      </span>
+                            <div class="d-flex align-items-center mb-2">
+                              <div class="item-thumb me-3">
+                                @if (item.imagem && item.imagem !== '-') {
+                                  <img [src]="item.imagem" alt="{{ item.nome || 'Item' }}" />
+                                } @else {
+                                  <span class="text-muted fs-4">
+                                    {{ getEmojiFallback(item.categoria) }}
+                                  </span>
+                                }
 
-                    </div>
+                              </div>
 
-                    <div>
-                      <h6 class="fw-bold text-white mb-1">{{ item.nome || 'Sem nome' }}</h6>
-                      <small class="raridade {{ getRaridadeClass(item.raridade) }}">
-                        {{ item.raridade || 'Comum' }}
-                      </small>
+                              <div>
+                                <h6 class="fw-bold text-white mb-1">{{ item.nome || 'Sem nome' }}</h6>
+                                <small class="raridade {{ getRaridadeClass(item.raridade) }}">
+                                  {{ item.raridade || 'Comum' }}
+                                </small>
+                              </div>
+                            </div>
+
+                            @if (item.efeito) {
+                              <p class="small mt-2 text-info">✨ {{ item.efeito }}</p>
+                            }
+                            @if (item.colateral) {
+                              <p class="small text-danger">⚠️ {{ item.colateral }}</p>
+                            }
+                            @if (item.descricao) {
+                              <p class="small descricao-text fst-italic">📝 {{ item.descricao }}</p>
+                            }
+
+                            <!-- Botão só para mestres -->
+                            @if (ehMestre) {
+                              <button
+                                class="btn btn-sm btn-outline-warning position-absolute bottom-0 end-0 m-2 d-flex align-items-center gap-1"
+                                (click)="toggleVisibilidade($event, item)" [disabled]="loadingVisibilidade[item.id]">
+                                @if (!loadingVisibilidade[item.id]) {
+                                  <span>
+                                    {{ item.visivel_jogadores ? '🙈 Ocultar' : '🙉 Mostrar' }}
+                                  </span>
+                                }
+                                @if (loadingVisibilidade[item.id]) {
+                                  <span class="spinner-border spinner-border-sm"></span>
+                                }
+                              </button>
+                            }
+
+                          </div>
+                        </div>
+                      }
                     </div>
                   </div>
+                }
 
-                  <p *ngIf="item.efeito" class="small mt-2 text-info">✨ {{ item.efeito }}</p>
-                  <p *ngIf="item.colateral" class="small text-danger">⚠️ {{ item.colateral }}</p>
-                  <p *ngIf="item.descricao" class="small descricao-text fst-italic">📝 {{ item.descricao }}</p>
-
-                  <!-- Botão só para mestres -->
-                  <button *ngIf="ehMestre"
-                    class="btn btn-sm btn-outline-warning position-absolute bottom-0 end-0 m-2 d-flex align-items-center gap-1"
-                    (click)="toggleVisibilidade($event, item)" [disabled]="loadingVisibilidade[item.id]">
-                    <span *ngIf="!loadingVisibilidade[item.id]">
-                      {{ item.visivel_jogadores ? '🙈 Ocultar' : '🙉 Mostrar' }}
-                    </span>
-                    <span *ngIf="loadingVisibilidade[item.id]" class="spinner-border spinner-border-sm"></span>
-                  </button>
-
-
-                </div>
               </div>
-            </div>
-          </div>
-
+            }
+          }
         </div>
-      </div>
+      }
 
     </div>
   </div>

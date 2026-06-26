@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -21,6 +21,7 @@ interface CategoriaCatalogo {
   imports: [CommonModule, FormsModule],
   templateUrl: './catalogo.html',
   styleUrls: ['./catalogo.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Catalogo implements OnInit {
   categorias: CategoriaCatalogo[] = [];
@@ -54,7 +55,7 @@ export class Catalogo implements OnInit {
     outros: ['Outros'],
   };
 
-  constructor(private router: Router) { }
+  constructor(private router: Router, private cdr: ChangeDetectorRef) { }
 
   async ngOnInit() {
     this.carregando = true;
@@ -65,6 +66,7 @@ export class Catalogo implements OnInit {
       console.error('[Catalogo] Erro ao carregar itens:', err);
     } finally {
       this.carregando = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -76,6 +78,7 @@ export class Catalogo implements OnInit {
       const jogadorAtual = jogadores.find((j) => j.email === user.email);
       this.ehMestre = jogadorAtual?.tipo_jogador === 'Mestre';
       console.log(`[Catalogo] 👑 Usuário é mestre? ${this.ehMestre}`);
+      this.cdr.markForCheck();
     }
   }
 
@@ -92,6 +95,7 @@ export class Catalogo implements OnInit {
         const atualizados = await this.repo.getLocal();
         this.todosItens = atualizados;           // 🔹 atualiza cache
         this.processarItens(this.todosItens);
+        this.cdr.markForCheck();
       }
     });
 
@@ -102,6 +106,8 @@ export class Catalogo implements OnInit {
       this.todosItens = online;                  // 🔹 atualiza cache
       this.processarItens(this.todosItens);
     }
+    
+    this.cdr.markForCheck();
   }
 
 
@@ -132,6 +138,7 @@ export class Catalogo implements OnInit {
       }));
 
     this.categoriasFiltradas = [...this.categorias];
+    this.cdr.markForCheck();
   }
 
 
@@ -140,6 +147,7 @@ export class Catalogo implements OnInit {
 
     if (!termo) {
       this.categoriasFiltradas = [...this.categorias];
+      this.cdr.markForCheck();
       return;
     }
 
@@ -158,6 +166,7 @@ export class Catalogo implements OnInit {
         };
       })
       .filter((c) => c.itens.length > 0);
+    this.cdr.markForCheck();
   }
 
   /** 🔠 Remove acentuação e normaliza para minúsculo */
@@ -172,6 +181,7 @@ export class Catalogo implements OnInit {
   selecionarAba(aba: 'recursos' | 'equipamentos' | 'pocoes' | 'outros' | 'ocultos') {
     this.abaAtiva = aba;
     this.processarItens(this.todosItens); // 🔹 sempre reprocessa o cache
+    this.cdr.markForCheck();
   }
 
 
@@ -181,6 +191,7 @@ export class Catalogo implements OnInit {
 
   toggleCategoria(cat: CategoriaCatalogo) {
     cat.expandido = !cat.expandido;
+    this.cdr.markForCheck();
   }
 
   abrirItem(item: CatalogoDomain) {
@@ -212,6 +223,7 @@ export class Catalogo implements OnInit {
       console.error('[Catalogo] Erro ao alternar visibilidade:', err);
     } finally {
       this.loadingVisibilidade[item.id] = false;
+      this.cdr.markForCheck();
     }
   }
 
