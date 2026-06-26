@@ -1,202 +1,603 @@
-/* ======== Layout Base ======== */
+/* ============================================================
+   BATALHA — Eldritch Archive Design System
+   Fontes: EB Garamond (títulos) · Inter (corpo) · JetBrains Mono (stats)
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600;700&family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+/* ── Tokens de cor ───────────────────────────────────────── */
+:host {
+  --surface:            #131313;
+  --surface-low:        #1c1b1b;
+  --surface-mid:        #201f1f;
+  --surface-high:       #2a2a2a;
+  --surface-highest:    #353534;
+  --border:             #4f4632;
+  --border-dim:         #2e2b1e;
+  --on-surface:         #e5e2e1;
+  --on-surface-dim:     #d4c5ab;
+  --primary:            #ffc107;
+  --primary-dim:        #fabd00;
+  --primary-dark:       #5b4300;
+  --hp-fill:            #c62828;
+  --hp-fill-end:        #b71c1c;
+  --hp-enemy:           #8b0000;
+  --red-accent:         #ef4444;
+  --gold:               #ffc107;
+  --outline:            #9c8f78;
+}
+
+/* ── Wrapper principal ───────────────────────────────────── */
 .batalha-wrapper {
-  background: #121212;
-  color: #fff;
+  min-height: 100%;
+  background-color: var(--surface);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='104' viewBox='0 0 60 104'%3E%3Cpolygon points='30,2 58,17 58,47 30,62 2,47 2,17' fill='none' stroke='%234f4632' stroke-width='0.6' opacity='0.35'/%3E%3Cpolygon points='30,52 58,67 58,97 30,112 2,97 2,67' fill='none' stroke='%234f4632' stroke-width='0.6' opacity='0.35'/%3E%3C/svg%3E");
+  background-size: 60px 104px;
+  color: var(--on-surface);
+  font-family: 'Inter', sans-serif;
 }
 
-.batalha-container {
+/* ── Scroll area ─────────────────────────────────────────── */
+.campo-scroll {
   width: 100%;
-  max-width: 900px;
+  overflow-y: auto;
+}
+
+.campo-container {
+  width: 100%;
+  max-width: 960px;
   margin: 0 auto;
+  padding: 16px 16px 32px;
 }
 
-/* ======== Abas ======== */
-.nav-tabs {
-  border-bottom: 1px solid #333;
+/* ── Abas ────────────────────────────────────────────────── */
+.batalha-tabs {
+  display: flex;
+  background: var(--surface-low);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-.nav-link {
-  color: #ccc;
+.tab-btn {
+  flex: 1;
+  padding: 12px 8px;
+  background: transparent;
   border: none;
   border-bottom: 3px solid transparent;
+  color: var(--on-surface-dim);
+  font-family: 'EB Garamond', serif;
+  font-size: 15px;
   font-weight: 600;
-  transition: all 0.2s ease;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
 }
 
-.nav-link.active {
-  color: #fff;
-  border-bottom: 3px solid #a78bfa;
-  background-color: transparent;
+.tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
 }
 
-.nav-link:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.05);
+.tab-btn:hover:not(.active) {
+  color: var(--on-surface);
+  background: rgba(255, 255, 255, 0.03);
 }
 
-/* ======== Busca ======== */
-.search-bar {
-  background: #1e1e1e;
-  color: #fff;
-  border: 1px solid #444;
-}
-.search-bar:focus {
-  border-color: #666;
-  box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+/* ── Loading ─────────────────────────────────────────────── */
+.loading-state {
+  text-align: center;
+  padding: 48px 16px;
 }
 
-/* ======== Cards ======== */
-.jogador-card {
-  background: #1e1e1e;
-  border-radius: 12px;
-  border: 1px solid #333;
-  transition: all 0.2s ease;
-}
-.jogador-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+.loading-text {
+  margin-top: 12px;
+  color: var(--on-surface-dim);
+  font-size: 14px;
 }
 
-.img-container {
-  width: 55px;
-  height: 55px;
+/* ── Busca ───────────────────────────────────────────────── */
+.search-wrapper {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  background: var(--surface-mid);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 10px 12px 10px 36px;
+  color: var(--on-surface);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input::placeholder {
+  color: var(--outline);
+}
+
+.search-input:focus {
+  border-color: var(--primary-dim);
+  box-shadow: 0 0 0 2px rgba(250, 189, 0, 0.15);
+}
+
+/* ── Cabeçalho de seção ──────────────────────────────────── */
+.secao-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface-high);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.secao-header:hover {
+  background: var(--surface-highest);
+}
+
+.secao-titulo {
+  font-family: 'EB Garamond', serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--on-surface);
+  letter-spacing: 0.04em;
+}
+
+.inimigos-titulo {
+  color: #f87171;
+}
+
+.secao-toggle {
+  color: var(--primary);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ── Grade de combatentes ────────────────────────────────── */
+.combatentes-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+@media (min-width: 480px) {
+  .combatentes-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .combatentes-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ── Card do combatente ──────────────────────────────────── */
+.combatente-card {
+  background: var(--surface-low);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  position: relative;
   overflow: hidden;
 }
 
-.img-fluid {
+/* Efeito de profundidade sutil */
+.combatente-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at top left, rgba(255, 193, 7, 0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.jogador-card {
+  border-color: var(--border);
+}
+
+.jogador-card:hover {
+  border-color: var(--primary-dim);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(250, 189, 0, 0.12), 0 2px 6px rgba(0,0,0,0.5);
+}
+
+.inimigo-card {
+  border-color: #4a1010;
+}
+
+.inimigo-card::before {
+  background: radial-gradient(ellipse at top left, rgba(180, 0, 0, 0.06) 0%, transparent 70%);
+}
+
+.inimigo-card:hover {
+  border-color: #8b0000;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(139, 0, 0, 0.2), 0 2px 6px rgba(0,0,0,0.5);
+}
+
+/* Card de personagem morto */
+.combatente-card.morto {
+  opacity: 0.55;
+  filter: grayscale(0.6);
+}
+
+/* ── Cabeçalho do card ───────────────────────────────────── */
+.card-cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ── Avatar ──────────────────────────────────────────────── */
+.avatar-wrapper {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 6px;
+  border: 2px solid;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-mid);
+  position: relative;
+}
+
+.jogador-avatar {
+  border-color: var(--primary);
+  box-shadow: 0 0 6px rgba(250, 189, 0, 0.3);
+}
+
+.inimigo-avatar {
+  border-color: #8b0000;
+  box-shadow: 0 0 6px rgba(139, 0, 0, 0.3);
+}
+
+.avatar-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
-/* ======== Botões ======== */
-.btn-outline-light {
-  border-color: #bbb;
-  color: #bbb;
-}
-.btn-outline-light:hover {
-  background: #bbb;
-  color: #1e1e1e;
+.avatar-placeholder,
+.avatar-morto {
+  font-size: 22px;
+  line-height: 1;
 }
 
-.btn-outline-success {
-  border-color: #28a745;
-  color: #28a745;
+/* ── Info do card ────────────────────────────────────────── */
+.card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
 }
-.btn-outline-success:hover {
-  background: #28a745;
+
+.card-nome {
+  font-family: 'EB Garamond', serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.02em;
+}
+
+.card-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: var(--outline);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-nivel {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.card-nivel-boss {
+  color: #f87171;
+}
+
+/* ── Barra de HP ─────────────────────────────────────────── */
+.hp-track {
+  width: 100%;
+  height: 6px;
+  background: #0e0e0e;
+  border-radius: 3px;
+  overflow: visible;
+  position: relative;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);
+}
+
+.hp-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--hp-fill), var(--hp-fill-end));
+  min-width: 2px;
+  position: relative;
+  transition: width 0.4s ease;
+  /* Bloom effect no leading edge */
+  box-shadow: 0 0 6px 1px rgba(198, 40, 40, 0.55);
+}
+
+.hp-fill-enemy {
+  background: linear-gradient(90deg, #8b0000, #6b0000);
+  box-shadow: 0 0 6px 1px rgba(139, 0, 0, 0.55);
+}
+
+/* ── Grid de stats ───────────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--surface-mid);
+  border: 1px solid var(--border-dim);
+  border-radius: 3px;
+  padding: 5px 4px 4px;
+  /* Radial gradient sutil */
+  background: radial-gradient(ellipse at center, #2a2a2a 0%, #1e1e1e 100%);
+}
+
+.stat-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--outline);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--on-surface);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.stat-gold {
+  color: var(--primary);
+}
+
+.stat-red {
+  color: #f87171;
+}
+
+/* ── Ações do card ───────────────────────────────────────── */
+.card-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: 2px;
+}
+
+.action-btn {
+  min-width: 44px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  border: 1px solid;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  padding: 6px 10px;
+}
+
+.action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.action-attack {
+  background: rgba(255, 193, 7, 0.1);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.action-attack:hover:not(:disabled) {
+  background: var(--primary);
+  color: #131313;
+  box-shadow: 0 0 8px rgba(255, 193, 7, 0.4);
+}
+
+.action-heal {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.action-heal:hover:not(:disabled) {
+  background: #22c55e;
+  color: #131313;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
+}
+
+.action-delete {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.action-delete:hover:not(:disabled) {
+  background: #ef4444;
   color: #fff;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.35);
 }
 
-.btn-outline-danger {
-  border-color: #ff4d6d;
-  color: #ff4d6d;
-}
-.btn-outline-danger:hover {
-  background: #ff4d6d;
-  color: #fff;
+/* ── Separador tático ────────────────────────────────────── */
+.batalha-separador {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0 20px;
 }
 
-/* ======== Histórico ======== */
+.sep-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+}
+
+.sep-icon {
+  font-size: 20px;
+  opacity: 0.7;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 4px rgba(255, 193, 7, 0.5));
+}
+
+/* ── Mensagem vazia ──────────────────────────────────────── */
+.vazio-msg {
+  text-align: center;
+  padding: 24px;
+  color: var(--outline);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* ── Histórico ───────────────────────────────────────────── */
+.historico-titulo {
+  font-family: 'EB Garamond', serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--on-surface);
+  margin-bottom: 16px;
+  letter-spacing: 0.03em;
+}
+
+.historico-secao {
+  margin-bottom: 12px;
+}
+
+.historico-secao-btn {
+  margin-bottom: 8px;
+}
+
+.historico-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
 .registro-card {
-  background: #1e1e1e;
-  border-radius: 10px;
-  border: 1px solid #333;
+  background: var(--surface-low);
+  border: 1px solid var(--border-dim);
+  border-left: 4px solid var(--border); /* cor sobreposta inline via [style] */
+  border-radius: 4px;
+  padding: 12px 14px;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
+
 .registro-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.35);
 }
 
-/* Cabeçalhos de Data */
-.btn-categoria {
-  background: #2a2a2a;
-  border: 1px solid #444;
-  border-radius: 8px;
-  padding: 8px 12px;
-  color: #fff;
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-.btn-categoria:hover {
-  background: #333;
+.registro-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
 }
 
-/* Texto */
-.descricao-text {
-  color: #eee;
-  line-height: 1.5;
+.registro-tipo {
+  font-family: 'EB Garamond', serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--on-surface);
+  margin: 0;
 }
 
 .registro-hora {
-  color: #bbb;
-  font-size: 0.85rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--outline);
 }
 
-
-.btn-categoria {
-  background: #2a2a2a;
-  border: 1px solid #444;
-  border-radius: 8px;
-  padding: 8px 12px;
-  color: #fff;
-  font-weight: bold;
-  transition: background 0.2s ease;
-}
-.btn-categoria:hover {
-  background: #333;
+.registro-detalhes {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--on-surface-dim);
+  line-height: 1.55;
+  margin: 0;
+  white-space: pre-line;
+  font-style: italic;
 }
 
-.status-linha {
-  gap: 0.8rem;
-  justify-content: flex-end;
-  font-size: 0.95rem;
-}
+/* ── Desktop: ajuste com sidenav ─────────────────────────── */
+@media (min-width: 992px) {
+  .campo-container {
+    padding: 20px 24px 40px;
+  }
 
-.status-item {
-  display: flex;
-  align-items: center;
-  min-width: 0px;
-  justify-content: flex-end;
-  text-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
-}
+  .combatentes-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 
-.text-danger {
-  color: #ef4444 !important; /* ❤️ Vida */
-}
+  .avatar-wrapper {
+    width: 60px;
+    height: 60px;
+  }
 
-.text-primary {
-  color: #3b82f6 !important; /* 🛡️ Armadura */
-}
+  .card-nome {
+    font-size: 16px;
+  }
 
-.text-warning {
-  color: #facc15 !important; /* 🔰 Escudo */
-}
+  .stat-value {
+    font-size: 14px;
+  }
 
-
-.status-linha {
-  gap: 0.8rem;
-  justify-content: flex-end;
-  font-size: 0.95rem;
-}
-
-.status-item {
-  display: flex;
-  align-items: center;
-  min-width: 40px;
-  justify-content: flex-end;
-  text-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
-}
-
-.text-danger {
-  color: #ef4444 !important; /* ❤️ Vida */
-}
-
-.text-primary {
-  color: #3b82f6 !important; /* 🛡️ Armadura */
-}
-
-.text-warning {
-  color: #facc15 !important; /* 🔰 Escudo */
+  .action-btn {
+    min-height: 38px;
+  }
 }

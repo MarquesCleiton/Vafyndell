@@ -1,142 +1,130 @@
-<div class="npc-wrapper d-flex flex-column min-vh-100 bg-dark text-light">
+<!-- =========================================================
+     NPCS — Eldritch Archive — Lista de Feras & Vilões
+     ========================================================= -->
+<div class="sheet-wrapper">
 
-  <!-- Barra de pesquisa -->
-  <div class="p-3 bg-black border-bottom position-sticky top-0" style="z-index: 10;">
-    <input type="text" class="form-control search-bar rounded-pill px-3" placeholder="🔍 Pesquisar NPCs..."
-      [(ngModel)]="filtro" (input)="aplicarFiltro()" />
+  <!-- Busca (sticky) -->
+  <div class="npc-search-bar">
+    <span class="search-icon">🔍</span>
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Pesquisar Feras & Vilões..."
+      [(ngModel)]="filtro"
+      (input)="aplicarFiltro()"
+    />
   </div>
 
-  <!-- Tabs -->
-  <ul class="nav nav-tabs bg-dark px-3" role="tablist">
-    <!-- Aba Ocultos → só para Mestre -->
+  <!-- Abas -->
+  <div class="sheet-tabs">
     @if (ehMestre) {
-      <li class="nav-item">
-        <button class="nav-link" [class.active]="abaAtiva === 'ocultos'" (click)="selecionarAba('ocultos')">
-          🙈 Ocultos
-        </button>
-      </li>
+      <button class="tab-btn" [class.active]="abaAtiva === 'ocultos'" (click)="selecionarAba('ocultos')">
+        🙈 Ocultos
+      </button>
     }
-
-    <li class="nav-item">
-      <button class="nav-link" [class.active]="abaAtiva === 'bestiais'" (click)="selecionarAba('bestiais')">
-        🐾 Bestiais
-      </button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" [class.active]="abaAtiva === 'inimigos'" (click)="selecionarAba('inimigos')">
-        ⚔️ Inimigos
-      </button>
-    </li>
-  </ul>
-
+    <button class="tab-btn" [class.active]="abaAtiva === 'bestiais'" (click)="selecionarAba('bestiais')">
+      🐾 Bestiais
+    </button>
+    <button class="tab-btn" [class.active]="abaAtiva === 'inimigos'" (click)="selecionarAba('inimigos')">
+      ⚔️ Inimigos
+    </button>
+  </div>
 
   <!-- Conteúdo -->
-  <div class="flex-grow-1 p-3 d-flex justify-content-center">
-    <div class="npc-container w-100">
-
-      <h4 class="fw-bold mb-3">👹 Feras & Vilões</h4>
+  <div class="sheet-scroll">
+    <div class="sheet-container">
 
       <!-- Loading -->
       @if (carregando) {
-        <div class="text-center py-5">
-          <div class="spinner-border text-light" role="status"></div>
-          <p class="mt-2">Carregando NPCs...</p>
+        <div class="loading-state">
+          <div class="spinner-border text-warning" role="status"></div>
+          <p class="loading-text">Carregando Feras & Vilões...</p>
         </div>
       }
 
       <!-- Vazio -->
       @if (!carregando && categoriasFiltradas.length === 0) {
-        <div class="text-center text-muted py-5">
-          Nenhum NPC encontrado.
+        <div class="loading-state">
+          <p class="loading-text" style="padding-top:0">Nenhum NPC encontrado.</p>
         </div>
       }
 
-      <!-- Categorias (tipos) -->
+      <!-- Categorias -->
       @if (!carregando) {
-        <div>
-          @for (cat of categoriasFiltradas; track cat.nome) {
-            <div class="mb-3">
+        @for (cat of categoriasFiltradas; track cat.nome) {
+          <div style="margin-bottom: 12px">
 
-              <!-- Cabeçalho da categoria -->
-              <button class="btn btn-categoria w-100 d-flex justify-content-between align-items-center"
-                (click)="toggleCategoria(cat)">
-                <span class="fw-bold">{{ cat.nome }}</span>
-                <span>{{ cat.expandido ? '−' : '+' }}</span>
-              </button>
+            <!-- Header categoria -->
+            <button class="secao-header" (click)="toggleCategoria(cat)">
+              <span class="secao-titulo">{{ cat.nome }}</span>
+              <span class="secao-toggle">{{ cat.expandido ? '−' : '+' }}</span>
+            </button>
 
-              <!-- Lista de NPCs -->
-              @if (cat.expandido) {
-                <div class="mt-2">
-                  <div class="row row-cols-1 g-2">
-                    @for (npc of cat.itens; track npc.id) {
-                      <div class="col">
-                        <div class="card npc-card shadow-sm p-3" (click)="abrirItem(npc)" style="cursor: pointer;">
+            <!-- Cards de NPCs -->
+            @if (cat.expandido) {
+              <div class="npc-grid">
+                @for (npc of cat.itens; track npc.id) {
+                  <div class="npc-card" (click)="abrirItem(npc)">
 
-                          <!-- Cabeçalho do NPC -->
-                          <div class="d-flex align-items-center mb-2">
-                            <div class="item-thumb me-3">
-                              @if (npc.imagem && npc.imagem !== '-') {
-                                <img [src]="npc.imagem" alt="{{ npc.nome }}" />
-                              }
-                              @if (!npc.imagem || npc.imagem === '-') {
-                                <span>👹</span>
-                              }
-                            </div>
+                    <!-- Avatar -->
+                    <div class="npc-avatar">
+                      @if (npc.imagem && npc.imagem !== '-') {
+                        <img [src]="npc.imagem" [alt]="npc.nome" class="npc-avatar-img" />
+                      } @else {
+                        <span class="npc-avatar-icon">👹</span>
+                      }
+                    </div>
 
-                            <div>
-                              <h6 class="fw-bold text-white mb-1">{{ npc.nome }}</h6>
-                              <small class="text-secondary">
-                                {{ npc.tipo || '—' }} | {{ npc.alinhamento || 'Sem alinhamento' }}
-                              </small>
-                            </div>
-                          </div>
+                    <!-- Info -->
+                    <div class="npc-card-body">
+                      <h6 class="npc-nome">{{ npc.nome }}</h6>
+                      <span class="npc-sub">{{ npc.tipo || '—' }} · {{ npc.alinhamento || 'Sem alinhamento' }}</span>
 
-                          <!-- Status -->
-                          <p class="small mb-1 text-info">
-                            ❤️ <b>{{ npc.pontos_de_vida }}</b>
-                            | 🛡️ <b>{{ npc.classe_armadura }}</b>
-                            | ⭐ <b>{{ npc.xp }}</b>
-                          </p>
-
-                          <!-- Descrição -->
-                          @if (npc.descricao) {
-                            <p class="text-white small descricao-text fst-italic">
-                              {{ npc.descricao }}
-                            </p>
-                          }
-
-                          <!-- 🔒 Botão só para o mestre -->
-                          @if (ehMestre) {
-                            <button
-                              class="btn btn-sm btn-outline-warning position-absolute bottom-0 end-0 m-2 d-flex align-items-center gap-1"
-                              (click)="toggleVisibilidade($event, npc)" [disabled]="loadingVisibilidade[npc.id]">
-                              @if (!loadingVisibilidade[npc.id]) {
-                                <span>
-                                  {{ npc.visivel_jogadores ? '🙈 Ocultar' : '🙉 Mostrar' }}
-                                </span>
-                              }
-                              @if (loadingVisibilidade[npc.id]) {
-                                <span class="spinner-border spinner-border-sm"></span>
-                              }
-                            </button>
-                          }
-                        </div>
+                      <!-- Stats rápidos -->
+                      <div class="npc-mini-stats">
+                        <span class="npc-stat">❤️ <b>{{ npc.pontos_de_vida }}</b></span>
+                        <span class="npc-stat">🛡️ <b>{{ npc.classe_armadura }}</b></span>
+                        <span class="npc-stat">⭐ <b>{{ npc.xp }}</b></span>
                       </div>
-                    }
-                  </div>
-                </div>
-              }
 
-            </div>
-          }
-        </div>
+                      <!-- Descrição -->
+                      @if (npc.descricao) {
+                        <p class="npc-descricao">{{ npc.descricao }}</p>
+                      }
+                    </div>
+
+                    <!-- Botão visibilidade (mestre) -->
+                    @if (ehMestre) {
+                      <button
+                        class="vis-btn"
+                        [class.vis-ativo]="npc.visivel_jogadores"
+                        (click)="toggleVisibilidade($event, npc)"
+                        [disabled]="loadingVisibilidade[npc.id]"
+                        title="{{ npc.visivel_jogadores ? 'Ocultar dos jogadores' : 'Mostrar aos jogadores' }}"
+                      >
+                        @if (!loadingVisibilidade[npc.id]) {
+                          {{ npc.visivel_jogadores ? '🙈' : '🙉' }}
+                        } @else {
+                          <span class="spinner-border spinner-border-sm"></span>
+                        }
+                      </button>
+                    }
+
+                  </div>
+                }
+              </div>
+            }
+
+          </div>
+        }
       }
 
     </div>
   </div>
 
-  <!-- Botão flutuante -->
+  <!-- FAB Novo NPC -->
   <div class="fab-stack">
-    <button class="fab fab-primary" (click)="novoNpc()">＋</button>
+    <button class="fab fab-edit" (click)="novoNpc()" title="Novo NPC">＋</button>
   </div>
+
 </div>

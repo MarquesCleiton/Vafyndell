@@ -1,101 +1,95 @@
-<div class="inventario-cadastro-wrapper d-flex flex-column min-vh-100 bg-dark text-light pb-5 mb-5">
-  <div class="flex-grow-1 p-3 d-flex justify-content-center">
-    <div class="inventario-cadastro-container w-100">
+<!-- =========================================================
+     CADASTRO INVENTÁRIO — Eldritch Archive
+     ========================================================= -->
+<div class="sheet-wrapper">
+  <div class="sheet-scroll">
+    <div class="form-container">
 
       <form #form="ngForm" (ngSubmit)="salvar(form)" id="formInventario">
-        <div class="card detalhe-card shadow-lg border-0">
+        
+        <h2 class="form-section-title">
+          🎒 {{ editando ? 'Editar Item do Inventário' : 'Adicionar ao Inventário' }}
+        </h2>
+        <div class="divider-blade"></div>
 
-          <!-- Cabeçalho -->
-          <div class="card-body p-3 border-bottom d-flex align-items-center gap-2">
-            <h4 class="fw-bold mb-0 text-light">
-              🎒 {{ editando ? 'Editar Item do Inventário' : 'Adicionar ao Inventário' }}
-            </h4>
-          </div>
+        <!-- ── Item (Autocomplete) ── -->
+        <div class="field-group mt-3">
+          <label class="field-label">🏷️ Item *</label>
+          <mat-form-field appearance="fill" class="w-100 eldritch-mat-field">
+            <input type="text" matInput placeholder="Selecione ou pesquise..." [(ngModel)]="filtro" name="filtro"
+              [matAutocomplete]="auto" (input)="filtrarItens()" [readonly]="editando" />
+            
+            <button mat-icon-button matSuffix disabled class="eldritch-dropdown-arrow">
+              <mat-icon>arrow_drop_down</mat-icon>
+            </button>
 
-          <div class="card-body">
-            <!-- Item com autocomplete -->
-            <div class="mb-3">
-              <label class="form-label text-light fw-bold">🏷️ Item *</label>
-              <mat-form-field appearance="fill" class="w-100 input-dark compact-select dropdown-field">
-                <input type="text" matInput placeholder="Selecione ou pesquise..." [(ngModel)]="filtro" name="filtro"
-                  [matAutocomplete]="auto" (input)="filtrarItens()" [readonly]="editando" />
+            <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selecionarItem($event.option.value)">
+              <mat-option *ngIf="!editando" (click)="novoItem()" class="eldritch-mat-option new-item-opt">
+                <mat-icon class="me-2">add_circle</mat-icon> Novo
+              </mat-option>
 
-                <!-- 🔽 Seta indicativa -->
-                <button mat-icon-button matSuffix disabled class="dropdown-arrow">
-                  <mat-icon>arrow_drop_down</mat-icon>
-                </button>
-
-                <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selecionarItem($event.option.value)">
-                  <mat-option *ngIf="!editando" (click)="novoItem()" class="text-success bg-dark">
-                    <mat-icon class="me-2">add_circle</mat-icon> Novo
-                  </mat-option>
-
-                  <mat-option *ngFor="let c of catalogoFiltrado" [value]="c" class="bg-dark text-light">
-                    <div class="d-flex align-items-center">
-                      <ng-container *ngIf="c.imagem && c.imagem !== '-'; else noItemIcon">
-                        <img [src]="c.imagem" class="me-2 rounded"
-                          style="width: 24px; height: 24px; object-fit: cover;">
-                      </ng-container>
-                      <ng-template #noItemIcon>
-                        <span class="me-2">📦</span>
-                      </ng-template>
-                      <span>{{ c.nome }}</span>
-                    </div>
-                  </mat-option>
-                </mat-autocomplete>
-              </mat-form-field>
-            </div>
-
-            <!-- Preview -->
-            <div *ngIf="selecionado" class="preview-card mb-3">
-              <div class="d-flex align-items-center">
-                <ng-container *ngIf="selecionado.imagem && selecionado.imagem !== '-'; else noPreviewIcon">
-                  <img [src]="selecionado.imagem" class="me-3 rounded preview-img">
-                </ng-container>
-                <ng-template #noPreviewIcon>
-                  <span class="me-3">📦</span>
-                </ng-template>
-                <div>
-                  <h6 class="fw-bold text-light mb-1">{{ selecionado.nome }}</h6>
-                  <small class="text-light">
-                    {{ selecionado.categoria }} | {{ selecionado.raridade }}
-                  </small>
+              <mat-option *ngFor="let c of catalogoFiltrado" [value]="c" class="eldritch-mat-option">
+                <div class="d-flex align-items-center">
+                  <ng-container *ngIf="c.imagem && c.imagem !== '-'; else noItemIcon">
+                    <img [src]="c.imagem" class="mat-opt-img" />
+                  </ng-container>
+                  <ng-template #noItemIcon>
+                    <span class="mat-opt-icon">📦</span>
+                  </ng-template>
+                  <span>{{ c.nome }}</span>
                 </div>
-              </div>
-            </div>
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
 
-            <!-- Quantidade -->
-            <div class="d-flex align-items-center justify-content-between mb-3">
-              <label class="form-label text-light fw-bold mb-0 me-3">🔢 Quantidade *</label>
-              <div class="quantidade-box">
-                <button type="button" class="btn btn-sm btn-outline-light" (click)="decrementar()">−</button>
-                <input type="number" class="quantidade-input" [(ngModel)]="quantidade" name="quantidade" min="0"
-                  required />
-                <button type="button" class="btn btn-sm btn-outline-light" (click)="incrementar()">+</button>
-              </div>
+        <!-- ── Preview do Selecionado ── -->
+        <div *ngIf="selecionado" class="preview-card mb-4">
+          <div class="d-flex align-items-center">
+            <ng-container *ngIf="selecionado.imagem && selecionado.imagem !== '-'; else noPreviewIcon">
+              <img [src]="selecionado.imagem" class="preview-img">
+            </ng-container>
+            <ng-template #noPreviewIcon>
+              <span class="preview-icon">📦</span>
+            </ng-template>
+            <div class="preview-info">
+              <h6 class="preview-nome">{{ selecionado.nome }}</h6>
+              <small class="preview-sub">{{ selecionado.categoria }} | {{ selecionado.raridade }}</small>
             </div>
-
-            <!-- 📝 Descrição da inclusão -->
-            <div class="mb-3">
-              <label class="form-label text-light fw-bold">📝 Descrição (opcional)</label>
-              <textarea class="form-control bg-dark text-light border-secondary" rows="3" [(ngModel)]="descricao"
-                name="descricao"
-                placeholder="Ex: Comprado no mercado, ganho em missão, achado nas ruínas..."></textarea>
-            </div>
-
           </div>
         </div>
-      </form>
 
+        <div class="divider-blade" style="opacity: 0.5;"></div>
+
+        <!-- ── Quantidade ── -->
+        <div class="d-flex justify-content-between align-items-center my-3">
+          <label class="field-label mb-0">🔢 Quantidade *</label>
+          <div class="edit-attr-controls">
+            <button type="button" class="edit-attr-btn" (click)="decrementar()">−</button>
+            <input type="number" class="edit-attr-input" [(ngModel)]="quantidade" name="quantidade" min="0" required />
+            <button type="button" class="edit-attr-btn" (click)="incrementar()">+</button>
+          </div>
+        </div>
+
+        <div class="divider-blade" style="opacity: 0.5;"></div>
+
+        <!-- ── Descrição ── -->
+        <div class="field-group mt-3">
+          <label class="field-label">📝 Descrição (opcional)</label>
+          <textarea class="field-input auto-expand" rows="3" [(ngModel)]="descricao" name="descricao"
+            placeholder="Ex: Comprado no mercado, ganho em missão, achado nas ruínas..."></textarea>
+        </div>
+
+      </form>
     </div>
   </div>
 
   <!-- FABs -->
   <div class="fab-stack">
     <!-- Cancelar -->
-    <button type="button" class="fab fab-warning" (click)="cancelar()">⬅️</button>
+    <button type="button" class="fab fab-back" (click)="cancelar()" title="Cancelar">⬅️</button>
     <!-- Salvar -->
-    <button type="submit" form="formInventario" class="fab fab-primary" [disabled]="form.invalid || salvando">
+    <button type="submit" form="formInventario" class="fab fab-save" [disabled]="form.invalid || salvando" title="Salvar">
       <ng-container *ngIf="!salvando">💾</ng-container>
       <ng-container *ngIf="salvando">
         <span class="spinner-border spinner-border-sm"></span>

@@ -1,154 +1,105 @@
-/* ======================
-   WRAPPER & CONTAINER
-   ====================== */
-.inventario-cadastro-wrapper {
+/* cadastro-inventario.css — Eldritch Archive */
+@import '../../jogador-pages/jogador-shared.css';
+
+/* ── Preview Card ────────────────────────────────────────── */
+.preview-card {
+  background: var(--surface-low);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px;
+}
+.preview-img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-right: 12px;
+  border: 1px solid var(--border);
+}
+.preview-icon {
+  font-size: 24px;
+  margin-right: 12px;
+}
+.preview-info {
   display: flex;
   flex-direction: column;
 }
-.inventario-cadastro-container {
-  width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
+.preview-nome {
+  font-family: 'EB Garamond', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin: 0;
+}
+.preview-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: var(--outline);
 }
 
-/* ======================
-   CARD
-   ====================== */
-.detalhe-card {
-  background: #1e1e1e;
-  border-radius: 12px;
-  overflow: hidden;
+/* ── Textarea ────────────────────────────────────────────── */
+textarea.auto-expand {
+  min-height: 80px;
+  resize: vertical;
+  border-radius: 4px 4px 0 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-/* ======================
-   INPUTS / MATERIAL
-   ====================== */
-.input-dark {
-  background: #1e1e1e !important;
-  border-radius: 6px;
-  color: #f8f9fa !important;
+/* ── Angular Material Overrides (Eldritch Style) ─────────── */
+::ng-deep .eldritch-mat-field .mdc-text-field {
+  background-color: var(--surface-mid) !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-radius: 4px 4px 0 0;
 }
-.input-dark input {
-  color: #f8f9fa !important;
+::ng-deep .eldritch-mat-field .mdc-text-field:not(.mdc-text-field--disabled) .mdc-text-field__input {
+  color: var(--on-surface) !important;
+  font-family: 'Inter', sans-serif !important;
 }
-
-/* Compactar selects */
-.compact-select .mat-mdc-form-field-subscript-wrapper {
-  display: none;
+::ng-deep .eldritch-mat-field .mdc-line-ripple::before,
+::ng-deep .eldritch-mat-field .mdc-line-ripple::after {
+  border-bottom-color: var(--primary) !important;
 }
-.compact-select .mat-mdc-form-field-flex {
-  padding: 0.25rem 0.5rem;
-}
-.compact-select .mat-select-trigger {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
+.eldritch-dropdown-arrow {
+  color: var(--outline) !important;
 }
 
-/* 🔽 Forçar seta em autocomplete */
-.dropdown-field .mat-mdc-form-field-flex {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.dropdown-arrow {
-  pointer-events: none; /* não clica */
-  color: #bbb !important;
-  margin-left: auto;
-}
-.dropdown-arrow mat-icon {
-  font-size: 1.4rem;
+/* Painel do Autocomplete (Overlay) */
+::ng-deep .mat-mdc-autocomplete-panel,
+::ng-deep .mat-mdc-autocomplete-panel .mdc-list {
+  background-color: #2a2a2a !important;
+  border: 1px solid #4f4632 !important;
 }
 
-/* ======================
-   PREVIEW
-   ====================== */
-.preview-card {
-  background: rgba(108, 117, 125, 0.2);
-  border-radius: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  text-align: left;
+::ng-deep .mat-mdc-autocomplete-panel .mat-mdc-option,
+::ng-deep .eldritch-mat-option,
+::ng-deep .eldritch-mat-option .mdc-list-item__primary-text,
+::ng-deep .eldritch-mat-option span {
+  color: #e5e2e1 !important;
+  font-family: 'Inter', sans-serif !important;
 }
-.preview-img {
-  width: 50px;
-  height: 50px;
+
+::ng-deep .mat-mdc-autocomplete-panel .mat-mdc-option.mat-mdc-option-active,
+::ng-deep .eldritch-mat-option.mat-mdc-option-active,
+::ng-deep .eldritch-mat-option:hover {
+  background-color: #353534 !important;
+}
+
+::ng-deep .new-item-opt,
+::ng-deep .new-item-opt .mdc-list-item__primary-text,
+::ng-deep .new-item-opt span {
+  color: #28a745 !important;
+}
+
+::ng-deep .mat-opt-img {
+  width: 24px;
+  height: 24px;
   object-fit: cover;
-  border-radius: 0.5rem;
-  border: 1px solid #6c757d;
+  border-radius: 4px;
+  margin-right: 8px;
 }
-
-/* ======================
-   QUANTIDADE
-   ====================== */
-.quantidade-box {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-.quantidade-input {
-  width: 60px;
-  text-align: center;
-  font-weight: bold;
-  border: 1px solid #6c757d;
-  border-radius: 0.4rem;
-  background: #212529;
-  color: #f8f9fa;
-  padding: 0.2rem;
-  font-size: 0.85rem;
-}
-
-/* ======================
-   FAB STACK
-   ====================== */
-.fab-stack {
-  position: fixed;
-  bottom: 70px;
-  right: 20px;
-  display: flex;
-  flex-direction: column-reverse;
-  gap: 15px;
-  z-index: 1000;
-}
-.fab {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  font-size: 1.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.4);
-  transition: transform 0.2s ease;
-}
-.fab:hover {
-  transform: scale(1.08);
-}
-.fab-primary {
-  background: #0d6efd;
-  color: #fff;
-}
-.fab-primary:hover {
-  background: #0b5ed7;
-}
-.fab-warning {
-  background: #ffc107;
-  color: #000;
-}
-.fab-warning:hover {
-  background: #e0a800;
-}
-
-/* ======================
-   DESKTOP AJUSTE
-   ====================== */
-@media (min-width: 992px) {
-  .inventario-cadastro-container {
-    padding: 0 2rem;
-  }
-  .detalhe-card {
-    border-radius: 16px;
-  }
-  .fab-stack {
-    right: calc(50% - 450px + 20px);
-  }
+::ng-deep .mat-opt-icon {
+  margin-right: 8px;
+  font-size: 16px;
 }

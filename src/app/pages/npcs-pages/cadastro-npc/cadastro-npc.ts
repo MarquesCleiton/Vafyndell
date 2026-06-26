@@ -11,10 +11,13 @@ import { IdUtils } from '../../../core/utils/IdUtils';
 
 type AtributoChave = keyof Pick<
   NpcDomain,
-  | 'forca' | 'constituicao' | 'destreza'
-  | 'sabedoria' | 'inteligencia' | 'energia'
-  | 'classe_armadura' | 'pontos_de_vida'
-  | 'escudo' | 'xp'   // 👈 incluído aqui
+  | 'nivel' | 'xp'
+  | 'forca' | 'destreza' | 'constituicao'
+  | 'inteligencia' | 'sabedoria' | 'carisma'
+  | 'energia' | 'classe_armadura'
+  | 'escudo' | 'pontos_de_sorte'
+  | 'pontos_de_vida' | 'fator_de_cura'
+  | 'deslocamento'
 >;
 
 
@@ -34,19 +37,27 @@ export class CadastroNpc implements OnInit, AfterViewInit {
     tipo: 'Comum',
     descricao: '',
     alinhamento: '',
+    ataques: '',
+    visivel_jogadores: false,
+    email: '',
+    // Combate
     pontos_de_vida: 0,
     classe_armadura: 0,
     escudo: 0,
-    forca: 0,
-    constituicao: 0,
-    destreza: 0,
-    sabedoria: 0,
-    inteligencia: 0,
-    energia: 0,
-    ataques: '',
     xp: 0,
-    visivel_jogadores: false,
-    email: '',
+    // Primários
+    forca: 0,
+    destreza: 0,
+    constituicao: 0,
+    inteligencia: 0,
+    sabedoria: 0,
+    carisma: 0,
+    energia: 0,
+    // Secundários
+    nivel: 1,
+    pontos_de_sorte: 0,
+    fator_de_cura: 0,
+    deslocamento: 0,
   };
 
   imagemBase64Temp: string | null = null;
@@ -54,16 +65,21 @@ export class CadastroNpc implements OnInit, AfterViewInit {
   editMode = false;
 
   atributosNumericos = [
-    { key: 'xp' as AtributoChave, label: 'XP', icon: '⭐' },
-    { key: 'pontos_de_vida' as AtributoChave, label: 'Vida', icon: '❤️' },
-    { key: 'classe_armadura' as AtributoChave, label: 'Armadura', icon: '🛡️' },
-    { key: 'escudo' as AtributoChave, label: 'Escudo', icon: '🔰' }, // 👈 novo atributo
-    { key: 'forca' as AtributoChave, label: 'Força', icon: '💪' },
-    { key: 'constituicao' as AtributoChave, label: 'Constituição', icon: '🪨' },
-    { key: 'destreza' as AtributoChave, label: 'Destreza', icon: '🤸‍♂️' },
-    { key: 'sabedoria' as AtributoChave, label: 'Sabedoria', icon: '📖' },
-    { key: 'inteligencia' as AtributoChave, label: 'Inteligência', icon: '🧠' },
-    { key: 'energia' as AtributoChave, label: 'Energia', icon: '⚡' },
+    { key: 'nivel'          as AtributoChave, label: 'Nível',        icon: '🏅' },
+    { key: 'xp'            as AtributoChave, label: 'XP',           icon: '⭐' },
+    { key: 'forca'         as AtributoChave, label: 'Força',        icon: '💪' },
+    { key: 'destreza'      as AtributoChave, label: 'Destreza',     icon: '🤸‍♂️' },
+    { key: 'constituicao'  as AtributoChave, label: 'Constituição', icon: '🪨' },
+    { key: 'inteligencia'  as AtributoChave, label: 'Inteligência', icon: '🧠' },
+    { key: 'sabedoria'     as AtributoChave, label: 'Sabedoria',    icon: '📖' },
+    { key: 'carisma'       as AtributoChave, label: 'Carisma',      icon: '😎' },
+    { key: 'energia'       as AtributoChave, label: 'Energia',      icon: '⚡' },
+    { key: 'classe_armadura' as AtributoChave, label: 'Armadura',   icon: '🛡️' },
+    { key: 'escudo'        as AtributoChave, label: 'Escudo',       icon: '🔰' },
+    { key: 'pontos_de_sorte' as AtributoChave, label: 'Sorte',      icon: '🍀' },
+    { key: 'pontos_de_vida'  as AtributoChave, label: 'Pontos de Vida', icon: '❤️' },
+    { key: 'fator_de_cura'   as AtributoChave, label: 'Fator de Cura', icon: '✨' },
+    { key: 'deslocamento'    as AtributoChave, label: 'Deslocamento',  icon: '🚶' },
   ];
 
 

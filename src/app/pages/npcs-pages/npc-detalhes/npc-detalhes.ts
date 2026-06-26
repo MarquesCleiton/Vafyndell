@@ -159,6 +159,11 @@ export class NpcDetalhes implements OnInit {
     }
   }
 
+  /** Calcula o modificador D&D: floor((valor - 10) / 2) */
+  calcMod(valor: number): number {
+    return Math.floor(((valor || 0) - 10) / 2);
+  }
+
   abrirImagem(src: string) {
     this.imagemSelecionada = src;
     this.modalAberto = true;
