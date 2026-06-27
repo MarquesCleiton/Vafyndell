@@ -105,8 +105,8 @@ export class App implements OnInit {
       if (document.visibilityState === 'visible' && navigator.onLine && AuthService.isAuthenticated()) {
         try {
           // Chamada leve: só Metadados (~100 bytes de resposta)
-          const { ScriptClientV3 } = await import('./core/script/ScriptClientV3');
-          await ScriptClientV3.getAll('Metadados');
+          const { ScriptClientV4 } = await import('./core/script/ScriptClientV4');
+          await ScriptClientV4.getAll('Metadados');
           console.log('[App] 🔥 Keepalive GAS OK');
         } catch { /* silencioso — não impacta o usuário */ }
       }

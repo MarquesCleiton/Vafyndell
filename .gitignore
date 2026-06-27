@@ -42,6 +42,6 @@ testem.log
 Thumbs.db
 
 # Google Apps Script
-Vafyndell_Backend.gs
+/backend/*
 
 /Referencias/*
