@@ -103,8 +103,8 @@ export class App implements OnInit {
   }
 
   ngOnInit() {
-    // Sincronização Global Periódica a cada 30 segundos (substitui o Keepalive e unifica a sincronia)
-    const INTERVALO_SYNC_MS = 30 * 1000;
+    // Sincronização Global Periódica a cada 10 segundos (para segurança de quota do Google Apps Script com 6 jogadores)
+    const INTERVALO_SYNC_MS = 10 * 1000;
     const todasAsAbas = [
       'Catalogo',
       'Inventario',
@@ -178,9 +178,12 @@ export class App implements OnInit {
                 classe = 'recuperacao';
               }
 
-              // Resolver imagem do autor da ação
+              // Resolver imagem e nome do autor da ação
               const autor = personagens.find(p => p.email === r.jogador);
+              const nomeAutor = autor ? autor.personagem : 'Sistema';
+              const subAutor = autor ? (autor.classificacao || (autor.nome_do_jogador === 'NPC' ? 'Inimigo' : 'Jogador')) : 'Global';
               const imagemAutor = autor?.imagem && autor.imagem !== '-' ? autor.imagem : null;
+              const isNpc = autor ? autor.nome_do_jogador === 'NPC' : false;
 
               // Extrair valor gigante de rolagem para dados e verificar estado crítico/falha
               let valorRolagem: number | null = null;
@@ -206,6 +209,9 @@ export class App implements OnInit {
                 classe,
                 isAlvo,
                 imagemAutor,
+                nomeAutor,
+                subAutor,
+                isNpc,
                 valorRolagem,
                 estadoRolagem
               };

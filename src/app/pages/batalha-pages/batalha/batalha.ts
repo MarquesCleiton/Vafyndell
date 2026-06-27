@@ -311,7 +311,17 @@ export class Batalha implements OnInit, OnDestroy {
     }
     const key = tipo.toLowerCase();
     if (this.dadosContagem[key] !== undefined) {
-      this.dadosContagem[key]++;
+      // Zera todos os outros dados ao selecionar um novo
+      for (const k of Object.keys(this.dadosContagem)) {
+        if (k !== key) {
+          this.dadosContagem[k] = 0;
+        }
+      }
+      
+      // Limite de até 10x
+      if (this.dadosContagem[key] < 10) {
+        this.dadosContagem[key]++;
+      }
     }
   }
 

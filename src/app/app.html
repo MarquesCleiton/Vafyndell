@@ -100,16 +100,23 @@
        [class.expandido]="notif.expandido">
     
     <div class="toast-main-content">
-      <!-- Avatar do Autor -->
-      <div class="toast-avatar-wrapper" *ngIf="notif.imagemAutor">
-        <img [src]="notif.imagemAutor" class="toast-avatar-img" />
+      <!-- Avatar do Autor (igual ao card da batalha) -->
+      <div class="toast-avatar-wrapper" [class.inimigo-avatar]="notif.isNpc">
+        <img *ngIf="notif.imagemAutor" [src]="notif.imagemAutor" class="toast-avatar-img" />
+        <span *ngIf="!notif.imagemAutor" class="toast-avatar-placeholder">{{ notif.isNpc ? '👹' : '👤' }}</span>
       </div>
 
-      <!-- Texto principal -->
-      <span class="toast-text" (click)="toggleExpandir(notif)">
-        {{ notif.texto }}
-        <span class="expand-arrow" *ngIf="notif.detalhes">{{ notif.expandido ? '▲' : '▼' }}</span>
-      </span>
+      <!-- Info do Autor/Texto -->
+      <div class="toast-content-info" (click)="toggleExpandir(notif)">
+        <div class="toast-autor-header">
+          <span class="toast-autor-nome">{{ notif.nomeAutor }}</span>
+          <span class="toast-autor-sub">{{ notif.subAutor }}</span>
+        </div>
+        <span class="toast-text">
+          {{ notif.texto }}
+          <span class="expand-arrow" *ngIf="notif.detalhes">{{ notif.expandido ? '▲' : '▼' }}</span>
+        </span>
+      </div>
 
       <!-- Resultado do dado bem grande e evidente -->
       <div class="toast-dice-result" 

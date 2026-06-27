@@ -465,19 +465,6 @@
 
         </div>
 
-        <!-- Resumo das Escolhas -->
-        <div class="dice-presets-section">
-          <span class="dice-presets-label">DADOS</span>
-          <div class="dice-presets-row">
-            <div class="dice-summary-badge" *ngFor="let esc of resumoEscolhas">
-              {{ esc }}
-            </div>
-            <div class="dice-summary-vazio" *ngIf="resumoEscolhas.length === 0">
-              Nenhum dado selecionado
-            </div>
-          </div>
-        </div>
-
         <!-- Ações do Modal -->
         <div class="dice-modal-footer">
           <button class="dice-btn-limpar" (click)="limparDados()">LIMPAR</button>
@@ -527,7 +514,6 @@
         <!-- Ações do Resultado -->
         <div class="dice-modal-footer result-footer">
           <button class="dice-btn-limpar" (click)="resultadoRolagem = null">VOLTAR</button>
-          <button class="dice-btn-rolar" (click)="rolarDados()">ROLAR NOVAMENTE</button>
         </div>
       </ng-container>
 
