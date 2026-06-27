@@ -45,7 +45,8 @@ export class Batalha implements OnInit, OnDestroy {
   };
   resultadoRolagem: {
     soma: number;
-    detalhes: { dado: string; rolls: number[]; soma: number }[];
+    detalhes: { dado: string; rolls: number[]; soma: number; criticoLabel?: string }[];
+    estado: 'normal' | 'critico' | 'falha';
   } | null = null;
   rolando = false;
 
@@ -360,8 +361,10 @@ export class Batalha implements OnInit, OnDestroy {
     this.rolando = true;
     try {
       let somaTotal = 0;
-      const detalhes: { dado: string; rolls: number[]; soma: number }[] = [];
+      const detalhes: { dado: string; rolls: number[]; soma: number; criticoLabel?: string }[] = [];
       const lines: string[] = [];
+      let temCriticoD20 = false;
+      let temFalhaD20 = false;
 
       for (const { tipo, qtd } of dadosSelecionados) {
         const faces = parseInt(tipo.replace('d', ''), 10);
@@ -372,25 +375,42 @@ export class Batalha implements OnInit, OnDestroy {
           const roll = Math.floor(Math.random() * faces) + 1;
           rolls.push(roll);
           somatorioDado += roll;
+
+          if (tipo === 'd20') {
+            if (roll === 20) temCriticoD20 = true;
+            if (roll === 1) temFalhaD20 = true;
+          }
         }
 
         somaTotal += somatorioDado;
+
+        let labelCritico = '';
+        if (tipo === 'd20') {
+          if (rolls.includes(20)) {
+            labelCritico = ' 🔥 ACERTO CRÍTICO!';
+          } else if (rolls.includes(1)) {
+            labelCritico = ' 💀 FALHA CRÍTICA!';
+          }
+        }
+
         detalhes.push({
           dado: tipo.toUpperCase(),
           rolls,
-          soma: somatorioDado
+          soma: somatorioDado,
+          criticoLabel: labelCritico.trim()
         });
 
         if (qtd > 1) {
-          lines.push(`${qtd}${tipo.toUpperCase()} ➔ ${rolls.join(' + ')} = ${somatorioDado}`);
+          lines.push(`${qtd}${tipo.toUpperCase()} ➔ ${rolls.join(' + ')} = ${somatorioDado}${labelCritico}`);
         } else {
-          lines.push(`${qtd}${tipo.toUpperCase()} ➔ ${somatorioDado} = ${somatorioDado}`);
+          lines.push(`${qtd}${tipo.toUpperCase()} ➔ ${somatorioDado} = ${somatorioDado}${labelCritico}`);
         }
       }
 
       this.resultadoRolagem = {
         soma: somaTotal,
-        detalhes
+        detalhes,
+        estado: temCriticoD20 ? 'critico' : (temFalhaD20 ? 'falha' : 'normal')
       };
 
       const user = AuthService.getUser();
@@ -401,7 +421,14 @@ export class Batalha implements OnInit, OnDestroy {
       const jogadorLogado = this.jogadores.find(j => j.email === user.email);
       const nomePersonagem = jogadorLogado ? jogadorLogado.personagem : (user.name || 'Jogador');
 
-      const registroDetalhes = `🎲 ${nomePersonagem} rolou os dados e obteve ${somaTotal}!\n\n` + lines.join('\n');
+      let sufixoCritico = '';
+      if (temCriticoD20) {
+        sufixoCritico = ' 🔥 ACERTO CRÍTICO!';
+      } else if (temFalhaD20) {
+        sufixoCritico = ' 💀 FALHA CRÍTICA!';
+      }
+
+      const registroDetalhes = `🎲 ${nomePersonagem} rolou os dados e obteve ${somaTotal}!${sufixoCritico}\n\n` + lines.join('\n');
 
       const novoRegistro: RegistroDomain = {
         id: IdUtils.generateULID(),

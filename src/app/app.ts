@@ -182,12 +182,19 @@ export class App implements OnInit {
               const autor = personagens.find(p => p.email === r.jogador);
               const imagemAutor = autor?.imagem && autor.imagem !== '-' ? autor.imagem : null;
 
-              // Extrair valor gigante de rolagem para dados
+              // Extrair valor gigante de rolagem para dados e verificar estado crítico/falha
               let valorRolagem: number | null = null;
+              let estadoRolagem: 'normal' | 'critico' | 'falha' = 'normal';
               if (classe === 'rolagem') {
                 const match = r.detalhes.match(/obteve (\d+)/);
                 if (match) {
                   valorRolagem = parseInt(match[1], 10);
+                }
+
+                if (r.detalhes.includes('ACERTO CRÍTICO')) {
+                  estadoRolagem = 'critico';
+                } else if (r.detalhes.includes('FALHA CRÍTICA')) {
+                  estadoRolagem = 'falha';
                 }
               }
 
@@ -199,7 +206,8 @@ export class App implements OnInit {
                 classe,
                 isAlvo,
                 imagemAutor,
-                valorRolagem
+                valorRolagem,
+                estadoRolagem
               };
             });
 

@@ -303,24 +303,57 @@ mat-toolbar {
 
 /* Notificação de Rolagem Grandiosa */
 .minimal-toast.rolagem {
-  border-color: rgba(255, 193, 7, 0.5);
-  background: linear-gradient(135deg, rgba(35, 30, 20, 0.9) 0%, rgba(20, 18, 14, 0.95) 100%);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 193, 7, 0.25);
-  animation: slideInDown 0.35s cubic-bezier(0.19, 1, 0.22, 1) both, diceGlowPulse 3s infinite ease-in-out;
+  --rolagem-color: #ffc107;
+  --rolagem-glow: rgba(255, 193, 7, 0.25);
+  --rolagem-border: rgba(255, 193, 7, 0.5);
+  --rolagem-bg: linear-gradient(135deg, rgba(35, 30, 20, 0.9) 0%, rgba(20, 18, 14, 0.95) 100%);
+  --rolagem-anim: diceGlowPulse 3s infinite ease-in-out;
+
+  border-color: var(--rolagem-border);
+  background: var(--rolagem-bg);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 25px var(--rolagem-glow);
+  animation: slideInDown 0.35s cubic-bezier(0.19, 1, 0.22, 1) both, var(--rolagem-anim);
+}
+
+/* Normal: Celestial Cyan/Teal com pulsação suave */
+.minimal-toast.rolagem-normal {
+  --rolagem-color: #00e5ff;
+  --rolagem-glow: rgba(0, 229, 255, 0.2);
+  --rolagem-border: rgba(0, 229, 255, 0.4);
+  --rolagem-bg: linear-gradient(135deg, rgba(14, 30, 35, 0.95) 0%, rgba(8, 16, 20, 0.98) 100%);
+  --rolagem-anim: normalDicePulse 3s infinite ease-in-out;
+}
+
+/* Acerto Crítico: Fiery Gold/Orange pulsante agressivo */
+.minimal-toast.rolagem-critica {
+  --rolagem-color: #ff9f43;
+  --rolagem-glow: rgba(255, 159, 67, 0.35);
+  --rolagem-border: rgba(255, 159, 67, 0.75);
+  --rolagem-bg: linear-gradient(135deg, rgba(45, 28, 10, 0.95) 0%, rgba(24, 15, 5, 0.98) 100%);
+  --rolagem-anim: critDicePulse 1.8s infinite ease-in-out;
+}
+
+/* Falha Crítica: Deep Blood-Red com pulsação de perigo */
+.minimal-toast.rolagem-falha {
+  --rolagem-color: #ff4757;
+  --rolagem-glow: rgba(255, 71, 87, 0.3);
+  --rolagem-border: rgba(255, 71, 87, 0.7);
+  --rolagem-bg: linear-gradient(135deg, rgba(40, 10, 15, 0.95) 0%, rgba(20, 5, 8, 0.98) 100%);
+  --rolagem-anim: failDicePulse 2.4s infinite ease-in-out;
 }
 
 .minimal-toast.rolagem .toast-main-content::before {
-  background: #ffc107;
-  box-shadow: 0 0 12px 2px #ffc107;
+  background: var(--rolagem-color);
+  box-shadow: 0 0 12px 2px var(--rolagem-color);
 }
 
 .minimal-toast.rolagem .toast-text {
-  color: #ffc107;
+  color: var(--rolagem-color);
   font-family: 'EB Garamond', Georgia, serif;
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.03em;
-  text-shadow: 0 0 10px rgba(255, 193, 7, 0.4);
+  text-shadow: 0 0 10px var(--rolagem-glow);
 }
 
 .minimal-toast.rolagem .toast-text:hover {
@@ -330,7 +363,7 @@ mat-toolbar {
 
 .minimal-toast.rolagem .toast-details .details-content {
   background: rgba(18, 14, 8, 0.75);
-  border: 1px solid rgba(255, 193, 7, 0.25);
+  border: 1px solid var(--rolagem-border);
   color: #ffd875;
   font-family: 'JetBrains Mono', Consolas, monospace;
   font-size: 12px;
@@ -375,9 +408,19 @@ mat-toolbar {
 }
 
 /* Customização dos avatares de acordo com o tipo de ação */
-.minimal-toast.rolagem .toast-avatar-wrapper {
-  border-color: #ffc107;
-  box-shadow: 0 0 8px rgba(255, 193, 7, 0.5);
+.minimal-toast.rolagem-normal .toast-avatar-wrapper {
+  border-color: #00e5ff;
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+}
+
+.minimal-toast.rolagem-critica .toast-avatar-wrapper {
+  border-color: #ff9f43;
+  box-shadow: 0 0 8px rgba(255, 159, 67, 0.6);
+}
+
+.minimal-toast.rolagem-falha .toast-avatar-wrapper {
+  border-color: #ff4757;
+  box-shadow: 0 0 8px rgba(255, 71, 87, 0.6);
 }
 
 .minimal-toast.ataque .toast-avatar-wrapper {
@@ -417,6 +460,45 @@ mat-toolbar {
   animation: diceResultPopIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
 
+.toast-dice-result.normal {
+  border-color: #00e5ff;
+  background: radial-gradient(circle at center, #102a35 0%, #051015 100%);
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.35), inset 0 0 6px rgba(0, 229, 255, 0.2);
+}
+.toast-dice-result.normal .dice-result-num {
+  color: #00e5ff;
+  text-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
+}
+.toast-dice-result.normal .dice-result-glow-effect {
+  background: rgba(0, 229, 255, 0.15);
+}
+
+.toast-dice-result.critico {
+  border-color: #ff9f43;
+  background: radial-gradient(circle at center, #3c2005 0%, #1c0e02 100%);
+  box-shadow: 0 0 20px rgba(255, 159, 67, 0.5), inset 0 0 8px rgba(255, 159, 67, 0.3);
+}
+.toast-dice-result.critico .dice-result-num {
+  color: #ff9f43;
+  text-shadow: 0 0 10px rgba(255, 159, 67, 0.8);
+}
+.toast-dice-result.critico .dice-result-glow-effect {
+  background: rgba(255, 159, 67, 0.25);
+}
+
+.toast-dice-result.falha {
+  border-color: #ff4757;
+  background: radial-gradient(circle at center, #350810 0%, #150306 100%);
+  box-shadow: 0 0 20px rgba(255, 71, 87, 0.45), inset 0 0 8px rgba(255, 71, 87, 0.25);
+}
+.toast-dice-result.falha .dice-result-num {
+  color: #ff4757;
+  text-shadow: 0 0 8px rgba(255, 71, 87, 0.7);
+}
+.toast-dice-result.falha .dice-result-glow-effect {
+  background: rgba(255, 71, 87, 0.2);
+}
+
 .dice-result-num {
   font-family: 'JetBrains Mono', monospace;
   font-size: 22px;
@@ -445,4 +527,53 @@ mat-toolbar {
   0% { opacity: 0.5; filter: blur(6px); }
   50% { opacity: 1; filter: blur(10px); }
   100% { opacity: 0.5; filter: blur(6px); }
+}
+
+/* ===== ANIMAÇÕES DE ROLAGEM ===== */
+@keyframes normalDicePulse {
+  0% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 229, 255, 0.15);
+    border-color: rgba(0, 229, 255, 0.35);
+  }
+  50% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(0, 229, 255, 0.4), inset 0 0 10px rgba(0, 229, 255, 0.1);
+    border-color: rgba(0, 229, 255, 0.7);
+  }
+  100% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 229, 255, 0.15);
+    border-color: rgba(0, 229, 255, 0.35);
+  }
+}
+
+@keyframes critDicePulse {
+  0% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 159, 67, 0.3);
+    border-color: rgba(255, 159, 67, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 40px rgba(255, 159, 67, 0.7), inset 0 0 15px rgba(255, 159, 67, 0.2);
+    border-color: rgba(255, 159, 67, 0.95);
+    transform: scale(1.025);
+  }
+  100% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 159, 67, 0.3);
+    border-color: rgba(255, 159, 67, 0.5);
+    transform: scale(1);
+  }
+}
+
+@keyframes failDicePulse {
+  0% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 15px rgba(255, 71, 87, 0.15);
+    border-color: rgba(255, 71, 87, 0.4);
+  }
+  50% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 71, 87, 0.55), inset 0 0 10px rgba(255, 71, 87, 0.15);
+    border-color: rgba(255, 71, 87, 0.85);
+  }
+  100% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 15px rgba(255, 71, 87, 0.15);
+    border-color: rgba(255, 71, 87, 0.4);
+  }
 }

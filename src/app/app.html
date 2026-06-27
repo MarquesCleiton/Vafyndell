@@ -93,6 +93,9 @@
        [class.recuperacao]="notif.classe === 'recuperacao'"
        [class.item]="notif.classe === 'item'"
        [class.rolagem]="notif.classe === 'rolagem'"
+       [class.rolagem-critica]="notif.classe === 'rolagem' && notif.estadoRolagem === 'critico'"
+       [class.rolagem-falha]="notif.classe === 'rolagem' && notif.estadoRolagem === 'falha'"
+       [class.rolagem-normal]="notif.classe === 'rolagem' && notif.estadoRolagem === 'normal'"
        [class.alvo-direto]="notif.isAlvo"
        [class.expandido]="notif.expandido">
     
@@ -109,7 +112,11 @@
       </span>
 
       <!-- Resultado do dado bem grande e evidente -->
-      <div class="toast-dice-result" *ngIf="notif.classe === 'rolagem' && notif.valorRolagem !== null">
+      <div class="toast-dice-result" 
+           *ngIf="notif.classe === 'rolagem' && notif.valorRolagem !== null"
+           [class.critico]="notif.estadoRolagem === 'critico'"
+           [class.falha]="notif.estadoRolagem === 'falha'"
+           [class.normal]="notif.estadoRolagem === 'normal'">
         <div class="dice-result-glow-effect"></div>
         <span class="dice-result-num">{{ notif.valorRolagem }}</span>
       </div>

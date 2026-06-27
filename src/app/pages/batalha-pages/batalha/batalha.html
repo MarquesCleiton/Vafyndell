@@ -490,7 +490,10 @@
 
       <!-- Modo de Resultados Aprimorado -->
       <ng-container *ngIf="resultadoRolagem">
-        <div class="dice-results-container">
+        <div class="dice-results-container" 
+             [class.critico]="resultadoRolagem.estado === 'critico'"
+             [class.falha]="resultadoRolagem.estado === 'falha'"
+             [class.normal]="resultadoRolagem.estado === 'normal'">
           
           <div class="dice-results-glow"></div>
           
@@ -509,6 +512,12 @@
                 <span class="breakdown-rolls">{{ item.rolls.join(' + ') }}</span>
                 <span class="breakdown-equals">➔</span>
                 <span class="breakdown-total">{{ item.soma }}</span>
+                <span class="breakdown-critico sucesso" *ngIf="item.criticoLabel && item.criticoLabel.includes('ACERTO')">
+                  {{ item.criticoLabel }}
+                </span>
+                <span class="breakdown-critico falha" *ngIf="item.criticoLabel && item.criticoLabel.includes('FALHA')">
+                  {{ item.criticoLabel }}
+                </span>
               </div>
             </div>
           </div>

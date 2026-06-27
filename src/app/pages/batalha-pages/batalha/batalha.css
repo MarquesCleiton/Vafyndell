@@ -967,18 +967,48 @@
    ✨ RESULTADOS APRIMORADOS
    ============================================================ */
 .dice-results-container {
+  --results-color: var(--primary);
+  --results-glow: rgba(255, 193, 7, 0.55);
+  --results-border: var(--border-dim);
+  --results-radial: radial-gradient(circle at center, rgba(255, 193, 7, 0.08) 0%, transparent 70%);
+  --results-anim: none;
+
   position: relative;
   text-align: center;
   padding: 16px 8px;
   background: rgba(0,0,0,0.3);
   border-radius: 14px;
-  border: 1px solid var(--border-dim);
+  border: 1px solid var(--results-border);
+}
+
+.dice-results-container.normal {
+  --results-color: #00e5ff;
+  --results-glow: rgba(0, 229, 255, 0.5);
+  --results-border: rgba(0, 229, 255, 0.3);
+  --results-radial: radial-gradient(circle at center, rgba(0, 229, 255, 0.1) 0%, transparent 70%);
+  --results-anim: resultsBreatheNormal 3s infinite ease-in-out;
+}
+
+.dice-results-container.critico {
+  --results-color: #ff9f43;
+  --results-glow: rgba(255, 159, 67, 0.8);
+  --results-border: rgba(255, 159, 67, 0.6);
+  --results-radial: radial-gradient(circle at center, rgba(255, 159, 67, 0.18) 0%, transparent 70%);
+  --results-anim: resultsHeartbeatCrit 1.8s infinite ease-in-out;
+}
+
+.dice-results-container.falha {
+  --results-color: #ff4757;
+  --results-glow: rgba(255, 71, 87, 0.6);
+  --results-border: rgba(255, 71, 87, 0.5);
+  --results-radial: radial-gradient(circle at center, rgba(255, 71, 87, 0.15) 0%, transparent 70%);
+  --results-anim: resultsBreatheFail 2.4s infinite ease-in-out;
 }
 
 .dice-results-glow {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, rgba(255, 193, 7, 0.08) 0%, transparent 70%);
+  background: var(--results-radial);
   pointer-events: none;
 }
 
@@ -1000,10 +1030,11 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 60px;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--results-color);
   line-height: 1;
-  text-shadow: 0 0 25px rgba(255, 193, 7, 0.6);
+  text-shadow: 0 0 25px var(--results-glow);
   margin-top: 8px;
+  animation: var(--results-anim);
 }
 
 .dice-breakdown-list {
@@ -1105,5 +1136,66 @@
   0% { transform: scale(0); opacity: 0; }
   80% { transform: scale(1.1); }
   100% { transform: scale(1); opacity: 1; }
+}
+
+.breakdown-critico {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+}
+
+.breakdown-critico.sucesso {
+  color: #ffc107;
+  text-shadow: 0 0 8px rgba(255, 193, 7, 0.4);
+}
+
+.breakdown-critico.falha {
+  color: #ef4444;
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+/* Animações de Resultado */
+@keyframes resultsBreatheNormal {
+  0%, 100% {
+    text-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    text-shadow: 0 0 30px rgba(0, 229, 255, 0.7);
+    transform: scale(1.02);
+  }
+}
+
+@keyframes resultsHeartbeatCrit {
+  0%, 100% {
+    text-shadow: 0 0 20px rgba(255, 159, 67, 0.5);
+    transform: scale(1);
+  }
+  30% {
+    text-shadow: 0 0 45px rgba(255, 159, 67, 0.95);
+    transform: scale(1.08);
+  }
+  60% {
+    text-shadow: 0 0 30px rgba(255, 159, 67, 0.7);
+    transform: scale(1.03);
+  }
+}
+
+@keyframes resultsBreatheFail {
+  0%, 100% {
+    text-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    text-shadow: 0 0 25px rgba(255, 71, 87, 0.65);
+    transform: scale(0.97);
+    opacity: 1;
+  }
 }
 
