@@ -13,6 +13,8 @@ import { MatDividerModule } from '@angular/material/divider';
 import { CommonModule } from '@angular/common';
 import { AuthService } from './core/auth/AuthService';
 import { BootstrapService } from './services/BootstrapService';
+import { BaseRepositoryV2 } from './repositories/BaseRepositoryV2';
+import { JogadorDomain } from './domain/jogadorDomain';
 
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
@@ -61,6 +63,8 @@ export class App implements OnInit {
   isDesktop = signal(window.innerWidth >= 992);
 
   private readonly destroyRef = inject(DestroyRef);
+  activeNotifications = signal<any[]>([]);
+  private knownIds = new Set<string>();
 
   get currentRoute(): string {
     return this.activeRoute();
@@ -99,19 +103,134 @@ export class App implements OnInit {
   }
 
   ngOnInit() {
-    // P6 Keepalive: pinga Metadados a cada 4 min para manter GAS “aquecido”
-    const KEEPALIVE_MS = 4 * 60 * 1000;
-    const keepalive = setInterval(async () => {
+    // Sincronização Global Periódica a cada 30 segundos (substitui o Keepalive e unifica a sincronia)
+    const INTERVALO_SYNC_MS = 30 * 1000;
+    const todasAsAbas = [
+      'Catalogo',
+      'Inventario',
+      'Receitas',
+      'Personagem',
+      'NPCs',
+      'Anotacoes',
+      'Caminhos',
+      'Arvores',
+      'Habilidades',
+      'Habilidades_jogadores',
+      'Registro'
+    ];
+
+    const syncInterval = setInterval(async () => {
       if (document.visibilityState === 'visible' && navigator.onLine && AuthService.isAuthenticated()) {
         try {
-          // Chamada leve: só Metadados (~100 bytes de resposta)
-          const { ScriptClientV4 } = await import('./core/script/ScriptClientV4');
-          await ScriptClientV4.getAll('Metadados');
-          console.log('[App] 🔥 Keepalive GAS OK');
-        } catch { /* silencioso — não impacta o usuário */ }
+          console.log('[App] 🔄 Iniciando sincronização global em segundo plano...');
+          await BaseRepositoryV2.multiSync(todasAsAbas);
+          console.log('[App] 🔥 Sincronização global concluída.');
+        } catch (err) {
+          console.warn('[App] ⚠️ Falha na sincronização global silenciosa:', err);
+        }
       }
-    }, KEEPALIVE_MS);
-    this.destroyRef.onDestroy(() => clearInterval(keepalive));
+    }, INTERVALO_SYNC_MS);
+
+    // Carregar IDs existentes no banco local na inicialização para evitar duplicar histórico antigo
+    const repoReg = new BaseRepositoryV2<any>('Registro');
+    repoReg.getLocal().then(locais => {
+      locais.forEach(r => this.knownIds.add(r.id));
+      console.log(`[App] 📥 ${this.knownIds.size} IDs de Registro conhecidos inicialmente.`);
+    }).catch(err => console.error('[App] Erro ao preencher conhecidos:', err));
+
+    // Inscrição reativa para notificações de novos registros
+    const syncSub = BaseRepositoryV2.onTabUpdated.subscribe(async (tab) => {
+      if (tab === 'Registro') {
+        try {
+          const todos = await repoReg.getLocal();
+          const userLogado = AuthService.getUser();
+          
+          if (!userLogado?.email) return;
+
+          // Filtrar somente registros que NÃO estão em knownIds
+          const novos = todos.filter(r => !this.knownIds.has(r.id));
+
+          if (novos.length > 0) {
+            console.log(`[App] 🔔 Encontrados ${novos.length} novos registros para notificação.`);
+            
+            // Adicionar ao Set de conhecidos
+            novos.forEach(r => this.knownIds.add(r.id));
+
+            // Buscar personagens locais para resolver as imagens dos autores das ações
+            const repoPersonagens = new BaseRepositoryV2<JogadorDomain>('Personagem');
+            const personagens = await repoPersonagens.getLocal();
+
+            // Converter cada novo registro em uma notificação
+            const novasNotifs = novos.map(r => {
+              const lines = r.detalhes.split('\n');
+              const texto = lines[0];
+              const detalhes = lines.slice(1).join('\n').trim();
+              const isAlvo = String(r.alvo).toLowerCase() === userLogado.email.toLowerCase();
+
+              // Mapear a classe CSS
+              let classe = 'item';
+              const detLow = r.detalhes.toLowerCase();
+              if (detLow.includes('rolou os dados') || r.acao === 'rolagem') {
+                classe = 'rolagem';
+              } else if (detLow.includes('atacou') || detLow.includes('caiu em combate') || r.acao === 'ataque') {
+                classe = 'ataque';
+              } else if (detLow.includes('recuperou') || detLow.includes('cura') || r.acao === 'cura') {
+                classe = 'recuperacao';
+              }
+
+              // Resolver imagem do autor da ação
+              const autor = personagens.find(p => p.email === r.jogador);
+              const imagemAutor = autor?.imagem && autor.imagem !== '-' ? autor.imagem : null;
+
+              // Extrair valor gigante de rolagem para dados
+              let valorRolagem: number | null = null;
+              if (classe === 'rolagem') {
+                const match = r.detalhes.match(/obteve (\d+)/);
+                if (match) {
+                  valorRolagem = parseInt(match[1], 10);
+                }
+              }
+
+              return {
+                id: r.id,
+                texto,
+                detalhes,
+                expandido: false,
+                classe,
+                isAlvo,
+                imagemAutor,
+                valorRolagem
+              };
+            });
+
+            // Adicionar à lista de notificações ativas
+            this.activeNotifications.update(list => [...list, ...novasNotifs]);
+          }
+        } catch (err) {
+          console.error('[App] Erro ao processar notificações de Registro:', err);
+        }
+      }
+    });
+
+    this.destroyRef.onDestroy(() => {
+      clearInterval(syncInterval);
+      syncSub.unsubscribe();
+    });
+  }
+
+  fecharNotificacao(id: string) {
+    this.activeNotifications.update(list => list.filter(n => n.id !== id));
+  }
+
+  toggleExpandir(notif: any) {
+    if (!notif.detalhes) return;
+    this.activeNotifications.update(list =>
+      list.map(n => n.id === notif.id ? { ...n, expandido: !n.expandido } : n)
+    );
+  }
+
+  trackByNotificationId(index: number, item: any): string {
+    return item.id;
   }
 
   async onRefresh() {

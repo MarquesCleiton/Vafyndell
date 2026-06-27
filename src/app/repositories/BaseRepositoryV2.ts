@@ -1,7 +1,10 @@
 import { IndexedDBClientV2 } from '../core/db/IndexedDBClientV2';
 import { ScriptClientV4 } from '../core/script/ScriptClientV4';
+import { Subject } from 'rxjs';
 
 export class BaseRepositoryV2<T extends { id: string }> {
+  static onTabUpdated = new Subject<string>();
+
   private static META_STORE = 'Metadados';
   private static dbPromise: Promise<IndexedDBClientV2> | null = null;
 
@@ -42,6 +45,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
     await (await this.getDb()).put(this.store, entity);
 
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 create persistido localmente →`, entity);
+    BaseRepositoryV2.onTabUpdated.next(this.store);
     return entity;
   }
 
@@ -58,6 +62,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
     await (await this.getDb()).put(this.store, entity);
 
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 update persistido localmente →`, entity);
+    BaseRepositoryV2.onTabUpdated.next(this.store);
     return entity;
   }
 
@@ -75,6 +80,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
 
     await (await this.getDb()).delete(this.store, String(id));
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 delete persistido localmente → id=${id}`);
+    BaseRepositoryV2.onTabUpdated.next(this.store);
     return true;
   }
 
@@ -95,6 +101,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
 
     await (await this.getDb()).bulkPut(this.store, entities);
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 createBatch persistiu ${entities.length} registros`);
+    BaseRepositoryV2.onTabUpdated.next(this.store);
     return entities;
   }
 
@@ -112,6 +119,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
 
     await (await this.getDb()).bulkPut(this.store, entities);
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 updateBatch persistiu ${entities.length} registros`);
+    BaseRepositoryV2.onTabUpdated.next(this.store);
     return entities;
   }
 
@@ -130,6 +138,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
     await Promise.all(ids.map((id) => db.delete(this.store, String(id))));
 
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 deleteBatch persistido localmente → ${ids.length} registros`);
+    BaseRepositoryV2.onTabUpdated.next(this.store);
     return ok;
   }
 
@@ -201,6 +210,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
       console.log(`[BaseRepositoryV2:${this.tab}] 📝 metadados atualizados →`, tabMeta);
     }
 
+    BaseRepositoryV2.onTabUpdated.next(this.store);
     return list;
   }
 
@@ -239,6 +249,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
       }
 
       console.log(`[BaseRepositoryV2] 💾 multiFetch persistiu ${list.length} registros em ${tab}`);
+      BaseRepositoryV2.onTabUpdated.next(tab);
     }
 
     return map;
@@ -306,6 +317,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
           console.log(`[BaseRepositoryV2] 📝 metadados locais atualizados para ${tab} →`, tabMeta);
         }
         statusMap[tab] = true;
+        BaseRepositoryV2.onTabUpdated.next(tab);
       } else {
         statusMap[tab] = false;
         // Mesmo sem atualizações na tabela, garante que salvamos o metadado do servidor localmente se tiver vindo
@@ -359,6 +371,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
         }));
         await db.bulkPut(tab, entities);
         console.log(`[BaseRepositoryV2] 💾 batch/create persistiu ${entities.length} em ${tab}`);
+        BaseRepositoryV2.onTabUpdated.next(tab);
       }
     }
 
@@ -374,6 +387,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
         }));
         await db.bulkPut(tab, entities);
         console.log(`[BaseRepositoryV2] 💾 batch/update persistiu ${entities.length} em ${tab}`);
+        BaseRepositoryV2.onTabUpdated.next(tab);
       }
     }
 
@@ -382,6 +396,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
         const ids = (result?.deleteById?.[tab] || []).map((r: any) => r.id);
         for (const id of ids) await db.delete(tab, String(id));
         console.log(`[BaseRepositoryV2] 💾 batch/delete removeu ${ids.length} de ${tab}`);
+        BaseRepositoryV2.onTabUpdated.next(tab);
       }
     }
 

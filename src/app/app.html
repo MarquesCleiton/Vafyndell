@@ -82,7 +82,50 @@
       </button>
     </nav>
   </mat-sidenav-content>
+
 </mat-sidenav-container>
+
+<!-- Container de Notificações Globais Reativas -->
+<div class="notification-container" *ngIf="activeNotifications().length > 0 && !isLoginPage()">
+  <div class="minimal-toast" 
+       *ngFor="let notif of activeNotifications(); trackBy: trackByNotificationId" 
+       [class.ataque]="notif.classe === 'ataque'"
+       [class.recuperacao]="notif.classe === 'recuperacao'"
+       [class.item]="notif.classe === 'item'"
+       [class.rolagem]="notif.classe === 'rolagem'"
+       [class.alvo-direto]="notif.isAlvo"
+       [class.expandido]="notif.expandido">
+    
+    <div class="toast-main-content">
+      <!-- Avatar do Autor -->
+      <div class="toast-avatar-wrapper" *ngIf="notif.imagemAutor">
+        <img [src]="notif.imagemAutor" class="toast-avatar-img" />
+      </div>
+
+      <!-- Texto principal -->
+      <span class="toast-text" (click)="toggleExpandir(notif)">
+        {{ notif.texto }}
+        <span class="expand-arrow" *ngIf="notif.detalhes">{{ notif.expandido ? '▲' : '▼' }}</span>
+      </span>
+
+      <!-- Resultado do dado bem grande e evidente -->
+      <div class="toast-dice-result" *ngIf="notif.classe === 'rolagem' && notif.valorRolagem !== null">
+        <div class="dice-result-glow-effect"></div>
+        <span class="dice-result-num">{{ notif.valorRolagem }}</span>
+      </div>
+
+      <!-- Botão OK -->
+      <button class="toast-ok-btn" (click)="fecharNotificacao(notif.id)">OK</button>
+    </div>
+
+    <!-- Detalhes Expandidos (RPG Console Style) -->
+    <div class="toast-details" *ngIf="notif.detalhes && notif.expandido">
+      <div class="details-divider"></div>
+      <pre class="details-content">{{ notif.detalhes }}</pre>
+    </div>
+
+  </div>
+</div>
 
 <!-- Template só para login -->
 <ng-template #loginOutlet>

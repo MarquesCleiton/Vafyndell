@@ -1,6 +1,7 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
 
 import { JogadorDomain } from '../../../domain/jogadorDomain';
 import { AuthService } from '../../../core/auth/AuthService';
@@ -15,7 +16,7 @@ import { ImageModal } from '../../image-modal/image-modal';
   imports: [CommonModule, ImageModal],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class Jogador implements OnInit {
+export class Jogador implements OnInit, OnDestroy {
   jogador: (JogadorDomain & {
     fator_de_cura?: number;
     vida_total?: number;
@@ -30,14 +31,29 @@ export class Jogador implements OnInit {
   imagemSelecionada: string | null = null;
   modalAberto = false;
 
-  // ✅ agora padronizado com BaseRepositoryV2
   private repo = new BaseRepositoryV2<JogadorDomain>('Personagem');
+  private syncSub: Subscription | null = null;
 
   constructor(private router: Router, private cdr: ChangeDetectorRef) { }
 
   async ngOnInit() {
     console.log('[Jogador] Iniciando carregamento...');
     this.loading = true;
+
+    // Subscrever a atualizações globais da tabela Personagem
+    this.syncSub = BaseRepositoryV2.onTabUpdated.subscribe(async (tab) => {
+      if (tab === 'Personagem') {
+        const user = AuthService.getUser();
+        if (user?.email) {
+          const atualizado = (await this.repo.getLocal()).find(j => j.email === user.email);
+          if (atualizado) {
+            console.log('[Jogador] Ficha reatualizada de forma reativa:', atualizado);
+            this.setJogador(atualizado);
+            this.cdr.markForCheck();
+          }
+        }
+      }
+    });
 
     try {
       const user = AuthService.getUser();
@@ -51,15 +67,7 @@ export class Jogador implements OnInit {
         this.setJogador(jogadorLocal);
 
         // 🔄 dispara sync em paralelo
-        this.repo.sync().then(async updated => {
-          if (updated) {
-            const atualizado = (await this.repo.getLocal()).find(j => j.email === user.email);
-            if (atualizado) {
-              this.setJogador(atualizado);
-              this.cdr.markForCheck();
-            }
-          }
-        });
+        this.repo.sync();
         return;
       }
 
@@ -80,6 +88,13 @@ export class Jogador implements OnInit {
     } finally {
       this.loading = false;
       this.cdr.markForCheck();
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.syncSub) {
+      this.syncSub.unsubscribe();
+      this.syncSub = null;
     }
   }
 
