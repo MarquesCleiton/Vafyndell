@@ -8,6 +8,8 @@ import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { JogadorDomain } from '../../../domain/jogadorDomain';
 import { AuthService } from '../../../core/auth/AuthService';
 import { VisibilidadeService } from '../../../services/VisibilidadeService';
+import { ImageModal } from '../../image-modal/image-modal';
+import { ReceitaDomain } from '../../../domain/ReceitaDomain';
 
 interface CategoriaCatalogo {
   nome: string;
@@ -18,7 +20,7 @@ interface CategoriaCatalogo {
 @Component({
   selector: 'app-catalogo',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ImageModal],
   templateUrl: './catalogo.html',
   styleUrls: ['./catalogo.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -28,11 +30,20 @@ export class Catalogo implements OnInit {
   categoriasFiltradas: CategoriaCatalogo[] = [];
   carregando = true;
   filtro = '';
+  itemSelecionado: CatalogoDomain | null = null;
+  imagemSelecionada: string | null = null;
+  modalAbertoImagem = false;
+  ingredientesDetalhados: { item: CatalogoDomain; quantidade: number }[] = [];
+  receitasAssociadas: { produto: CatalogoDomain; quantidade: number }[] = [];
 
-  abaAtiva: 'recursos' | 'equipamentos' | 'pocoes' | 'outros' | 'ocultos' = 'recursos';
+  abas: Array<'tudo' | 'recursos' | 'equipamentos' | 'pocoes' | 'outros' | 'ocultos'> = [
+    'tudo', 'recursos', 'equipamentos', 'pocoes', 'outros', 'ocultos'
+  ];
+  abaAtiva: 'tudo' | 'recursos' | 'equipamentos' | 'pocoes' | 'outros' | 'ocultos' = 'tudo';
 
   private repo = new BaseRepositoryV2<CatalogoDomain>('Catalogo');
   private jogadorRepo = new BaseRepositoryV2<JogadorDomain>('Personagem');
+  private repoReceitas = new BaseRepositoryV2<ReceitaDomain>('Receitas');
   private visibilidadeService = new VisibilidadeService<CatalogoDomain>(this.repo);
   private todosItens: CatalogoDomain[] = []; // cache local em memória
 
@@ -144,7 +155,9 @@ export class Catalogo implements OnInit {
 
   aplicarFiltro() {
     const termo = this.normalizarTexto(this.filtro);
-
+    if (termo) {
+      this.abaAtiva = 'tudo'; // Força aba TUDO na pesquisa
+    }
     if (!termo) {
       this.categoriasFiltradas = [...this.categorias];
       this.cdr.markForCheck();
@@ -178,15 +191,33 @@ export class Catalogo implements OnInit {
       .trim();
   }
 
-  selecionarAba(aba: 'recursos' | 'equipamentos' | 'pocoes' | 'outros' | 'ocultos') {
+  selecionarAba(aba: 'tudo' | 'recursos' | 'equipamentos' | 'pocoes' | 'outros' | 'ocultos') {
     this.abaAtiva = aba;
     this.processarItens(this.todosItens); // 🔹 sempre reprocessa o cache
     this.cdr.markForCheck();
   }
 
-
   pertenceAba(categoria: string): boolean {
-    return this.mapaAbas[this.abaAtiva].includes(categoria);
+    if (this.abaAtiva === 'tudo') return true;
+    if (this.abaAtiva === 'ocultos') return true; // ocultos processa todos ocultados na filtragem geral
+    return this.mapaAbas[this.abaAtiva]?.includes(categoria) || false;
+  }
+
+  getQuantidadePorAba(aba: 'tudo' | 'recursos' | 'equipamentos' | 'pocoes' | 'outros' | 'ocultos'): number {
+    const listaFiltradaPorAba = this.todosItens.filter((item) => {
+      if (this.abaAtiva === 'ocultos') return this.ehMestre && !item.visivel_jogadores;
+      return this.ehMestre ? true : item.visivel_jogadores;
+    });
+
+    if (aba === 'tudo') {
+      return listaFiltradaPorAba.length;
+    }
+    if (aba === 'ocultos') {
+      return this.todosItens.filter(item => !item.visivel_jogadores).length;
+    }
+
+    const categoriasAba = this.mapaAbas[aba];
+    return listaFiltradaPorAba.filter(item => item.categoria && categoriasAba?.includes(item.categoria)).length;
   }
 
   toggleCategoria(cat: CategoriaCatalogo) {
@@ -194,8 +225,96 @@ export class Catalogo implements OnInit {
     this.cdr.markForCheck();
   }
 
-  abrirItem(item: CatalogoDomain) {
-    this.router.navigate(['/item-catalogo', String(item.id)]);
+  async abrirItem(item: CatalogoDomain) {
+    this.itemSelecionado = item;
+    this.cdr.markForCheck();
+    await this.carregarReceitas(String(item.id));
+  }
+
+  private async carregarReceitas(itemId: string) {
+    this.ingredientesDetalhados = [];
+    this.receitasAssociadas = [];
+    try {
+      const [receitas, catalogo] = await Promise.all([
+        this.repoReceitas.getLocal(),
+        this.repo.getLocal()
+      ]);
+
+      // 1) Ingredientes do item
+      const doItem = receitas.filter(r => String(r.fabricavel) === String(itemId));
+      this.ingredientesDetalhados = doItem.map(rec => {
+        const ingItem = catalogo.find(c => String(c.id) === String(rec.catalogo));
+        return {
+          item: ingItem || ({} as CatalogoDomain),
+          quantidade: rec.quantidade,
+        };
+      });
+
+      // 2) Receitas em que ele é ingrediente
+      const usadasEm = receitas.filter(r => String(r.catalogo) === String(itemId));
+      this.receitasAssociadas = usadasEm.map(rec => {
+        const produto = catalogo.find(c => String(c.id) === String(rec.fabricavel));
+        return {
+          produto: produto || ({} as CatalogoDomain),
+          quantidade: rec.quantidade,
+        };
+      });
+      this.cdr.markForCheck();
+    } catch (err) {
+      console.error('[Catalogo] Erro ao carregar receitas:', err);
+    }
+  }
+
+  abrirImagem(src: string | undefined, event?: Event) {
+    if (!src || src === '-') return;
+    if (event) event.stopPropagation();
+    this.imagemSelecionada = src;
+    this.modalAbertoImagem = true;
+    this.cdr.markForCheck();
+  }
+
+  fecharModalImagem() {
+    this.imagemSelecionada = null;
+    this.modalAbertoImagem = false;
+    this.cdr.markForCheck();
+  }
+
+  editarItem(id: any, event: Event) {
+    event.stopPropagation();
+    this.router.navigate(['/cadastro-item-catalogo', String(id)]);
+  }
+
+  async excluirItem(id: any) {
+    const confirmacao = confirm(`🗑️ Deseja realmente excluir este item do catálogo?`);
+    if (!confirmacao) return;
+    try {
+      await this.repo.delete(id);
+      alert('✅ Item excluído com sucesso!');
+      this.itemSelecionado = null;
+      this.todosItens = this.todosItens.filter(i => String(i.id) !== String(id));
+      this.processarItens(this.todosItens);
+    } catch (err) {
+      console.error('[Catalogo] Erro ao excluir item:', err);
+      alert('❌ Erro ao excluir item. Veja o console.');
+    }
+  }
+
+  async excluirItemDesdeCard(id: any, nome: string, event: Event) {
+    event.stopPropagation();
+    const confirmacao = confirm(`🗑️ Deseja realmente excluir o item "${nome}" do catálogo?`);
+    if (!confirmacao) return;
+    try {
+      await this.repo.delete(id);
+      alert('✅ Item excluído com sucesso!');
+      if (this.itemSelecionado && String(this.itemSelecionado.id) === String(id)) {
+        this.itemSelecionado = null;
+      }
+      this.todosItens = this.todosItens.filter(i => String(i.id) !== String(id));
+      this.processarItens(this.todosItens);
+    } catch (err) {
+      console.error('[Catalogo] Erro ao excluir item:', err);
+      alert('❌ Erro ao excluir item. Veja o console.');
+    }
   }
 
   novoItem() {

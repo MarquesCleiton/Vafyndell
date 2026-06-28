@@ -1,151 +1,241 @@
-<div class="catalogo-wrapper d-flex flex-column min-vh-100 bg-dark text-light">
+<!-- =========================================================
+     CATÁLOGO — Eldritch Archive
+     ========================================================= -->
+<div class="sheet-wrapper">
 
-  <!-- Barra de pesquisa -->
-  <div class="p-3 bg-black border-bottom position-sticky top-0" style="z-index: 10;">
-    <input type="text" class="form-control search-bar rounded-pill px-3" placeholder="🔍 Pesquisar no catálogo..."
-      [(ngModel)]="filtro" (input)="aplicarFiltro()" />
+  <!-- Coluna da Esquerda (Conteúdo + Busca/FAB Inferior) -->
+  <div class="inv-content-column">
+    
+    <!-- Conteúdo Scrollable -->
+    <div class="sheet-scroll">
+      <div class="sheet-container">
+
+        <!-- Loading -->
+        <div *ngIf="carregando" class="loading-state">
+          <div class="spinner-border text-warning" role="status"></div>
+          <p class="loading-text">Carregando catálogo...</p>
+        </div>
+
+        <!-- Vazio -->
+        <div *ngIf="!carregando && categoriasFiltradas.length === 0" class="loading-state">
+          <p class="loading-text" style="padding-top:0">Nenhum item encontrado.</p>
+        </div>
+
+        <!-- Categorias -->
+        <div *ngIf="!carregando">
+          <ng-container *ngFor="let cat of categoriasFiltradas">
+            <div style="margin-bottom: 12px" *ngIf="abaAtiva === 'ocultos' || pertenceAba(cat.nome)">
+
+              <!-- Cabeçalho categoria -->
+              <button class="secao-header" (click)="toggleCategoria(cat)">
+                <span class="secao-titulo">{{ cat.nome || 'Outros' }}</span>
+                <span class="secao-toggle">{{ cat.expandido ? '−' : '+' }}</span>
+              </button>
+
+              <!-- Lista de Itens -->
+              <div *ngIf="cat.expandido" class="inv-grid">
+                <div *ngFor="let item of cat.itens" class="inv-card {{ getRaridadeClass(item.raridade) }}">
+                  
+                  <!-- Clique abre detalhes -->
+                  <div class="inv-card-content" (click)="abrirItem(item)">
+                    
+                    <!-- Topo: Dot de raridade e Rótulo da raridade -->
+                    <div class="inv-card-header">
+                      <span class="rarity-dot"></span>
+                      <span class="rarity-label">{{ item.raridade || 'Comum' }}</span>
+                    </div>
+
+                    <!-- Centro: Imagem ou Icone -->
+                    <div class="inv-card-center">
+                      <img *ngIf="item.imagem && item.imagem !== '-'"
+                        [src]="item.imagem" [alt]="item.nome" class="inv-card-img" />
+                      <span *ngIf="!item.imagem || item.imagem === '-'" class="inv-card-icon">
+                        {{ getEmojiFallback(item.categoria) }}
+                      </span>
+                    </div>
+
+                    <!-- Info de Peso -->
+                    <div class="inv-card-meta">
+                      <span class="inv-card-weight" title="Peso Unitário" style="right: auto; left: 8px;">
+                        ⚖️ {{ item.peso || 0 }} kg
+                      </span>
+                    </div>
+
+                    <!-- Banner inferior com o Nome -->
+                    <div class="inv-card-footer">
+                      <span class="inv-card-name" [title]="item.nome">
+                        {{ item.nome || 'Sem nome' }}
+                      </span>
+                    </div>
+
+                  </div>
+
+
+
+                </div>
+              </div>
+
+            </div>
+          </ng-container>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Barra de Busca Inferior -->
+    <div class="inv-bottom-bar">
+      <div class="inv-search-bar-footer">
+        <span class="search-icon-footer">🔍</span>
+        <input
+          type="text"
+          class="search-input-footer"
+          placeholder="Pesquisar catálogo..."
+          [(ngModel)]="filtro"
+          (input)="aplicarFiltro()"
+        />
+      </div>
+      <button class="inv-add-btn" (click)="novoItem()" title="Novo Item Catalogo">＋</button>
+    </div>
+
   </div>
 
-  <!-- Tabs -->
-  <ul class="nav nav-tabs bg-dark px-3" role="tablist">
-    <!-- Aba Ocultos → só aparece para mestres -->
-    @if (ehMestre) {
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" [class.active]="abaAtiva === 'ocultos'" (click)="selecionarAba('ocultos')">
-          🙈 Ocultos
-        </button>
-      </li>
-    }
-
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" [class.active]="abaAtiva === 'recursos'" (click)="selecionarAba('recursos')">
-        🌿 Recursos
+  <!-- Barra Lateral de Navegação (Abas) -->
+  <div class="inv-sidebar">
+    <ng-container *ngFor="let aba of abas">
+      <button 
+        *ngIf="aba === 'ocultos' ? ehMestre && getQuantidadePorAba(aba) > 0 : getQuantidadePorAba(aba) > 0"
+        class="sidebar-tab-btn" 
+        [class.active]="abaAtiva === aba" 
+        (click)="selecionarAba(aba)"
+      >
+        <span class="sidebar-tab-icon">
+          {{ aba === 'tudo' ? '🎒' :
+             aba === 'ocultos' ? '🙈' :
+             aba === 'recursos' ? '🌿' :
+             aba === 'equipamentos' ? '⚔️' :
+             aba === 'pocoes' ? '🧪' :
+             '📦' }}
+        </span>
+        <span class="sidebar-tab-label">
+          {{ aba === 'tudo' ? 'Tudo' :
+             aba === 'ocultos' ? 'Ocultos' :
+             aba === 'recursos' ? 'Recursos' :
+             aba === 'equipamentos' ? 'Equip' :
+             aba === 'pocoes' ? 'Poções' :
+             'Outros' }}
+        </span>
+        <span class="sidebar-tab-badge">
+          {{ getQuantidadePorAba(aba) }}
+        </span>
       </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" [class.active]="abaAtiva === 'equipamentos'" (click)="selecionarAba('equipamentos')">
-        ⚔️ Equipamentos
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" [class.active]="abaAtiva === 'pocoes'" (click)="selecionarAba('pocoes')">
-        🧪 Poções
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" [class.active]="abaAtiva === 'outros'" (click)="selecionarAba('outros')">
-        📦 Outros
-      </button>
-    </li>
-  </ul>
+    </ng-container>
+  </div>
 
+  <!-- Modal de Detalhes do Item Selecionado (Eldritch Dialog Style) -->
+  <div class="item-detail-modal-backdrop" *ngIf="itemSelecionado" (click)="itemSelecionado = null">
+    <div class="item-detail-modal-card border-{{ getRaridadeClass(itemSelecionado.raridade) }}" (click)="$event.stopPropagation()">
+      
+      <div class="detail-header">
+        <h5 class="detail-title">📖 Detalhes do Item (Catálogo)</h5>
+        <button class="detail-close-btn" (click)="itemSelecionado = null">✕</button>
+      </div>
 
-  <!-- Conteúdo -->
-  <div class="flex-grow-1 p-3 d-flex justify-content-center">
-    <div class="catalogo-container w-100">
+      <div class="detail-content-scroll">
+        <div class="detail-main-info">
+          <!-- Imagem e Nome/Raridade (Clicável para abrir visualização de imagem) -->
+          <div class="detail-avatar" 
+               [class.clicavel]="itemSelecionado.imagem && itemSelecionado.imagem !== '-'"
+               (click)="itemSelecionado.imagem && itemSelecionado.imagem !== '-' && abrirImagem(itemSelecionado.imagem, $event)">
+            <img *ngIf="itemSelecionado.imagem && itemSelecionado.imagem !== '-'"
+              [src]="itemSelecionado.imagem" [alt]="itemSelecionado.nome" class="detail-avatar-img" />
+            <span *ngIf="!itemSelecionado.imagem || itemSelecionado.imagem === '-'" class="detail-avatar-icon">
+              {{ getEmojiFallback(itemSelecionado.categoria) }}
+            </span>
+          </div>
 
-      <!-- Loading -->
-      @if (carregando) {
-        <div class="text-center py-5">
-          <div class="spinner-border text-light" role="status"></div>
-          <p class="mt-2">Carregando catálogo...</p>
+          <div class="detail-body">
+            <div class="detail-title-row">
+              <h4 class="detail-name">{{ itemSelecionado.nome }}</h4>
+              <span class="detail-rarity-badge bg-{{ getRaridadeClass(itemSelecionado.raridade) }}">
+                {{ itemSelecionado.raridade || 'Comum' }}
+              </span>
+            </div>
+            <div class="detail-specs">
+              <span><b>📂 Categoria:</b> {{ itemSelecionado.categoria || '—' }}</span>
+              <span><b>🌱 Origem:</b> {{ itemSelecionado.origem || '—' }}</span>
+              <span><b>⚖️ Peso:</b> {{ itemSelecionado.peso || 0 }} kg</span>
+            </div>
+          </div>
         </div>
-      }
 
-      <!-- Vazio -->
-      @if (!carregando && categoriasFiltradas.length === 0) {
-        <div class="text-center text-muted py-5">
-          Nenhum item encontrado.
-        </div>
-      }
+        <hr class="detail-divider" />
 
-      <!-- Categorias filtradas -->
-      @if (!carregando) {
-        <div>
-          @for (cat of categoriasFiltradas; track cat.nome) {
-            @if (abaAtiva === 'ocultos' || pertenceAba(cat.nome)) {
-              <div class="mb-3">
+        <div class="detail-extra-info">
+          <p *ngIf="itemSelecionado.efeito" class="detail-efeito">
+            ✨ <b>Efeito:</b> {{ itemSelecionado.efeito }}
+          </p>
+          <p *ngIf="itemSelecionado.colateral" class="detail-colateral">
+            ⚠️ <b>Colateral:</b> {{ itemSelecionado.colateral }}
+          </p>
+          <p *ngIf="itemSelecionado.descricao" class="detail-descricao">
+            📝 <b>Descrição:</b> {{ itemSelecionado.descricao }}
+          </p>
 
-                <!-- Cabeçalho da categoria -->
-                <button class="btn btn-categoria w-100 d-flex justify-content-between align-items-center"
-                  (click)="toggleCategoria(cat)">
-                  <span>{{ cat.nome || 'Outros' }}</span>
-                  <span>{{ cat.expandido ? '−' : '+' }}</span>
-                </button>
-
-                <!-- Itens -->
-                @if (cat.expandido) {
-                  <div class="mt-2">
-                    <div class="row row-cols-1 g-2">
-                      @for (item of cat.itens; track item.id) {
-                        <div class="col">
-                          <div class="card catalogo-card shadow-sm h-100 p-3 position-relative" (click)="abrirItem(item)">
-
-
-                            <div class="d-flex align-items-center mb-2">
-                              <div class="item-thumb me-3">
-                                @if (item.imagem && item.imagem !== '-') {
-                                  <img [src]="item.imagem" alt="{{ item.nome || 'Item' }}" />
-                                } @else {
-                                  <span class="text-muted fs-4">
-                                    {{ getEmojiFallback(item.categoria) }}
-                                  </span>
-                                }
-
-                              </div>
-
-                              <div>
-                                <h6 class="fw-bold text-white mb-1">{{ item.nome || 'Sem nome' }}</h6>
-                                <small class="raridade {{ getRaridadeClass(item.raridade) }}">
-                                  {{ item.raridade || 'Comum' }}
-                                </small>
-                              </div>
-                            </div>
-
-                            @if (item.efeito) {
-                              <p class="small mt-2 text-info">✨ {{ item.efeito }}</p>
-                            }
-                            @if (item.colateral) {
-                              <p class="small text-danger">⚠️ {{ item.colateral }}</p>
-                            }
-                            @if (item.descricao) {
-                              <p class="small descricao-text fst-italic">📝 {{ item.descricao }}</p>
-                            }
-
-                            <!-- Botão só para mestres -->
-                            @if (ehMestre) {
-                              <button
-                                class="btn btn-sm btn-outline-warning position-absolute bottom-0 end-0 m-2 d-flex align-items-center gap-1"
-                                (click)="toggleVisibilidade($event, item)" [disabled]="loadingVisibilidade[item.id]">
-                                @if (!loadingVisibilidade[item.id]) {
-                                  <span>
-                                    {{ item.visivel_jogadores ? '🙈 Ocultar' : '🙉 Mostrar' }}
-                                  </span>
-                                }
-                                @if (loadingVisibilidade[item.id]) {
-                                  <span class="spinner-border spinner-border-sm"></span>
-                                }
-                              </button>
-                            }
-
-                          </div>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
-
+          <!-- Receita / Ingredientes -->
+          <div *ngIf="ingredientesDetalhados.length > 0" class="detail-receita-section mt-3">
+            <h6 class="receita-header">🥣 Receita</h6>
+            <div class="receita-grid mt-2">
+              <div *ngFor="let ing of ingredientesDetalhados" class="receita-item-card" 
+                   style="cursor: pointer;" (click)="ing.item.id && abrirItem(ing.item)">
+                <div class="d-flex align-items-center gap-2">
+                  <img *ngIf="ing.item.imagem && ing.item.imagem !== '-'; else noIngImg" 
+                       [src]="ing.item.imagem" class="receita-item-thumb" />
+                  <ng-template #noIngImg><span class="receita-item-emoji">📦</span></ng-template>
+                  <span class="receita-item-name">{{ ing.item.nome || 'Ingrediente' }}</span>
+                </div>
+                <span class="receita-item-qty">x{{ ing.quantidade }}</span>
               </div>
-            }
-          }
+            </div>
+            <div class="receita-produz-badge mt-2" *ngIf="itemSelecionado.quantidade_fabricavel">
+              ⚒️ Produz: <b>{{ itemSelecionado.quantidade_fabricavel }} {{ itemSelecionado.unidade_medida || 'unidade(s)' }}</b>
+            </div>
+          </div>
+
+          <!-- Receitas Associadas -->
+          <div *ngIf="receitasAssociadas.length > 0" class="detail-receita-section mt-3">
+            <h6 class="receita-header">🔗 Receitas associadas</h6>
+            <div class="receita-grid mt-2">
+              <div *ngFor="let rec of receitasAssociadas" class="receita-item-card" 
+                   style="cursor: pointer;" (click)="rec.produto.id && abrirItem(rec.produto)">
+                <div class="d-flex align-items-center gap-2">
+                  <img *ngIf="rec.produto.imagem && rec.produto.imagem !== '-'; else noProdImg" 
+                       [src]="rec.produto.imagem" class="receita-item-thumb" />
+                  <ng-template #noProdImg><span class="receita-item-emoji">📦</span></ng-template>
+                  <span class="receita-item-name">{{ rec.produto.nome || 'Produto' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      }
+      </div>
+
+      <div class="detail-actions">
+        <button class="detail-action-btn btn-editar" (click)="editarItem(itemSelecionado.id, $event)" title="Editar Item">
+          ✏️ Editar
+        </button>
+        <button class="detail-action-btn btn-excluir" (click)="excluirItem(itemSelecionado.id)" title="Excluir Item">
+          🗑️ Excluir
+        </button>
+      </div>
 
     </div>
   </div>
 
-  <!-- FAB -->
-  <div class="fab-stack">
-    <button class="fab fab-primary" (click)="novoItem()">＋</button>
-  </div>
+  <!-- Modal para visualização de imagem em tela cheia -->
+  <app-image-modal 
+    [imagem]="imagemSelecionada" 
+    [aberto]="modalAbertoImagem" 
+    (fecharModal)="fecharModalImagem()">
+  </app-image-modal>
+
 </div>

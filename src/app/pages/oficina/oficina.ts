@@ -24,9 +24,10 @@ export class Oficina implements OnInit {
   filtro = '';
   fabricaveisOnly = false;
 
-  // Abas fixas
-  abaAtiva: 'recursos' | 'equipamentos' | 'pocoes' | 'outros' = 'recursos';
-  abas: Array<'recursos' | 'equipamentos' | 'pocoes' | 'outros'> = [
+  // Abas fixas — 'todos' é especial e exibe todas as categorias
+  abaAtiva: 'todos' | 'recursos' | 'equipamentos' | 'pocoes' | 'outros' = 'todos';
+  abas: Array<'todos' | 'recursos' | 'equipamentos' | 'pocoes' | 'outros'> = [
+    'todos',
     'recursos',
     'equipamentos',
     'pocoes',
@@ -60,15 +61,7 @@ export class Oficina implements OnInit {
       this.carregando = true;
       this.todasReceitas = await this.oficinaService.getPossiveisReceitas();
       this.processarItens(this.todasReceitas);
-
-      if (this.abas.length > 0) {
-        // seleciona a primeira aba que tiver receitas fabricáveis
-        const primeiraDisponivel = this.abas.find(a => this.getQuantidadePorAba(a) > 0);
-        if (primeiraDisponivel) {
-          this.abaAtiva = primeiraDisponivel;
-        }
-      }
-
+      this.abaAtiva = 'todos';
     } catch (err) {
       console.error('[Oficina] Erro ao carregar receitas:', err);
     } finally {
@@ -101,6 +94,11 @@ export class Oficina implements OnInit {
   aplicarFiltro() {
     const termo = this.normalize(this.filtro);
 
+    // Se houver texto de busca, força aba "todos"
+    if (termo) {
+      this.abaAtiva = 'todos';
+    }
+
     if (!termo && !this.fabricaveisOnly) {
       this.categoriasFiltradas = [...this.categorias];
       return;
@@ -110,7 +108,8 @@ export class Oficina implements OnInit {
       .map((c) => {
         const itensFiltrados = c.itens.filter((i) =>
           (!this.fabricaveisOnly || i.fabricavel) &&
-          (this.normalize(i.nome).includes(termo) ||
+          (!termo ||
+            this.normalize(i.nome).includes(termo) ||
             this.normalize(i.raridade).includes(termo) ||
             this.normalize(i.efeito).includes(termo) ||
             this.normalize(i.descricao).includes(termo))
@@ -129,11 +128,12 @@ export class Oficina implements OnInit {
     return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   }
 
-  selecionarAba(aba: 'recursos' | 'equipamentos' | 'pocoes' | 'outros') {
+  selecionarAba(aba: 'todos' | 'recursos' | 'equipamentos' | 'pocoes' | 'outros') {
     this.abaAtiva = aba;
   }
 
   pertenceAba(categoria: string): boolean {
+    if (this.abaAtiva === 'todos') return true;
     return this.mapaAbas[this.abaAtiva].includes(categoria);
   }
 
@@ -218,17 +218,21 @@ export class Oficina implements OnInit {
     this.router.navigate(['/item-catalogo', String(id)]);
   }
 
-  getQuantidadePorAba(aba: 'recursos' | 'equipamentos' | 'pocoes' | 'outros'): number {
+  getQuantidadePorAba(aba: 'todos' | 'recursos' | 'equipamentos' | 'pocoes' | 'outros'): number {
+    if (aba === 'todos') {
+      // badge de 'todos' sempre conta todas as receitas (ou só disponíveis se filtro ativo)
+      return this.categorias.reduce((sum, cat) => {
+        const itens = this.fabricaveisOnly ? cat.itens.filter(i => i.fabricavel) : cat.itens;
+        return sum + itens.length;
+      }, 0);
+    }
+
     const categoriasAba = this.mapaAbas[aba];
-    let count = 0;
-
-    this.categorias.forEach(cat => {
-      if (categoriasAba.includes(cat.nome)) {
-        count += cat.itens.length; // 👈 conta todos os itens, fabricáveis ou não
-      }
-    });
-
-    return count;
+    return this.categorias.reduce((sum, cat) => {
+      if (!categoriasAba.includes(cat.nome)) return sum;
+      const itens = this.fabricaveisOnly ? cat.itens.filter(i => i.fabricavel) : cat.itens;
+      return sum + itens.length;
+    }, 0);
   }
 
 

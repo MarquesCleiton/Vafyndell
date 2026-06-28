@@ -7,6 +7,9 @@ import { InventarioDomain } from '../../../domain/InventarioDomain';
 import { CatalogoDomain } from '../../../domain/CatalogoDomain';
 import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { AuthService } from '../../../core/auth/AuthService';
+import { RegistroDomain } from '../../../domain/RegistroDomain';
+import { IdUtils } from '../../../core/utils/IdUtils';
+import { ImageModal } from '../../image-modal/image-modal';
 
 interface InventarioDetalhado extends InventarioDomain {
   itemDetalhe?: CatalogoDomain;
@@ -20,7 +23,7 @@ interface CategoriaInventario {
 @Component({
   selector: 'app-inventario-jogador',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ImageModal],
   templateUrl: './inventario-jogador.html',
   styleUrls: ['./inventario-jogador.css'],
 })
@@ -29,17 +32,21 @@ export class InventarioJogador implements OnInit {
   categoriasFiltradas: CategoriaInventario[] = [];
   carregando = true;
   filtro = '';
+  itemSelecionado: InventarioDetalhado | null = null;
+  imagemSelecionada: string | null = null;
+  modalAbertoImagem = false;
 
-  abas: Array<'recursos' | 'equipamentos' | 'pocoes' | 'outros'> = [
-    'recursos', 'equipamentos', 'pocoes', 'outros'
+  abas: Array<'tudo' | 'recursos' | 'equipamentos' | 'pocoes' | 'outros'> = [
+    'tudo', 'recursos', 'equipamentos', 'pocoes', 'outros'
   ];
-  abaAtiva: 'recursos' | 'equipamentos' | 'pocoes' | 'outros' = 'recursos';
+  abaAtiva: 'tudo' | 'recursos' | 'equipamentos' | 'pocoes' | 'outros' = 'tudo';
 
   resumo = { tipos: 0, unidades: 0, pesoTotal: 0, categorias: 0 };
   processando: { [id: string]: 'transferir' | 'editar' | 'excluir' | null } = {};
 
   private catalogoRepo = new BaseRepositoryV2<CatalogoDomain>('Catalogo');
   private inventarioRepo = new BaseRepositoryV2<InventarioDomain>('Inventario');
+  private registroRepo = new BaseRepositoryV2<RegistroDomain>('Registro');
 
   private mapaAbas: Record<string, string[]> = {
     recursos: ['Recursos botânicos', 'Mineral', 'Componentes bestiais e animalescos', 'Tesouro', 'Moeda'],
@@ -131,6 +138,9 @@ export class InventarioJogador implements OnInit {
 
   aplicarFiltro() {
     const termo = this.normalizarTexto(this.filtro);
+    if (termo) {
+      this.abaAtiva = 'tudo'; // Força aba TUDO ao pesquisar
+    }
     if (!termo) {
       this.categoriasFiltradas = [...this.categorias];
       return;
@@ -157,20 +167,26 @@ export class InventarioJogador implements OnInit {
     return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
   }
 
-  selecionarAba(aba: 'recursos' | 'equipamentos' | 'pocoes' | 'outros') { this.abaAtiva = aba; }
+  selecionarAba(aba: 'tudo' | 'recursos' | 'equipamentos' | 'pocoes' | 'outros') { this.abaAtiva = aba; }
 
   pertenceAba(categoria?: string): boolean {
+    if (this.abaAtiva === 'tudo') return true;
     if (!categoria) return this.abaAtiva === 'outros';
-    return this.mapaAbas[this.abaAtiva].includes(categoria);
+    return this.mapaAbas[this.abaAtiva]?.includes(categoria) || false;
   }
 
   toggleCategoria(cat: CategoriaInventario) { cat.expandido = !cat.expandido; }
 
-  getQuantidadePorAba(aba: 'recursos' | 'equipamentos' | 'pocoes' | 'outros'): number {
+  getQuantidadePorAba(aba: 'tudo' | 'recursos' | 'equipamentos' | 'pocoes' | 'outros'): number {
+    if (aba === 'tudo') {
+      let count = 0;
+      this.categorias.forEach(cat => count += cat.itens.length);
+      return count;
+    }
     const categoriasAba = this.mapaAbas[aba];
     let count = 0;
     this.categorias.forEach(cat => {
-      if (categoriasAba.includes(cat.nome)) count += cat.itens.length;
+      if (categoriasAba?.includes(cat.nome)) count += cat.itens.length;
     });
     return count;
   }
@@ -193,7 +209,53 @@ export class InventarioJogador implements OnInit {
     return '📦';
   }
 
-  abrirItem(itemId: string) { this.router.navigate(['/item-inventario', itemId]); }
+  abrirItem(inv: InventarioDetalhado) {
+    if (this.itemSelecionado?.id === inv.id) {
+      this.itemSelecionado = null;
+    } else {
+      this.itemSelecionado = inv;
+    }
+  }
+
+  async compartilharItem(inv: InventarioDetalhado, event: Event) {
+    event.stopPropagation();
+    const user = AuthService.getUser();
+    if (!user?.email) return;
+
+    const confirmShare = confirm(`📢 Deseja compartilhar as informações do item "${inv.itemDetalhe?.nome || 'Item'}" no log de atividade dos jogadores?`);
+    if (!confirmShare) return;
+
+    try {
+      const nomeItem = inv.itemDetalhe?.nome || 'Item desconhecido';
+      const raridade = inv.itemDetalhe?.raridade || 'Comum';
+      const peso = ((inv.itemDetalhe?.peso || 0) * inv.quantidade).toFixed(2).replace(/\.00$/, '');
+      const unidade = inv.itemDetalhe?.unidade_medida || 'unidade(s)';
+
+      const registro: RegistroDomain = {
+        id: IdUtils.generateULID(),
+        jogador: user.email,
+        tipo: 'item',
+        acao: `compartilhou o item: ${nomeItem}`,
+        detalhes:
+          `📦 Compartilhou as especificações de um item\n` +
+          `🎒 ${nomeItem}\n` +
+          `💎 Raridade: ${raridade} · ⚖️ Peso total: ${peso} kg\n` +
+          `🔢 Quantidade: ${inv.quantidade} ${unidade}\n` +
+          (inv.itemDetalhe?.efeito ? `✨ Efeito: ${inv.itemDetalhe.efeito}\n` : '') +
+          (inv.itemDetalhe?.colateral ? `⚠️ Colateral: ${inv.itemDetalhe.colateral}\n` : '') +
+          (inv.itemDetalhe?.descricao ? `📝 Descrição: ${inv.itemDetalhe.descricao}\n` : '') +
+          (inv.descricao ? `📜 Histórico: ${inv.descricao}` : ''),
+        data: new Date().toISOString(),
+      };
+
+      await this.registroRepo.create(registro);
+      alert('✅ Item compartilhado com sucesso no log de atividades!');
+    } catch (err) {
+      console.error('[Inventário] Erro ao compartilhar item:', err);
+      alert('❌ Erro ao compartilhar item.');
+    }
+  }
+
   novoItemInventario() { this.router.navigate(['/cadastro-inventario']); }
 
   trocarItem(itemId: string, event: Event) {
@@ -218,6 +280,11 @@ export class InventarioJogador implements OnInit {
       await this.inventarioRepo.delete(id);
       alert('✅ Item excluído do inventário!');
 
+      // Se o item excluído for o atualmente selecionado no modal, fecha o modal
+      if (this.itemSelecionado?.id === id) {
+        this.itemSelecionado = null;
+      }
+
       // Atualiza lista removendo o item excluído
       this.categorias = this.categorias.map(c => ({
         ...c,
@@ -231,5 +298,22 @@ export class InventarioJogador implements OnInit {
     } finally {
       this.processando[id] = null;
     }
+  }
+
+  abrirImagem(src: string | undefined, event?: Event) {
+    if (!src || src === '-') return;
+    if (event) event.stopPropagation();
+    this.imagemSelecionada = src;
+    this.modalAbertoImagem = true;
+  }
+
+  fecharModalImagem() {
+    this.imagemSelecionada = null;
+    this.modalAbertoImagem = false;
+  }
+
+  abrirCatalogo(catalogoId: string, event?: Event) {
+    if (event) event.stopPropagation();
+    this.router.navigate(['/item-catalogo', catalogoId]);
   }
 }

@@ -169,86 +169,132 @@
        ABA: INVENTÁRIO
        ══════════════════════════════════════ -->
   @if (!loading && jogador?.email && abaAtiva === 'inventario') {
-    <div class="sheet-scroll">
-      <div class="sheet-container">
+    <div class="inv-split-container">
+      
+      <!-- Coluna da Esquerda (Conteúdo + Busca Inferior) -->
+      <div class="inv-content-column">
+        
+        <!-- Conteúdo Scrollable -->
+        <div class="sheet-scroll-inventario">
+          <div class="sheet-container-inventario">
+            
+            <div class="inventario-resumo" *ngIf="!carregandoInventario && categoriasFiltradas.length > 0">
+              ⚖️ Peso total: <b>{{ resumo.pesoTotal | number:'1.0-2' }} kg</b>
+            </div>
 
-        <h2 class="section-title" style="text-align:left;margin-bottom:16px">🎒 Inventário</h2>
+            <!-- Loading -->
+            <div *ngIf="carregandoInventario" class="loading-state">
+              <div class="spinner-border text-warning" role="status"></div>
+              <p class="loading-text">Carregando inventário...</p>
+            </div>
 
-        <!-- Resumo de peso -->
-        @if (!carregandoInventario && categoriasFiltradas.length > 0) {
-          <div class="inventario-resumo">
-            ⚖️ Peso total: <b>{{ resumo.pesoTotal | number:'1.0-2' }} kg</b>
-          </div>
-        }
+            <!-- Vazio -->
+            <div *ngIf="!carregandoInventario && categoriasFiltradas.length === 0" class="loading-state">
+              <p class="loading-text" style="padding-top:0">Nenhum item encontrado.</p>
+            </div>
 
-        <!-- Loading inventário -->
-        @if (carregandoInventario) {
-          <div class="loading-state">
-            <div class="spinner-border text-warning" role="status"></div>
-            <p class="loading-text">Carregando inventário...</p>
-          </div>
-        }
+            <!-- Categorias e Itens -->
+            <div *ngIf="!carregandoInventario">
+              <ng-container *ngFor="let cat of categoriasFiltradas">
+                <div style="margin-bottom: 12px" *ngIf="pertenceAbaInventario(cat.nome)">
+                  
+                  <!-- Header categoria -->
+                  <button class="secao-header" (click)="toggleCategoria(cat)">
+                    <span class="secao-titulo">{{ cat.nome }}</span>
+                    <span class="secao-toggle">{{ cat.expandido ? '−' : '+' }}</span>
+                  </button>
 
-        <!-- Vazio -->
-        @if (!carregandoInventario && categoriasFiltradas.length === 0) {
-          <div style="text-align:center;padding:40px 0;color:var(--outline);font-size:14px">
-            Nenhum item encontrado.
-          </div>
-        }
-
-        <!-- Abas internas -->
-        @if (!carregandoInventario) {
-          <div class="sheet-tabs" style="position:static;margin-bottom:16px;border-radius:4px">
-            @for (aba of abasInventario; track aba) {
-              <button class="tab-btn" [class.active]="abaInventario === aba.toLowerCase()"
-                (click)="selecionarAbaInventario(aba)">
-                {{ aba }}
-              </button>
-            }
-          </div>
-
-          <!-- Categorias -->
-          @for (cat of categoriasFiltradas; track cat.nome) {
-            @if (pertenceAbaInventario(cat.nome)) {
-              <div style="margin-bottom:12px">
-                <button class="cat-btn" (click)="toggleCategoria(cat)">
-                  <span>{{ cat.nome }}</span>
-                  <span class="cat-toggle">{{ cat.expandido ? '−' : '+' }}</span>
-                </button>
-
-                @if (cat.expandido) {
-                  <div class="inventario-lista">
-                    @for (inv of cat.itens; track inv.id) {
-                      <div class="item-card">
-                        <div class="item-thumb">
-                          @if (inv.itemDetalhe?.imagem && inv.itemDetalhe?.imagem !== '-') {
-                            <img [src]="inv.itemDetalhe?.imagem" [alt]="inv.itemDetalhe?.nome" />
-                          } @else {
-                            📦
-                          }
+                  <!-- Grade de Itens (Cards) -->
+                  <div *ngIf="cat.expandido" class="inv-grid">
+                    <div *ngFor="let inv of cat.itens" class="inv-card {{ getRaridadeClass(inv.itemDetalhe?.raridade) }}">
+                      
+                      <!-- Clique abre detalhes -->
+                      <div class="inv-card-content" (click)="abrirItemInventario(inv)">
+                        
+                        <div class="inv-card-header">
+                          <span class="rarity-dot"></span>
+                          <span class="rarity-label">{{ inv.itemDetalhe?.raridade || 'Comum' }}</span>
                         </div>
-                        <div class="item-info">
-                          <h6>{{ inv.itemDetalhe?.nome || 'Item desconhecido' }}</h6>
-                          <span class="item-meta">
-                            {{ inv.quantidade }} {{ inv.itemDetalhe?.unidade_medida || '' }} | ⚖️ {{ inv.itemDetalhe?.peso || 0 }} kg
+
+                        <div class="inv-card-center">
+                          <img *ngIf="inv.itemDetalhe?.imagem && inv.itemDetalhe?.imagem !== '-'"
+                            [src]="inv.itemDetalhe?.imagem" [alt]="inv.itemDetalhe?.nome" class="inv-card-img" />
+                          <span *ngIf="!inv.itemDetalhe?.imagem || inv.itemDetalhe?.imagem === '-'" class="inv-card-icon">📦</span>
+                        </div>
+
+                        <div class="inv-card-meta">
+                          <span class="inv-card-weight" title="Peso Total">
+                            ⚖️ {{ (inv.itemDetalhe?.peso || 0) * inv.quantidade | number:'1.0-2' }} kg
                           </span>
-                          @if (inv.itemDetalhe?.efeito) {
-                            <p class="item-efeito">✨ {{ inv.itemDetalhe?.efeito }}</p>
-                          }
-                          @if (inv.itemDetalhe?.colateral) {
-                            <p class="item-colateral">⚠️ {{ inv.itemDetalhe?.colateral }}</p>
-                          }
+                          <span class="inv-card-qty" title="Quantidade">
+                            {{ inv.quantidade }}
+                          </span>
                         </div>
+
+                        <div class="inv-card-footer">
+                          <span class="inv-card-name" [title]="inv.itemDetalhe?.nome">
+                            {{ inv.itemDetalhe?.nome || 'Item desconhecido' }}
+                          </span>
+                        </div>
+
                       </div>
-                    }
+
+                    </div>
                   </div>
-                }
-              </div>
-            }
-          }
-        }
+
+                </div>
+              </ng-container>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Barra de Busca Inferior -->
+        <div class="inv-bottom-bar">
+          <div class="inv-search-bar-footer">
+            <span class="search-icon-footer">🔍</span>
+            <input
+              type="text"
+              class="search-input-footer"
+              placeholder="Pesquisar no inventário..."
+              [(ngModel)]="filtroInventario"
+              (input)="aplicarFiltroInventario()"
+            />
+          </div>
+        </div>
 
       </div>
+
+      <!-- Coluna da Direita (Abas do Inventário) -->
+      <div class="inv-sidebar">
+        <ng-container *ngFor="let aba of abasInventario">
+          <button 
+            *ngIf="getQuantidadePorAbaInventario(aba) > 0"
+            class="sidebar-tab-btn" 
+            [class.active]="abaInventario === aba" 
+            (click)="selecionarAbaInventario(aba)"
+          >
+            <span class="sidebar-tab-icon">
+              {{ aba === 'tudo' ? '🎒' :
+                 aba === 'recursos' ? '🌿' :
+                 aba === 'equipamentos' ? '⚔️' :
+                 aba === 'pocoes' ? '🧪' :
+                 '📦' }}
+            </span>
+            <span class="sidebar-tab-label">
+              {{ aba === 'tudo' ? 'Tudo' :
+                 aba === 'recursos' ? 'Recursos' :
+                 aba === 'equipamentos' ? 'Equip' :
+                 aba === 'pocoes' ? 'Poções' :
+                 'Outros' }}
+            </span>
+            <span class="sidebar-tab-badge">
+              {{ getQuantidadePorAbaInventario(aba) }}
+            </span>
+          </button>
+        </ng-container>
+      </div>
+
     </div>
   }
 
@@ -277,6 +323,129 @@
   <!-- FAB Voltar -->
   <div class="fab-stack">
     <button class="fab fab-back" (click)="voltar()" title="Voltar">⬅️</button>
+  </div>
+
+  <!-- Modal de Detalhes do Item Selecionado (Eldritch Dialog Style) -->
+  <div class="item-detail-modal-backdrop" *ngIf="itemSelecionado" (click)="itemSelecionado = null">
+    <div class="item-detail-modal-card border-{{ getRaridadeClass(itemSelecionado.itemDetalhe?.raridade) }}" (click)="$event.stopPropagation()">
+      
+      <div class="detail-header">
+        <h5 class="detail-title">📖 Detalhes do Item</h5>
+        <button class="detail-close-btn" (click)="itemSelecionado = null">✕</button>
+      </div>
+
+      <div class="detail-content-scroll">
+        <div class="detail-main-info">
+          <!-- Imagem e Nome/Raridade (Clicável para abrir visualização de imagem) -->
+          <div class="detail-avatar" 
+               [class.clicavel]="itemSelecionado.itemDetalhe?.imagem && itemSelecionado.itemDetalhe?.imagem !== '-'"
+               (click)="itemSelecionado.itemDetalhe?.imagem && itemSelecionado.itemDetalhe?.imagem !== '-' && abrirImagem(itemSelecionado.itemDetalhe!.imagem)">
+            <img *ngIf="itemSelecionado.itemDetalhe?.imagem && itemSelecionado.itemDetalhe?.imagem !== '-'"
+              [src]="itemSelecionado.itemDetalhe?.imagem" [alt]="itemSelecionado.itemDetalhe?.nome" class="detail-avatar-img" />
+            <span *ngIf="!itemSelecionado.itemDetalhe?.imagem || itemSelecionado.itemDetalhe?.imagem === '-'" class="detail-avatar-icon">
+              📦
+            </span>
+          </div>
+
+          <div class="detail-body">
+            <div class="detail-title-row">
+              <h4 class="detail-name">{{ itemSelecionado.itemDetalhe?.nome }}</h4>
+              <span class="detail-rarity-badge bg-{{ getRaridadeClass(itemSelecionado.itemDetalhe?.raridade) }}">
+                {{ itemSelecionado.itemDetalhe?.raridade || 'Comum' }}
+              </span>
+            </div>
+            <div class="detail-specs">
+              <span><b>📂 Categoria:</b> {{ itemSelecionado.itemDetalhe?.categoria || '—' }}</span>
+              <span><b>🌱 Origem:</b> {{ itemSelecionado.itemDetalhe?.origem || '—' }}</span>
+              <span><b>🔢 Quantidade:</b> {{ itemSelecionado.quantidade }} {{ itemSelecionado.itemDetalhe?.unidade_medida || '' }}</span>
+              <span><b>⚖️ Peso total:</b> {{ (itemSelecionado.itemDetalhe?.peso || 0) * itemSelecionado.quantidade | number:'1.0-2' }} kg</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Link para catálogo -->
+        <p *ngIf="itemSelecionado.itemDetalhe" class="mt-3 mb-1 text-start">
+          <a class="text-info text-decoration-none link-clicavel" 
+             (click)="abrirCatalogo(itemSelecionado.itemDetalhe!.id)" 
+             style="cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
+            ℹ️ Ver detalhes no catálogo
+          </a>
+        </p>
+
+        <hr class="detail-divider" />
+
+        <div class="detail-extra-info">
+          <p *ngIf="itemSelecionado.itemDetalhe?.efeito" class="detail-efeito">
+            ✨ <b>Efeito:</b> {{ itemSelecionado.itemDetalhe?.efeito }}
+          </p>
+          <p *ngIf="itemSelecionado.itemDetalhe?.colateral" class="detail-colateral">
+            ⚠️ <b>Colateral:</b> {{ itemSelecionado.itemDetalhe?.colateral }}
+          </p>
+          <p *ngIf="itemSelecionado.itemDetalhe?.descricao" class="detail-descricao">
+            📝 <b>Descrição:</b> {{ itemSelecionado.itemDetalhe?.descricao }}
+          </p>
+
+          <!-- Receita / Ingredientes -->
+          <div *ngIf="ingredientesDetalhados.length > 0" class="detail-receita-section mt-3">
+            <h6 class="receita-header">🥣 Receita</h6>
+            <div class="receita-grid mt-2">
+              <div *ngFor="let ing of ingredientesDetalhados" class="receita-item-card" 
+                   style="cursor: pointer;" (click)="ing.item.id && abrirItemPorCatalogoId(ing.item.id)">
+                <div class="d-flex align-items-center gap-2">
+                  <img *ngIf="ing.item.imagem && ing.item.imagem !== '-'; else noIngImg" 
+                       [src]="ing.item.imagem" class="receita-item-thumb" />
+                  <ng-template #noIngImg><span class="receita-item-emoji">📦</span></ng-template>
+                  <span class="receita-item-name">{{ ing.item.nome || 'Ingrediente' }}</span>
+                </div>
+                <span class="receita-item-qty">x{{ ing.quantidade }}</span>
+              </div>
+            </div>
+            <div class="receita-produz-badge mt-2" *ngIf="itemSelecionado.itemDetalhe?.quantidade_fabricavel">
+              ⚒️ Produz: <b>{{ itemSelecionado.itemDetalhe?.quantidade_fabricavel }} {{ itemSelecionado.itemDetalhe?.unidade_medida || 'unidade(s)' }}</b>
+            </div>
+          </div>
+
+          <!-- Receitas Associadas -->
+          <div *ngIf="receitasAssociadas.length > 0" class="detail-receita-section mt-3">
+            <h6 class="receita-header">🔗 Receitas associadas</h6>
+            <div class="receita-grid mt-2">
+              <div *ngFor="let rec of receitasAssociadas" class="receita-item-card" 
+                   style="cursor: pointer;" (click)="rec.produto.id && abrirItemPorCatalogoId(rec.produto.id)">
+                <div class="d-flex align-items-center gap-2">
+                  <img *ngIf="rec.produto.imagem && rec.produto.imagem !== '-'; else noProdImg" 
+                       [src]="rec.produto.imagem" class="receita-item-thumb" />
+                  <ng-template #noProdImg><span class="receita-item-emoji">📦</span></ng-template>
+                  <span class="receita-item-name">{{ rec.produto.nome || 'Produto' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Histórico -->
+          <div class="detail-historico-section mt-2 text-start">
+            <h6 class="historico-header">🧾 Histórico</h6>
+            <div class="p-2 ps-3 mt-1 detail-historico">
+              <p *ngIf="itemSelecionado.descricao; else semHistorico" class="descricao-text m-0">
+                {{ itemSelecionado.descricao }}
+              </p>
+              <ng-template #semHistorico>
+                <p class="text-muted fst-italic m-0">Sem histórico registrado.</p>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-actions" *ngIf="ehMestre">
+        <button class="detail-action-btn btn-editar" (click)="editarItemInventario(itemSelecionado.id)" title="Editar Item">
+          ✏️ Editar
+        </button>
+        <button class="detail-action-btn btn-excluir" (click)="excluirItemInventario(itemSelecionado.id)" title="Excluir Item">
+          🗑️ Excluir
+        </button>
+      </div>
+
+    </div>
   </div>
 
 </div>
