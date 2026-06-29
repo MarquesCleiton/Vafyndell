@@ -2,7 +2,7 @@ import { AuthService } from '../auth/AuthService';
 
 export class ScriptClientV4 {
   private static BASE_URL =
-    'https://script.google.com/macros/s/AKfycbzWPwJz714gSuRPPPjSJJ2P_WE-QrWDPJkWm0FCDhTCAyp0_g6URBGnPABsuFSrdnBhUw/exec';
+    'https://script.google.com/macros/s/AKfycbwG2nz0n6wAiRyhg1rTqv5NpX1eg-_d4io5JzYyD21XGV7OH1m7aq1GHeBzEUlHjIunFg/exec';
 
   // Map para coalescer requisições idênticas em andamento
   private static inFlightRequests = new Map<string, Promise<any>>();

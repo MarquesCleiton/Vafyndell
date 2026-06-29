@@ -302,12 +302,10 @@
        ABA: HABILIDADES
        ══════════════════════════════════════ -->
   @if (!loading && jogador?.email && abaAtiva === 'habilidades') {
-    <div class="sheet-scroll">
-      <div class="sheet-container">
-        @if (jogador?.email) {
-          <app-skilltree [jogadorId]="jogador?.email"></app-skilltree>
-        }
-      </div>
+    <div class="skilltree-tab-container" style="height: calc(100dvh - 140px); position: relative;">
+      @if (jogador?.email) {
+        <app-skilltree [jogadorId]="jogador?.email" alturaDinamica="100%"></app-skilltree>
+      }
     </div>
   }
 

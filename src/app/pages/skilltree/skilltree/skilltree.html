@@ -1,87 +1,103 @@
-<div class="skilltree-wrapper d-flex flex-column min-vh-100 bg-dark text-light pb-5">
-  <div class="flex-grow-1 p-3 d-flex justify-content-center">
-    <div class="skilltree-container w-100">
+<div class="skilltree-wrapper d-flex flex-column" [style.height]="alturaDinamica" style="position: relative; overflow: hidden;">
+  
+  <!-- Toolbar no topo -->
+  <div class="editor-toolbar mb-2 flex-shrink-0" style="border-radius: 8px;">
+    <div class="toolbar-left">
+      <span class="toolbar-title" style="margin-right: 16px;">🌳 Habilidades</span>
+      
+      <select class="select-dark" [(ngModel)]="caminhoSelecionado" (ngModelChange)="onCaminhoChange()" [disabled]="processando">
+        <option [ngValue]="null">Selecione o Caminho…</option>
+        <option *ngFor="let c of caminhos" [ngValue]="c.id">{{ c.caminho }}</option>
+      </select>
 
-      <h2 class="page-title">🌳 Árvores de Habilidades</h2>
+      <select class="select-dark" [(ngModel)]="arvoreSelecionada" (ngModelChange)="onArvoreChange()" [disabled]="!caminhoSelecionado || processando">
+        <option [ngValue]="null">Selecione a Árvore…</option>
+        <option *ngFor="let a of arvoresDoCaminho" [ngValue]="a.id">{{ a.arvore }}</option>
+      </select>
+    </div>
+  </div>
 
-      <!-- Tabs -->
-      <ul class="nav nav-tabs custom-tabs mb-4">
-        <li class="nav-item" *ngFor="let caminho of caminhos">
-          <a class="nav-link" [class.active]="abaAtiva === caminho.id" (click)="selecionarAba(caminho)">
-            {{ caminho.caminho }}
-          </a>
-        </li>
-      </ul>
+  <!-- Loading Overlay -->
+  <div *ngIf="carregando" class="text-center py-5 position-absolute w-100 h-100 d-flex flex-column justify-content-center align-items-center" style="background: rgba(10,10,10,0.8); z-index: 10;">
+    <div class="spinner-border text-light"></div>
+    <p class="mt-2" style="color: var(--primary);">Sincronizando habilidades...</p>
+  </div>
 
-      <!-- Loading -->
-      <div *ngIf="carregando" class="text-center py-5">
-        <div class="spinner-border text-light"></div>
-        <p class="mt-2">Carregando habilidades...</p>
-      </div>
+  <!-- Empty State -->
+  <div *ngIf="!carregando && !arvoreSelecionada" class="empty-state-overlay position-absolute w-100 h-100 d-flex flex-column justify-content-center align-items-center" style="z-index: 5; color: var(--on-surface-dim);">
+    Selecione um Caminho e uma Árvore para visualizar.
+  </div>
 
-      <!-- Árvores -->
-      <div *ngIf="!carregando && abaAtiva" class="arvores-scroll">
-        <div *ngFor="let arvore of arvoresAtivas" class="arvore-card shadow-lg">
-          <h3 class="arvore-titulo">{{ arvore.arvore }}</h3>
-          <div #cyContainer class="cy-arvore"></div>
-        </div>
-      </div>
-
-      <!-- Backdrop -->
-      <div class="modal-backdrop-blur" *ngIf="habilidadeSelecionada"></div>
-
-      <!-- Modal -->
-      <div class="modal fade" id="habilidadeModal" tabindex="-1" aria-hidden="true"
-           [ngClass]="{ 'show d-block': habilidadeSelecionada }"
-           *ngIf="habilidadeSelecionada">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content bg-dark text-light detalhe-card shadow-lg">
-            <div class="modal-header border-0">
-              <h5 class="modal-title fw-bold">
-                {{ habilidadeSelecionada.habilidade }}
-              </h5>
-              <button type="button" class="btn-close btn-close-white" (click)="fecharModal()"></button>
-            </div>
-
-            <div class="modal-body">
-              <p class="mb-2">{{ habilidadeSelecionada.descricao }}</p>
-              <div *ngIf="habilidadeSelecionada?.requisitos" class="detalhe-extra">
-                <span>📌 Requisito:</span> <br>{{ habilidadeSelecionada.requisitos }}
-              </div>
-            </div>
-
-            <!-- Rodapé condicional -->
-<div class="modal-footer border-0 d-flex justify-content-end gap-2" *ngIf="!somenteVisualizacao">
-  <!-- Editar -->
-  <button class="btn btn-sm btn-outline-warning" (click)="editarHabilidade(habilidadeSelecionada!.id)">
-    ✏️
-  </button>
-
-  <ng-container *ngIf="temHabilidade(habilidadeSelecionada?.id); else addBtn">
-    <button class="btn btn-sm btn-outline-danger" [disabled]="processando"
-            (click)="removerHabilidadeJogador(habilidadeSelecionada!)">
-      <ng-container *ngIf="processando; else removerIcon">
-        <span class="spinner-border spinner-border-sm"></span>
-      </ng-container>
-      <ng-template #removerIcon>❌</ng-template>
-    </button>
-  </ng-container>
-
-  <ng-template #addBtn>
-    <button class="btn btn-sm btn-outline-success" [disabled]="processando"
-            (click)="adicionarHabilidadeJogador(habilidadeSelecionada!)">
-      <ng-container *ngIf="processando; else addIcon">
-        <span class="spinner-border spinner-border-sm"></span>
-      </ng-container>
-      <ng-template #addIcon>➕</ng-template>
-    </button>
-  </ng-template>
+  <!-- Árvore Única -->
+  <div *ngIf="arvoreSelecionada" class="w-100 d-flex flex-column flex-grow-1 position-relative" style="min-height: 0;">
+    <h3 class="arvore-titulo flex-shrink-0 mb-2 text-center" style="color: var(--primary); font-family: 'EB Garamond', serif;">{{ getNomeArvoreSelecionada() }}</h3>
+    
+    <div #cyContainer class="cy-arvore flex-grow-1" style="min-height: 0; border: none; width: 100%;"></div>
+    
+    <!-- Controles de Zoom -->
+    <div class="bottom-controls" style="position: absolute; bottom: 16px; right: 16px; display: flex; align-items: center; gap: 12px; background: rgba(17,17,17,0.95); border: 1px solid #332f28; padding: 8px 16px; border-radius: 8px; z-index: 100;">
+      <button class="control-btn" (click)="zoomOut()" style="background: transparent; border: none; color: #d4c5ab; cursor: pointer;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+      </button>
+      
+      <span class="zoom-level" style="color: #d4c5ab; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; min-width: 48px; text-align: center;">{{ getZoomPercent() }}%</span>
+      
+      <button class="control-btn" (click)="zoomIn()" style="background: transparent; border: none; color: #d4c5ab; cursor: pointer;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+      </button>
+      
+      <div class="control-divider" style="width: 1px; height: 20px; background: #332f28;"></div>
+      
+      <button class="control-btn" (click)="fitCanvas()" style="background: transparent; border: none; color: #d4c5ab; cursor: pointer;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v6h6M20 10V4h-6M4 10V4h6M20 14v6h-6"></path></svg>
+      </button>
+    </div>
+  </div>
 </div>
 
-          </div>
-        </div>
-      </div>
-
+<!-- Painel Inferior de Detalhes -->
+<div class="bottom-detail-panel animate-slide-up" *ngIf="habilidadeSelecionada">
+  <div class="detalhe-card shadow-lg">
+    <div class="modal-header">
+      <h5 class="modal-title">{{ habilidadeSelecionada.habilidade }}</h5>
+      <button type="button" class="btn-close btn-close-white" aria-label="Close"
+              (click)="fecharModal()"></button>
     </div>
+
+    <div class="modal-body p-4">
+      <p class="mb-3" style="white-space: pre-line;">{{ habilidadeSelecionada.descricao }}</p>
+
+      <div class="detalhe-extra mt-2" *ngIf="habilidadeSelecionada.requisitos" style="white-space: pre-line;">
+        <span class="d-block mb-1">Requisitos:</span>
+        {{ habilidadeSelecionada.requisitos }}
+      </div>
+    </div>
+
+    <div class="modal-footer justify-content-end" *ngIf="!somenteVisualizacao">
+      <ng-container *ngTemplateOutlet="botoesAcao"></ng-container>
+    </div>
+
+    <!-- Action Buttons Template -->
+    <ng-template #botoesAcao>
+      <ng-container *ngIf="temHabilidade(habilidadeSelecionada.id); else addBtn">
+        <button class="btn btn-sm btn-outline-danger" [disabled]="processando"
+                (click)="removerHabilidadeJogador(habilidadeSelecionada)">
+          <ng-container *ngIf="processando; else removeIcon">
+            <span class="spinner-border spinner-border-sm"></span>
+          </ng-container>
+          <ng-template #removeIcon>🗑️ Esquecer Habilidade</ng-template>
+        </button>
+      </ng-container>
+
+      <ng-template #addBtn>
+        <button class="btn btn-sm btn-outline-success" [disabled]="processando"
+                (click)="adicionarHabilidadeJogador(habilidadeSelecionada!)">
+          <ng-container *ngIf="processando; else addIcon">
+            <span class="spinner-border spinner-border-sm"></span>
+          </ng-container>
+          <ng-template #addIcon>➕ Aprender Habilidade</ng-template>
+        </button>
+      </ng-template>
+    </ng-template>
   </div>
 </div>
