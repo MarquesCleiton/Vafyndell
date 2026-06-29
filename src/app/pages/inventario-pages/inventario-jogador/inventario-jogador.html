@@ -46,10 +46,12 @@
                   <!-- Clique abre detalhes -->
                   <div class="inv-card-content" (click)="abrirItem(inv)">
                     
-                    <!-- Topo: Dot de raridade e Rótulo da raridade -->
+                    <!-- Topo: Rótulo da raridade à esquerda e Peso à direita -->
                     <div class="inv-card-header">
-                      <span class="rarity-dot"></span>
                       <span class="rarity-label">{{ inv.itemDetalhe?.raridade || 'Comum' }}</span>
+                      <span class="inv-card-weight" title="Peso Total" style="font-size: 9px;">
+                        ⚖️ {{ (inv.itemDetalhe?.peso || 0) * inv.quantidade | number:'1.0-2' }} kg
+                      </span>
                     </div>
 
                     <!-- Centro: Imagem ou Icone -->
@@ -61,13 +63,10 @@
                       </span>
                     </div>
 
-                    <!-- Info de Peso e Quantidade -->
+                    <!-- Info de Quantidade -->
                     <div class="inv-card-meta">
-                      <span class="inv-card-weight" title="Peso Total">
-                        ⚖️ {{ (inv.itemDetalhe?.peso || 0) * inv.quantidade | number:'1.0-2' }} kg
-                      </span>
                       <span class="inv-card-qty" title="Quantidade">
-                        {{ inv.quantidade }}
+                        {{ inv.quantidade }} {{ inv.itemDetalhe?.unidade_medida || 'un' }}
                       </span>
                     </div>
 
