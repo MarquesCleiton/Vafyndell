@@ -8,6 +8,7 @@ import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../../core/auth/AuthService';
 import { IdUtils } from '../../../core/utils/IdUtils';
+import { ScriptClientV4 } from '../../../core/script/ScriptClientV4';
 
 interface SecaoRegistro {
   data: string;
@@ -49,6 +50,7 @@ export class Batalha implements OnInit, OnDestroy {
     estado: 'normal' | 'critico' | 'falha';
   } | null = null;
   rolando = false;
+  rolandoAnimacao = false;
 
   // Campo de batalha
   jogadores: JogadorDomain[] = [];
@@ -417,11 +419,7 @@ export class Batalha implements OnInit, OnDestroy {
         }
       }
 
-      this.resultadoRolagem = {
-        soma: somaTotal,
-        detalhes,
-        estado: temCriticoD20 ? 'critico' : (temFalhaD20 ? 'falha' : 'normal')
-      };
+      // Prepara objeto, mas não define no UI ainda (movido para o setTimeout)
 
       const user = AuthService.getUser();
       if (!user) {
@@ -449,17 +447,58 @@ export class Batalha implements OnInit, OnDestroy {
         data: new Date().toISOString()
       };
 
-      await BaseRepositoryV2.batch({
-        create: { Registro: [novoRegistro] }
-      });
+      // 1. Calcular tempos e decidir se precisamos empurrar para o próximo pooling
+      const now = Date.now();
+      const INTERVALO_SYNC_MS = 10000;
+      let timeToNextSync = INTERVALO_SYNC_MS - (now % INTERVALO_SYNC_MS);
+      
+      let targetRevealTime = now + timeToNextSync;
+      let delayUploadMs = 0;
 
-      console.log('[Batalha] 🎲 Rolagem registrada com sucesso no Registro');
-      await this.carregarHistorico();
+      // Se faltar muito pouco tempo para o pooling (menos de 2.5s), empurra a revelação
+      // em 10s e atrasa o envio para o servidor para garantir que o ciclo de sincronização atual
+      // dos outros jogadores não puxe o registro antes de iniciarmos a nova rodada.
+      if (timeToNextSync < 2500) {
+        targetRevealTime += INTERVALO_SYNC_MS;
+        // Atrasamos o envio para 1s após o início do pooling atual
+        delayUploadMs = timeToNextSync + 1000;
+      }
+
+      const waitTime = targetRevealTime - Date.now();
+      console.log(`[Batalha] 🎲 Dado rolado. Tempo de animação: ${waitTime}ms. Atraso no envio: ${delayUploadMs}ms.`);
+
+      // 2. Envia para o servidor silenciosamente (sem acionar o banco local agora para evitar spoiler)
+      setTimeout(async () => {
+        try {
+          console.log('[Batalha] 📤 Enviando rolagem para o servidor silenciosamente...');
+          await ScriptClientV4.create({ Registro: [novoRegistro] });
+          console.log('[Batalha] 📤 Rolagem enviada ao servidor com sucesso.');
+        } catch (err) {
+          console.error('[Batalha] Erro ao enviar rolagem para o servidor:', err);
+        }
+      }, delayUploadMs);
+
+      // 3. Ativar animação de loading e esperar
+      this.rolandoAnimacao = true;
+
+      setTimeout(async () => {
+        this.rolandoAnimacao = false;
+        
+        // Revelar resultado
+        this.resultadoRolagem = {
+          soma: somaTotal,
+          detalhes,
+          estado: temCriticoD20 ? 'critico' : (temFalhaD20 ? 'falha' : 'normal')
+        };
+        
+        // Puxar histórico local (que já deve ter recebido pelo pooling global)
+        await this.carregarHistorico();
+        this.rolando = false; // liberação final
+      }, waitTime);
 
     } catch (err) {
       console.error('[Batalha] Erro ao registrar rolagem:', err);
       alert('❌ Erro ao salvar resultado da rolagem.');
-    } finally {
       this.rolando = false;
     }
   }

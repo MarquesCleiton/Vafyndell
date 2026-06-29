@@ -358,8 +358,16 @@
         <p class="dice-modal-subtitle">Que a sorte esteja ao seu lado!</p>
       </div>
 
+      <!-- Animação de Rolagem (Overlay / Substituição) -->
+      <ng-container *ngIf="rolandoAnimacao">
+        <div class="dice-animation-container">
+          <div class="rolling-dice-icon">🎲</div>
+          <h3 class="rolling-text">Os dados estão rolando...</h3>
+        </div>
+      </ng-container>
+
       <!-- Modo de Seleção / Anel de Dados -->
-      <ng-container *ngIf="!resultadoRolagem">
+      <ng-container *ngIf="!resultadoRolagem && !rolandoAnimacao">
         <div class="dice-ring-container">
           
           <!-- D100 no Centro -->

@@ -118,18 +118,38 @@ export class App implements OnInit {
       'Habilidades_jogadores',
       'Registro'
     ];
+    // Sincronização Global Periódica cravada a cada 10 segundos (sincronizada com o relógio)
 
-    const syncInterval = setInterval(async () => {
+    let syncTimeout: any;
+
+    const runSync = async () => {
       if (document.visibilityState === 'visible' && navigator.onLine && AuthService.isAuthenticated()) {
         try {
-          console.log('[App] 🔄 Iniciando sincronização global em segundo plano...');
+          console.log('[App] 🔄 Iniciando sincronização global sincronizada (pooling)...');
           await BaseRepositoryV2.multiSync(todasAsAbas);
           console.log('[App] 🔥 Sincronização global concluída.');
         } catch (err) {
           console.warn('[App] ⚠️ Falha na sincronização global silenciosa:', err);
         }
       }
-    }, INTERVALO_SYNC_MS);
+    };
+
+    const scheduleNextSync = () => {
+      const now = Date.now();
+      // Calcula quanto tempo falta para o próximo múltiplo exato de INTERVALO_SYNC_MS
+      let delay = INTERVALO_SYNC_MS - (now % INTERVALO_SYNC_MS);
+      
+      // Margem muito pequena pode disparar quase junto, garantimos ao menos 100ms
+      if (delay < 100) delay += INTERVALO_SYNC_MS;
+
+      syncTimeout = setTimeout(async () => {
+        await runSync();
+        scheduleNextSync(); // Agenda o próximo disparo
+      }, delay);
+    };
+
+    // Inicia o ciclo de sincronização exata
+    scheduleNextSync();
 
     // Carregar IDs existentes no banco local na inicialização para evitar duplicar histórico antigo
     const repoReg = new BaseRepositoryV2<any>('Registro');
@@ -148,19 +168,23 @@ export class App implements OnInit {
           if (!userLogado?.email) return;
 
           // Filtrar somente registros que NÃO estão em knownIds
-          let novos = todos.filter(r => !this.knownIds.has(r.id));
+          const novosParaNotificar = todos.filter(r => !this.knownIds.has(r.id));
 
-          if (novos.length > 0) {
-            console.log(`[App] 🔔 Encontrados ${novos.length} novos registros para notificação.`);
+          if (novosParaNotificar.length > 0) {
+            console.log(`[App] 🔔 Encontrados ${novosParaNotificar.length} novos registros.`);
             
             // Adicionar ao Set de conhecidos TODOS os novos, para não processá-los novamente
-            novos.forEach(r => this.knownIds.add(r.id));
+            novosParaNotificar.forEach(r => this.knownIds.add(r.id));
 
-            // Limita sempre aos últimos 5 para evitar poluição visual,
-            // principalmente quando o cache está vazio e ele baixa todos os registros de uma vez.
-            if (novos.length > 5) {
-              novos = novos.slice(-5);
-            }
+            // Filtra para não exibir a notificação se for uma rolagem de dados do próprio usuário logado
+            let novos = novosParaNotificar.filter(r => !(r.acao === 'rolagem' && r.jogador === userLogado.email));
+
+            if (novos.length > 0) {
+              // Limita sempre aos últimos 5 para evitar poluição visual,
+              // principalmente quando o cache está vazio e ele baixa todos os registros de uma vez.
+              if (novos.length > 5) {
+                novos = novos.slice(-5);
+              }
 
             // Buscar personagens locais para resolver as imagens dos autores das ações
             const repoPersonagens = new BaseRepositoryV2<JogadorDomain>('Personagem');
@@ -226,14 +250,15 @@ export class App implements OnInit {
             // Adicionar à lista de notificações ativas
             this.activeNotifications.update(list => [...list, ...novasNotifs]);
           }
-        } catch (err) {
+        }
+      } catch (err) {
           console.error('[App] Erro ao processar notificações de Registro:', err);
         }
       }
     });
 
     this.destroyRef.onDestroy(() => {
-      clearInterval(syncInterval);
+      clearTimeout(syncTimeout);
       syncSub.unsubscribe();
     });
   }
