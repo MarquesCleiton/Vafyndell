@@ -1,11 +1,8 @@
 import { AuthService } from '../auth/AuthService';
 
-export class ScriptClientV3 {
+export class ScriptClientV4 {
   private static BASE_URL =
-    'https://script.google.com/macros/s/AKfycbyF7zPufz4P_6gDpxIo5_MJ8_B_bhFV3L6yQh6jXNfIlnuSHjaQHr37gpsi97-OWy1vTA/exec';
-
-  private static SHEET_ID = '1r3l3yg2jK5ZvamDxtSfkXprU6Ap8YWkAzmR_wY9rqr8';
-  private static FOLDER_ID = '1lo6Xwydu1-GZAh-kRkgCnDqseCFno3ty';
+    'https://script.google.com/macros/s/AKfycbwG2nz0n6wAiRyhg1rTqv5NpX1eg-_d4io5JzYyD21XGV7OH1m7aq1GHeBzEUlHjIunFg/exec';
 
   // Map para coalescer requisições idênticas em andamento
   private static inFlightRequests = new Map<string, Promise<any>>();
@@ -16,7 +13,7 @@ export class ScriptClientV3 {
 
   static clearCache() {
     this.cache.clear();
-    console.log('[ScriptClientV3] 🧹 Cache limpo');
+    console.log('[ScriptClientV4] 🧹 Cache limpo');
   }
 
   /** Método interno genérico */
@@ -24,7 +21,7 @@ export class ScriptClientV3 {
     const cacheKey = JSON.stringify(bodyPayload);
 
     if (retry && this.inFlightRequests.has(cacheKey)) {
-      console.log(`[ScriptClientV3] 🔄 Reutilizando requisição em andamento para a chave:`, cacheKey);
+      console.log(`[ScriptClientV4] 🔄 Reutilizando requisição em andamento para a chave:`, cacheKey);
       return this.inFlightRequests.get(cacheKey) as Promise<T>;
     }
 
@@ -39,12 +36,11 @@ export class ScriptClientV3 {
 
       const body = {
         idToken,
-        sheetId: this.SHEET_ID,
-        folderId: this.FOLDER_ID,
+        // SHEET_ID e FOLDER_ID são omitidos pois o backend V4 já os possui fixados
         ...bodyPayload,
       };
 
-      console.log(`➡️ [ScriptClientV3] Enviando →`, body);
+      console.log(`➡️ [ScriptClientV4] Enviando →`, body);
 
       const res = await fetch(this.BASE_URL, {
         method: 'POST',
@@ -54,22 +50,22 @@ export class ScriptClientV3 {
       const text = await res.text();
 
       if (!res.ok) {
-        console.error(`❌ [ScriptClientV3] Erro bruto do Script:`, text);
+        console.error(`❌ [ScriptClientV4] Erro bruto do Script:`, text);
         if (res.status === 401 && retry) {
-          console.warn(`[ScriptClientV3] Token inválido, tentando renovar...`);
+          console.warn(`[ScriptClientV4] Token inválido, tentando renovar...`);
           const user = await AuthService.refreshIdToken();
           if (!user) throw new Error('Usuário precisa se autenticar novamente.');
           return this.call<T>(bodyPayload, false);
         }
-        throw new Error(`[ScriptClientV3] HTTP ${res.status} - ${res.statusText}\n${text}`);
+        throw new Error(`[ScriptClientV4] HTTP ${res.status} - ${res.statusText}\n${text}`);
       }
 
       try {
         const parsed = JSON.parse(text) as T;
-        console.log(`⬅️ [ScriptClientV3] Resposta →`, parsed);
+        console.log(`⬅️ [ScriptClientV4] Resposta →`, parsed);
         return parsed;
       } catch (err) {
-        console.error(`❌ [ScriptClientV3] Resposta não-JSON:`, text);
+        console.error(`❌ [ScriptClientV4] Resposta não-JSON:`, text);
         throw err;
       }
     })();
@@ -90,7 +86,7 @@ export class ScriptClientV3 {
   // ========================
   // OPERAÇÕES EM LOTE POR ID
   // ========================
-  
+
   /** Operações em lote (create/update/delete de múltiplas abas em 1 chamada) */
   static async batch<T = any>(payloads: {
     create?: Record<string, any[]>;
@@ -100,7 +96,6 @@ export class ScriptClientV3 {
     const res = await this.call<any>({ payloads });
     return res || {};
   }
-
 
   /** Criação em lote (não duplica IDs já existentes) */
   static create<T = any>(payloads: Record<string, any[]>) {
@@ -118,17 +113,22 @@ export class ScriptClientV3 {
   }
 
   // ========================
-  // CONSULTAS
+  // CONSULTAS E SINCRONIA
   // ========================
 
-  /** Retorna todos os registros de uma aba ou várias abas */
+  /** Sincronização inteligente com PropertiesService (V4) */
+  static async sync(tabs: Record<string, { versao?: number; UltimaModificacao?: string }>) {
+    return this.call<any>({ payloads: { sync: tabs } });
+  }
+
+  /** Retorna todos os registros de uma aba ou várias abas (Fallback/Legacy) */
   static async getAll<T = any>(tabs: string[] | string) {
     const isMetadadosOnly = tabs === 'Metadados' || (Array.isArray(tabs) && tabs.length === 1 && tabs[0] === 'Metadados');
 
     if (isMetadadosOnly) {
       const cached = this.cache.get('Metadados');
       if (cached && cached.expiry > Date.now()) {
-        console.log('[ScriptClientV3] ⚡ Retornando Metadados do cache em memória (TTL active)');
+        console.log('[ScriptClientV4] ⚡ Retornando Metadados do cache em memória (TTL active)');
         return cached.data;
       }
     }
@@ -141,7 +141,7 @@ export class ScriptClientV3 {
         data: unwrapped,
         expiry: Date.now() + this.CACHE_TTL_MS
       });
-      console.log('[ScriptClientV3] 📝 Metadados salvos no cache');
+      console.log('[ScriptClientV4] 📝 Metadados salvos no cache');
     }
 
     return unwrapped;
@@ -152,7 +152,6 @@ export class ScriptClientV3 {
     const res = await this.call<any>({ payloads: { getById: payloads } });
     return res?.getById || {}; // 🔑 unwrap
   }
-
 
   // ========================
   // HELPERS

@@ -333,4 +333,191 @@
     </div>
   </div>
 
+  <!-- ======= BOTAO FLUTUANTE DE DADOS ======= -->
+  <button class="dice-floating-btn" (click)="abrirModalDados()" title="Lançar Dados">
+    <svg viewBox="0 0 24 24" class="dice-floating-icon">
+      <rect x="3" y="3" width="18" height="18" rx="4" fill="currentColor" />
+      <circle cx="8" cy="8" r="1.5" fill="#131313" />
+      <circle cx="16" cy="16" r="1.5" fill="#131313" />
+      <circle cx="16" cy="8" r="1.5" fill="#131313" />
+      <circle cx="8" cy="16" r="1.5" fill="#131313" />
+      <circle cx="12" cy="12" r="1.5" fill="#131313" />
+    </svg>
+  </button>
+
+  <!-- ======= MODAL DE LANÇAMENTO DE DADOS ======= -->
+  <div class="dice-modal-overlay" *ngIf="modalDadosAberto" (click)="fecharModalDados()">
+    <div class="dice-modal-card" (click)="$event.stopPropagation()">
+      
+      <!-- Botão Fechar -->
+      <button class="dice-modal-close" (click)="fecharModalDados()">×</button>
+
+      <!-- Cabeçalho -->
+      <div class="dice-modal-header">
+        <h2 class="dice-modal-title">Lançamento de Dados</h2>
+        <p class="dice-modal-subtitle">Que a sorte esteja ao seu lado!</p>
+      </div>
+
+      <!-- Modo de Seleção / Anel de Dados -->
+      <ng-container *ngIf="!resultadoRolagem">
+        <div class="dice-ring-container">
+          
+          <!-- D100 no Centro -->
+          <div class="dice-card-wrapper die-d100">
+            <div class="dice-card center-die" [class.has-count]="dadosContagem['d100'] > 0" (click)="adicionarDado('d100')">
+              <div class="dice-badge" *ngIf="dadosContagem['d100'] > 0">{{ dadosContagem['d100'] }}</div>
+              <svg viewBox="0 0 24 24" class="dice-svg-icon">
+                <circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="1.5" fill="none" />
+                <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2,2" fill="none" />
+                <circle cx="12" cy="12" r="1" fill="currentColor" />
+              </svg>
+              <span class="dice-name">D100</span>
+            </div>
+            <button class="dice-minus-btn" [class.visible]="dadosContagem['d100'] > 0" (click)="removerDado('d100', $event)">−</button>
+          </div>
+
+          <!-- D2 (Topo) -->
+          <div class="dice-card-wrapper die-d2">
+            <div class="dice-card" [class.has-count]="dadosContagem['d2'] > 0" (click)="adicionarDado('d2')">
+              <div class="dice-badge" *ngIf="dadosContagem['d2'] > 0">{{ dadosContagem['d2'] }}</div>
+              <svg viewBox="0 0 24 24" class="dice-svg-icon">
+                <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8" fill="none" />
+                <text x="12" y="16" font-size="11" font-weight="bold" text-anchor="middle" fill="currentColor">$</text>
+              </svg>
+              <span class="dice-name">D2</span>
+            </div>
+            <button class="dice-minus-btn" [class.visible]="dadosContagem['d2'] > 0" (click)="removerDado('d2', $event)">−</button>
+          </div>
+
+          <!-- D4 (Top-Right) -->
+          <div class="dice-card-wrapper die-d4">
+            <div class="dice-card" [class.has-count]="dadosContagem['d4'] > 0" (click)="adicionarDado('d4')">
+              <div class="dice-badge" *ngIf="dadosContagem['d4'] > 0">{{ dadosContagem['d4'] }}</div>
+              <svg viewBox="0 0 24 24" class="dice-svg-icon">
+                <polygon points="12,4 4,19 20,19" stroke="currentColor" stroke-width="1.8" fill="none" />
+              </svg>
+              <span class="dice-name">D4</span>
+            </div>
+            <button class="dice-minus-btn" [class.visible]="dadosContagem['d4'] > 0" (click)="removerDado('d4', $event)">−</button>
+          </div>
+
+          <!-- D6 (Right) -->
+          <div class="dice-card-wrapper die-d6">
+            <div class="dice-card" [class.has-count]="dadosContagem['d6'] > 0" (click)="adicionarDado('d6')">
+              <div class="dice-badge" *ngIf="dadosContagem['d6'] > 0">{{ dadosContagem['d6'] }}</div>
+              <svg viewBox="0 0 24 24" class="dice-svg-icon">
+                <rect x="5" y="5" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.8" fill="none" />
+              </svg>
+              <span class="dice-name">D6</span>
+            </div>
+            <button class="dice-minus-btn" [class.visible]="dadosContagem['d6'] > 0" (click)="removerDado('d6', $event)">−</button>
+          </div>
+
+          <!-- D8 (Bottom-Right) -->
+          <div class="dice-card-wrapper die-d8">
+            <div class="dice-card" [class.has-count]="dadosContagem['d8'] > 0" (click)="adicionarDado('d8')">
+              <div class="dice-badge" *ngIf="dadosContagem['d8'] > 0">{{ dadosContagem['d8'] }}</div>
+              <svg viewBox="0 0 24 24" class="dice-svg-icon">
+                <polygon points="12,4 20,10 17,19 7,19 4,10" stroke="currentColor" stroke-width="1.8" fill="none" />
+              </svg>
+              <span class="dice-name">D8</span>
+            </div>
+            <button class="dice-minus-btn" [class.visible]="dadosContagem['d8'] > 0" (click)="removerDado('d8', $event)">−</button>
+          </div>
+
+          <!-- D10 (Bottom-Left) -->
+          <div class="dice-card-wrapper die-d10">
+            <div class="dice-card" [class.has-count]="dadosContagem['d10'] > 0" (click)="adicionarDado('d10')">
+              <div class="dice-badge" *ngIf="dadosContagem['d10'] > 0">{{ dadosContagem['d10'] }}</div>
+              <svg viewBox="0 0 24 24" class="dice-svg-icon">
+                <polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" stroke="currentColor" stroke-width="1.5" fill="none" />
+              </svg>
+              <span class="dice-name">D10</span>
+            </div>
+            <button class="dice-minus-btn" [class.visible]="dadosContagem['d10'] > 0" (click)="removerDado('d10', $event)">−</button>
+          </div>
+
+          <!-- D12 (Left) -->
+          <div class="dice-card-wrapper die-d12">
+            <div class="dice-card" [class.has-count]="dadosContagem['d12'] > 0" (click)="adicionarDado('d12')">
+              <div class="dice-badge" *ngIf="dadosContagem['d12'] > 0">{{ dadosContagem['d12'] }}</div>
+              <svg viewBox="0 0 24 24" class="dice-svg-icon">
+                <polygon points="12,3 20,7.5 20,16.5 12,21 4,16.5 4,7.5" stroke="currentColor" stroke-width="1.8" fill="none" />
+              </svg>
+              <span class="dice-name">D12</span>
+            </div>
+            <button class="dice-minus-btn" [class.visible]="dadosContagem['d12'] > 0" (click)="removerDado('d12', $event)">−</button>
+          </div>
+
+          <!-- D20 (Top-Left) -->
+          <div class="dice-card-wrapper die-d20">
+            <div class="dice-card" [class.has-count]="dadosContagem['d20'] > 0" (click)="adicionarDado('d20')">
+              <div class="dice-badge" *ngIf="dadosContagem['d20'] > 0">{{ dadosContagem['d20'] }}</div>
+              <svg viewBox="0 0 24 24" class="dice-svg-icon">
+                <polygon points="12,3 20,9 12,21 4,9" stroke="currentColor" stroke-width="1.8" fill="none" />
+                <line x1="4" y1="9" x2="20" y2="9" stroke="currentColor" stroke-width="1.2" />
+                <line x1="12" y1="3" x2="12" y2="21" stroke="currentColor" stroke-width="1.2" />
+              </svg>
+              <span class="dice-name">D20</span>
+            </div>
+            <button class="dice-minus-btn" [class.visible]="dadosContagem['d20'] > 0" (click)="removerDado('d20', $event)">−</button>
+          </div>
+
+        </div>
+
+        <!-- Ações do Modal -->
+        <div class="dice-modal-footer">
+          <button class="dice-btn-limpar" (click)="limparDados()">LIMPAR</button>
+          <button class="dice-btn-rolar" (click)="rolarDados()" [disabled]="rolando">
+            <span *ngIf="rolando" class="spinner-border spinner-border-sm me-1"></span>
+            ROLAR
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- Modo de Resultados Aprimorado -->
+      <ng-container *ngIf="resultadoRolagem">
+        <div class="dice-results-container" 
+             [class.critico]="resultadoRolagem.estado === 'critico'"
+             [class.falha]="resultadoRolagem.estado === 'falha'"
+             [class.normal]="resultadoRolagem.estado === 'normal'">
+          
+          <div class="dice-results-glow"></div>
+          
+          <div class="dice-sum-display">
+            <span class="dice-sum-title">SOMA TOTAL</span>
+            <div class="dice-sum-value">{{ resultadoRolagem.soma }}</div>
+          </div>
+
+          <div class="dice-breakdown-list">
+            <div class="breakdown-item" *ngFor="let item of resultadoRolagem.detalhes">
+              <div class="breakdown-die">
+                <span class="breakdown-die-badge">{{ item.rolls.length }}</span>
+                <span class="breakdown-die-name">{{ item.dado }}</span>
+              </div>
+              <div class="breakdown-formula">
+                <span class="breakdown-rolls">{{ item.rolls.join(' + ') }}</span>
+                <span class="breakdown-equals">➔</span>
+                <span class="breakdown-total">{{ item.soma }}</span>
+                <span class="breakdown-critico sucesso" *ngIf="item.criticoLabel && item.criticoLabel.includes('ACERTO')">
+                  {{ item.criticoLabel }}
+                </span>
+                <span class="breakdown-critico falha" *ngIf="item.criticoLabel && item.criticoLabel.includes('FALHA')">
+                  {{ item.criticoLabel }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Ações do Resultado -->
+        <div class="dice-modal-footer result-footer">
+          <button class="dice-btn-limpar" (click)="resultadoRolagem = null">VOLTAR</button>
+        </div>
+      </ng-container>
+
+    </div>
+  </div>
+
 </div>

@@ -5,6 +5,9 @@ import { Router } from '@angular/router';
 import { JogadorDomain, JogadorUtils } from '../../../domain/jogadorDomain';
 import { RegistroDomain } from '../../../domain/RegistroDomain';
 import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
+import { Subscription } from 'rxjs';
+import { AuthService } from '../../../core/auth/AuthService';
+import { IdUtils } from '../../../core/utils/IdUtils';
 
 interface SecaoRegistro {
   data: string;
@@ -25,11 +28,27 @@ interface RegistroComMeta extends RegistroDomain {
   styleUrls: ['./batalha.css'],
 })
 export class Batalha implements OnInit, OnDestroy {
-  // 🕒 Tempo de atualização automática (em segundos)
-  private readonly INTERVALO_SINCRONIA = 30;
-  private intervaloId: any = null;
-
   abaAtiva: 'campo' | 'historico' = 'campo';
+  private syncSub: Subscription | null = null;
+
+  // Lançador de dados
+  modalDadosAberto = false;
+  dadosContagem: Record<string, number> = {
+    d2: 0,
+    d4: 0,
+    d6: 0,
+    d8: 0,
+    d10: 0,
+    d12: 0,
+    d20: 0,
+    d100: 0
+  };
+  resultadoRolagem: {
+    soma: number;
+    detalhes: { dado: string; rolls: number[]; soma: number; criticoLabel?: string }[];
+    estado: 'normal' | 'critico' | 'falha';
+  } | null = null;
+  rolando = false;
 
   // Campo de batalha
   jogadores: JogadorDomain[] = [];
@@ -58,43 +77,32 @@ export class Batalha implements OnInit, OnDestroy {
 
   async ngOnInit() {
     await Promise.all([this.carregarJogadores(), this.carregarHistorico()]);
-    this.iniciarSincronizacaoAutomatica();
+    
+    // Inscrição reativa global
+    this.syncSub = BaseRepositoryV2.onTabUpdated.subscribe(async (tab) => {
+      console.log(`[Batalha] 🔔 Evento de atualização recebido para a aba: ${tab}`);
+      if (tab === 'Personagem') {
+        const atualizados = await this.repoJogadores.getLocal();
+        this.jogadores = atualizados;
+        this.aplicarFiltro();
+        console.log('[Batalha] ✅ Jogadores atualizados reativamente');
+      } else if (tab === 'Registro') {
+        const atualizados = await this.repoRegistros.getLocal();
+        const filtrados = atualizados.filter(r => r.tipo === 'batalha' || r.tipo === 'recuperacao');
+        this.processarSecoesHistorico(filtrados);
+        console.log('[Batalha] ✅ Histórico atualizado reativamente');
+      }
+    });
   }
 
   ngOnDestroy() {
-    if (this.intervaloId) {
-      clearInterval(this.intervaloId);
-      this.intervaloId = null;
+    if (this.syncSub) {
+      this.syncSub.unsubscribe();
+      this.syncSub = null;
     }
   }
 
-  // ==========================================================
-  // 🔄 SINCRONIZAÇÃO AUTOMÁTICA
-  // ==========================================================
-  private iniciarSincronizacaoAutomatica() {
-    this.intervaloId = setInterval(async () => {
-      if (document.visibilityState === 'visible' && navigator.onLine) {
-        console.log('[Batalha] 🔁 Sincronizando dados...');
 
-        // P1 fix: multiSync consolida N tabs em 1 chamada GAS (antes eram 2 separadas)
-        const statusMap = await BaseRepositoryV2.multiSync(['Personagem', 'Registro']);
-
-        if (statusMap['Personagem']) {
-          const atualizados = await this.repoJogadores.getLocal();
-          this.jogadores = atualizados;
-          this.aplicarFiltro();
-          console.log('[Batalha] ✅ Jogadores atualizados');
-        }
-
-        if (statusMap['Registro']) {
-          const atualizados = await this.repoRegistros.getLocal();
-          const filtrados = atualizados.filter(r => r.tipo === 'batalha' || r.tipo === 'recuperacao');
-          this.processarSecoesHistorico(filtrados);
-          console.log('[Batalha] ✅ Histórico atualizado');
-        }
-      }
-    }, this.INTERVALO_SINCRONIA * 1000);
-  }
 
   // ==========================================================
   // ⚔️ CAMPO DE BATALHA
@@ -106,14 +114,8 @@ export class Batalha implements OnInit, OnDestroy {
       this.aplicarFiltro();
       this.carregando = false;
 
-      (async () => {
-        const updated = await this.repoJogadores.sync();
-        if (updated) {
-          const atualizados = await this.repoJogadores.getLocal();
-          this.jogadores = atualizados;
-          this.aplicarFiltro();
-        }
-      })();
+      // Dispara a sincronia rápida inicial em segundo plano.
+      this.repoJogadores.sync();
     } catch (err) {
       console.error('[Batalha] Erro ao carregar jogadores:', err);
       this.carregando = false;
@@ -198,15 +200,8 @@ export class Batalha implements OnInit, OnDestroy {
       const filtrados = locais.filter(r => r.tipo === 'batalha' || r.tipo === 'recuperacao');
       this.processarSecoesHistorico(filtrados);
 
-      this.repoRegistros.sync().then(async updated => {
-        if (updated) {
-          const atualizados = await this.repoRegistros.getLocal();
-          const filtradosAtualizados = atualizados.filter(
-            r => r.tipo === 'batalha' || r.tipo === 'recuperacao'
-          );
-          this.processarSecoesHistorico(filtradosAtualizados);
-        }
-      });
+      // Dispara a sincronia em segundo plano
+      this.repoRegistros.sync();
     } catch (err) {
       console.error('[Batalha] Erro ao carregar histórico:', err);
     } finally {
@@ -295,5 +290,177 @@ export class Batalha implements OnInit, OnDestroy {
 
   toggleSecaoCampo(tipo: 'jogadores' | 'bestiais') {
     this.secoesExpandidas[tipo] = !this.secoesExpandidas[tipo];
+  }
+
+  // ==========================================================
+  // 🎲 LANÇADOR DE DADOS
+  // ==========================================================
+  abrirModalDados() {
+    this.modalDadosAberto = true;
+    this.limparDados();
+  }
+
+  fecharModalDados() {
+    this.modalDadosAberto = false;
+    this.resultadoRolagem = null;
+  }
+
+  adicionarDado(tipo: string) {
+    if (this.resultadoRolagem) {
+      this.resultadoRolagem = null;
+    }
+    const key = tipo.toLowerCase();
+    if (this.dadosContagem[key] !== undefined) {
+      // Zera todos os outros dados ao selecionar um novo
+      for (const k of Object.keys(this.dadosContagem)) {
+        if (k !== key) {
+          this.dadosContagem[k] = 0;
+        }
+      }
+      
+      // Limite de até 10x
+      if (this.dadosContagem[key] < 10) {
+        this.dadosContagem[key]++;
+      }
+    }
+  }
+
+  removerDado(tipo: string, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    if (this.resultadoRolagem) {
+      this.resultadoRolagem = null;
+    }
+    const key = tipo.toLowerCase();
+    if (this.dadosContagem[key] !== undefined && this.dadosContagem[key] > 0) {
+      this.dadosContagem[key]--;
+    }
+  }
+
+  limparDados() {
+    for (const key of Object.keys(this.dadosContagem)) {
+      this.dadosContagem[key] = 0;
+    }
+    this.resultadoRolagem = null;
+  }
+
+  get resumoEscolhas(): string[] {
+    const ordem = ['d2', 'd4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100'];
+    const resumo: string[] = [];
+    for (const key of ordem) {
+      const qtd = this.dadosContagem[key];
+      if (qtd > 0) {
+        resumo.push(`${qtd}${key.toUpperCase()}`);
+      }
+    }
+    return resumo;
+  }
+
+  async rolarDados() {
+    const ordem = ['d2', 'd4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100'];
+    const dadosSelecionados = ordem
+      .map(tipo => ({ tipo, qtd: this.dadosContagem[tipo] }))
+      .filter(item => item.qtd > 0);
+
+    if (dadosSelecionados.length === 0) {
+      alert('⚠️ Selecione pelo menos um dado para rolar.');
+      return;
+    }
+
+    this.rolando = true;
+    try {
+      let somaTotal = 0;
+      const detalhes: { dado: string; rolls: number[]; soma: number; criticoLabel?: string }[] = [];
+      const lines: string[] = [];
+      let temCriticoD20 = false;
+      let temFalhaD20 = false;
+
+      for (const { tipo, qtd } of dadosSelecionados) {
+        const faces = parseInt(tipo.replace('d', ''), 10);
+        const rolls: number[] = [];
+        let somatorioDado = 0;
+
+        for (let i = 0; i < qtd; i++) {
+          const roll = Math.floor(Math.random() * faces) + 1;
+          rolls.push(roll);
+          somatorioDado += roll;
+
+          if (tipo === 'd20') {
+            if (roll === 20) temCriticoD20 = true;
+            if (roll === 1) temFalhaD20 = true;
+          }
+        }
+
+        somaTotal += somatorioDado;
+
+        let labelCritico = '';
+        if (tipo === 'd20') {
+          if (rolls.includes(20)) {
+            labelCritico = ' 🔥 ACERTO CRÍTICO!';
+          } else if (rolls.includes(1)) {
+            labelCritico = ' 💀 FALHA CRÍTICA!';
+          }
+        }
+
+        detalhes.push({
+          dado: tipo.toUpperCase(),
+          rolls,
+          soma: somatorioDado,
+          criticoLabel: labelCritico.trim()
+        });
+
+        if (qtd > 1) {
+          lines.push(`${qtd}${tipo.toUpperCase()} ➔ ${rolls.join(' + ')} = ${somatorioDado}${labelCritico}`);
+        } else {
+          lines.push(`${qtd}${tipo.toUpperCase()} ➔ ${somatorioDado} = ${somatorioDado}${labelCritico}`);
+        }
+      }
+
+      this.resultadoRolagem = {
+        soma: somaTotal,
+        detalhes,
+        estado: temCriticoD20 ? 'critico' : (temFalhaD20 ? 'falha' : 'normal')
+      };
+
+      const user = AuthService.getUser();
+      if (!user) {
+        throw new Error('Usuário não autenticado.');
+      }
+
+      const jogadorLogado = this.jogadores.find(j => j.email === user.email);
+      const nomePersonagem = jogadorLogado ? jogadorLogado.personagem : (user.name || 'Jogador');
+
+      let sufixoCritico = '';
+      if (temCriticoD20) {
+        sufixoCritico = ' 🔥 ACERTO CRÍTICO!';
+      } else if (temFalhaD20) {
+        sufixoCritico = ' 💀 FALHA CRÍTICA!';
+      }
+
+      const registroDetalhes = `🎲 ${nomePersonagem} rolou os dados e obteve ${somaTotal}!${sufixoCritico}\n\n` + lines.join('\n');
+
+      const novoRegistro: RegistroDomain = {
+        id: IdUtils.generateULID(),
+        jogador: user.email,
+        tipo: 'batalha',
+        acao: 'rolagem',
+        detalhes: registroDetalhes,
+        data: new Date().toISOString()
+      };
+
+      await BaseRepositoryV2.batch({
+        create: { Registro: [novoRegistro] }
+      });
+
+      console.log('[Batalha] 🎲 Rolagem registrada com sucesso no Registro');
+      await this.carregarHistorico();
+
+    } catch (err) {
+      console.error('[Batalha] Erro ao registrar rolagem:', err);
+      alert('❌ Erro ao salvar resultado da rolagem.');
+    } finally {
+      this.rolando = false;
+    }
   }
 }

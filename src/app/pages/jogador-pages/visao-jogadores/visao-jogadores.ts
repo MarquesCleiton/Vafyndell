@@ -9,9 +9,10 @@ import { CatalogoDomain } from '../../../domain/CatalogoDomain';
 import { BaseRepositoryV2 } from '../../../repositories/BaseRepositoryV2';
 import { Location } from '@angular/common';
 
-// ⬅️ IMPORTAR O SUBCOMPONENTE
 import { SkillTree } from '../../skilltree/skilltree/skilltree';
 import { ImageModal } from '../../image-modal/image-modal';
+import { ReceitaDomain } from '../../../domain/ReceitaDomain';
+import { AuthService } from '../../../core/auth/AuthService';
 
 interface InventarioDetalhado extends InventarioDomain {
   itemDetalhe?: CatalogoDomain;
@@ -48,14 +49,22 @@ export class VisaoJogadores implements OnInit {
 
   // Abas
   abaAtiva: 'jogador' | 'inventario' | 'habilidades' = 'jogador';
-  abaInventario: 'recursos' | 'equipamentos' | 'pocoes' | 'outros' = 'recursos';
+  abaInventario: 'tudo' | 'recursos' | 'equipamentos' | 'pocoes' | 'outros' = 'tudo';
   abaHabilidade: string = 'Warlord'; // mock inicial
-  abasInventario = ['Recursos', 'Equipamentos', 'Pocoes', 'Outros'];
+  abasInventario: Array<'tudo' | 'recursos' | 'equipamentos' | 'pocoes' | 'outros'> = [
+    'tudo', 'recursos', 'equipamentos', 'pocoes', 'outros'
+  ];
   abasHabilidades = ['Warlord', 'Arcane', 'Rogue'];
+  filtroInventario = '';
+  itemSelecionado: InventarioDetalhado | null = null;
+  ingredientesDetalhados: { item: CatalogoDomain; quantidade: number }[] = [];
+  receitasAssociadas: { produto: CatalogoDomain; quantidade: number }[] = [];
+  ehMestre = false;
 
   private jogadorRepo = new BaseRepositoryV2<JogadorDomain>('Personagem');
   private catalogoRepo = new BaseRepositoryV2<CatalogoDomain>('Catalogo');
   private inventarioRepo = new BaseRepositoryV2<InventarioDomain>('Inventario');
+  private repoReceitas = new BaseRepositoryV2<ReceitaDomain>('Receitas');
 
   constructor(
     private route: ActivatedRoute,
@@ -72,6 +81,7 @@ export class VisaoJogadores implements OnInit {
     }
 
     try {
+      await this.definirSeEhMestre();
       await this.loadJogador(id);
 
       if (this.jogador?.email) {
@@ -82,6 +92,39 @@ export class VisaoJogadores implements OnInit {
     } finally {
       this.loading = false;
       this.cdr.markForCheck();
+    }
+  }
+
+  private async definirSeEhMestre() {
+    const user = AuthService.getUser();
+    if (user?.email) {
+      const jogadores = await this.jogadorRepo.getLocal();
+      const jogadorAtual = jogadores.find((j) => j.email === user.email);
+      this.ehMestre = jogadorAtual?.tipo_jogador === 'Mestre';
+      this.cdr.markForCheck();
+    }
+  }
+
+  editarItemInventario(id: string, event?: Event) {
+    if (event) event.stopPropagation();
+    this.itemSelecionado = null;
+    this.router.navigate(['/cadastro-inventario', id]);
+  }
+
+  async excluirItemInventario(id: string, event?: Event) {
+    if (event) event.stopPropagation();
+    const confirmacao = confirm('🗑️ Deseja realmente excluir este item do inventário do jogador?');
+    if (!confirmacao) return;
+    try {
+      await this.inventarioRepo.delete(id);
+      alert('✅ Item excluído com sucesso!');
+      this.itemSelecionado = null;
+      if (this.jogador?.email) {
+        await this.loadInventario(this.jogador.email);
+      }
+    } catch (err) {
+      console.error('[VisaoJogadores] Erro ao excluir item do inventário:', err);
+      alert('❌ Erro ao excluir item.');
     }
   }
 
@@ -226,12 +269,9 @@ export class VisaoJogadores implements OnInit {
     this.cdr.markForCheck();
   }
 
-  selecionarAbaInventario(aba: string) {
-    const key = aba.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    if (key === 'recursos' || key === 'equipamentos' || key === 'pocoes' || key === 'outros') {
-      this.abaInventario = key as any;
-      this.cdr.markForCheck();
-    }
+  selecionarAbaInventario(aba: 'tudo' | 'recursos' | 'equipamentos' | 'pocoes' | 'outros') {
+    this.abaInventario = aba;
+    this.cdr.markForCheck();
   }
 
   selecionarAbaHabilidade(aba: string) {
@@ -240,6 +280,7 @@ export class VisaoJogadores implements OnInit {
   }
 
   pertenceAbaInventario(categoria?: string): boolean {
+    if (this.abaInventario === 'tudo') return true;
     if (!categoria) return this.abaInventario === 'outros';
     const mapa: Record<string, string[]> = {
       recursos: ['Recursos botânicos', 'Mineral', 'Componentes bestiais e animalescos', 'Tesouro', 'Moeda'],
@@ -255,7 +296,135 @@ export class VisaoJogadores implements OnInit {
       ],
       outros: ['Outros'],
     };
-    return mapa[this.abaInventario].includes(categoria);
+    return mapa[this.abaInventario]?.includes(categoria) || false;
+  }
+
+  getQuantidadePorAbaInventario(aba: 'tudo' | 'recursos' | 'equipamentos' | 'pocoes' | 'outros'): number {
+    if (aba === 'tudo') {
+      let count = 0;
+      this.categorias.forEach(cat => count += cat.itens.length);
+      return count;
+    }
+    const mapa: Record<string, string[]> = {
+      recursos: ['Recursos botânicos', 'Mineral', 'Componentes bestiais e animalescos', 'Tesouro', 'Moeda'],
+      equipamentos: ['Equipamento', 'Ferramentas', 'Utilitário – Bombas, armadilhas, luz, som, gás, adesivos'],
+      pocoes: [
+        'Poção de Cura – Regenera vida, cicatriza feridas',
+        'Poção Mental – Calmante, foco, memória, sono, esquecimento',
+        'Poção de Aprimoramento Físico – Força, resistência, agilidade',
+        'Poção Sensorial – Visão, audição, percepção, voz, respiração',
+        'Poção de Furtividade – Camuflagem, passos suaves, silêncio',
+        'Poção de Energia – Percepção da energia fundamental',
+        'Veneno – Sonolência, confusão ou morte',
+      ],
+      outros: ['Outros'],
+    };
+    const categoriasAba = mapa[aba];
+    let count = 0;
+    this.categorias.forEach(cat => {
+      if (categoriasAba?.includes(cat.nome)) count += cat.itens.length;
+    });
+    return count;
+  }
+
+  aplicarFiltroInventario() {
+    const termo = this.normalizarTexto(this.filtroInventario);
+    if (termo) {
+      this.abaInventario = 'tudo'; // Força aba TUDO na pesquisa
+    }
+    if (!termo) {
+      this.categoriasFiltradas = [...this.categorias];
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.categoriasFiltradas = this.categorias
+      .map(c => {
+        const itensFiltrados = c.itens.filter(i =>
+          [
+            i.itemDetalhe?.nome,
+            i.itemDetalhe?.raridade,
+            i.itemDetalhe?.efeito,
+            i.itemDetalhe?.colateral,
+            i.itemDetalhe?.categoria,
+          ]
+            .map(v => this.normalizarTexto(String(v || '')))
+            .some(texto => texto.includes(termo))
+        );
+        return { ...c, itens: itensFiltrados, expandido: itensFiltrados.length > 0 };
+      })
+      .filter(c => c.itens.length > 0);
+    this.cdr.markForCheck();
+  }
+
+  private normalizarTexto(texto: string): string {
+    return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  }
+
+  async abrirItemInventario(inv: InventarioDetalhado) {
+    this.itemSelecionado = inv;
+    this.cdr.markForCheck();
+    if (inv.itemDetalhe) {
+      await this.carregarReceitas(String(inv.itemDetalhe.id));
+    }
+  }
+
+  async abrirItemPorCatalogoId(catalogoId: string) {
+    try {
+      const catalogo = await this.catalogoRepo.getLocal();
+      const item = catalogo.find(c => String(c.id) === String(catalogoId));
+      if (item) {
+        await this.abrirItemInventario({
+          id: '',
+          jogador: '',
+          item_catalogo: item.id,
+          quantidade: 0,
+          index: 0,
+          itemDetalhe: item
+        });
+      }
+    } catch (err) {
+      console.error('[VisaoJogadores] Erro ao abrir item por ID do catalogo:', err);
+    }
+  }
+
+  private async carregarReceitas(itemId: string) {
+    this.ingredientesDetalhados = [];
+    this.receitasAssociadas = [];
+    try {
+      const [receitas, catalogo] = await Promise.all([
+        this.repoReceitas.getLocal(),
+        this.catalogoRepo.getLocal()
+      ]);
+
+      // 1) Ingredientes do item
+      const doItem = receitas.filter(r => String(r.fabricavel) === String(itemId));
+      this.ingredientesDetalhados = doItem.map(rec => {
+        const ingItem = catalogo.find(c => String(c.id) === String(rec.catalogo));
+        return {
+          item: ingItem || ({} as CatalogoDomain),
+          quantidade: rec.quantidade,
+        };
+      });
+
+      // 2) Receitas em que ele é ingrediente
+      const usadasEm = receitas.filter(r => String(r.catalogo) === String(itemId));
+      this.receitasAssociadas = usadasEm.map(rec => {
+        const produto = catalogo.find(c => String(c.id) === String(rec.fabricavel));
+        return {
+          produto: produto || ({} as CatalogoDomain),
+          quantidade: rec.quantidade,
+        };
+      });
+      this.cdr.markForCheck();
+    } catch (err) {
+      console.error('[VisaoJogadores] Erro ao carregar receitas:', err);
+    }
+  }
+
+  abrirCatalogo(catalogoId: string, event?: Event) {
+    if (event) event.stopPropagation();
+    this.router.navigate(['/item-catalogo', catalogoId]);
   }
 
   toggleCategoria(cat: CategoriaInventario) {
@@ -267,9 +436,15 @@ export class VisaoJogadores implements OnInit {
     this.location.back(); // 🔙 volta para a página anterior no histórico
   }
 
-  abrirImagem(src: string) {
+  abrirImagem(src: string | undefined) {
+    if (!src || src === '-') return;
     this.imagemSelecionada = src;
     this.modalAberto = true;
     this.cdr.markForCheck();
+  }
+
+  getRaridadeClass(raridade?: string): string {
+    if (!raridade) return 'comum';
+    return raridade.toLowerCase();
   }
 }

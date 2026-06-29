@@ -99,6 +99,197 @@ mat-toolbar {
   }
 }
 
+/* ===== NOTIFICAÇÕES TIPO PILL (DYNAMIC ISLAND) ===== */
+.notification-container {
+  position: fixed;
+  top: 70px; /* Logo abaixo da Toolbar */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+  width: 90%;
+  max-width: 480px;
+}
+
+.minimal-toast {
+  pointer-events: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 10px 16px;
+  background: rgba(30, 30, 30, 0.85); /* Dark Glassmorphism */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px; /* Formato pílula flexível */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  color: #f3f3f3;
+  font-size: 13px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+  animation: slideInDown 0.35s cubic-bezier(0.19, 1, 0.22, 1) both;
+  transition: border-radius 0.2s ease-in-out;
+}
+
+.minimal-toast.expandido {
+  border-radius: 14px;
+}
+
+.toast-main-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* Indicador lateral sutil luminoso */
+.toast-main-content::before {
+  content: '';
+  position: absolute;
+  left: -2px; /* Ajustado para se alinhar a 14px da borda externa */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 14px;
+  border-radius: 2px;
+}
+
+.minimal-toast.ataque .toast-main-content::before {
+  background: #ff4757;
+  box-shadow: 0 0 8px #ff4757;
+}
+
+.minimal-toast.recuperacao .toast-main-content::before {
+  background: #2ed573;
+  box-shadow: 0 0 8px #2ed573;
+}
+
+.minimal-toast.item .toast-main-content::before {
+  background: #ffa502;
+  box-shadow: 0 0 8px #ffa502;
+}
+
+/* Efeito de pulsação brilhante se o usuário for o alvo direto */
+.minimal-toast.alvo-direto {
+  border-color: rgba(255, 71, 87, 0.45);
+  animation: slideInDown 0.35s cubic-bezier(0.19, 1, 0.22, 1) both, toastPulse 2s infinite ease-in-out;
+}
+
+.toast-text {
+  line-height: 1.3;
+  flex-grow: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.2s;
+  user-select: none;
+  font-size: 12px;
+  color: #e5e2e1;
+}
+
+.toast-text:hover {
+  color: #fff;
+}
+
+.expand-arrow {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.4);
+  transition: transform 0.2s;
+}
+
+/* Área de detalhes expandida */
+.toast-details {
+  margin-top: 8px;
+  animation: fadeInSlideDown 0.25s cubic-bezier(0.19, 1, 0.22, 1) both;
+}
+
+.details-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin-bottom: 8px;
+}
+
+.details-content {
+  margin: 0;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  color: #d1d1d1;
+  font-size: 11px;
+  font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.details-content::-webkit-scrollbar {
+  width: 4px;
+}
+.details-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+@keyframes fadeInSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.toast-ok-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  outline: none;
+}
+
+.toast-ok-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+@keyframes slideInDown {
+  0% {
+    transform: translateY(-20px) scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes toastPulse {
+  0% {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 0 0 0 rgba(255, 71, 87, 0.3);
+  }
+  50% {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 0 15px 4px rgba(255, 71, 87, 0.45);
+  }
+  100% {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 0 0 0 rgba(255, 71, 87, 0.3);
+  }
+}
+
 .refresh-rotating {
   animation: spin 1s linear infinite;
 }
@@ -106,5 +297,332 @@ mat-toolbar {
 @keyframes spin {
   100% {
     transform: rotate(360deg);
+  }
+}
+
+/* Notificação de Rolagem Grandiosa */
+.minimal-toast.rolagem {
+  --rolagem-color: #ffc107;
+  --rolagem-glow: rgba(255, 193, 7, 0.25);
+  --rolagem-border: rgba(255, 193, 7, 0.5);
+  --rolagem-bg: linear-gradient(135deg, rgba(35, 30, 20, 0.9) 0%, rgba(20, 18, 14, 0.95) 100%);
+  --rolagem-anim: diceGlowPulse 3s infinite ease-in-out;
+
+  border-color: var(--rolagem-border);
+  background: var(--rolagem-bg);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 25px var(--rolagem-glow);
+  animation: slideInDown 0.35s cubic-bezier(0.19, 1, 0.22, 1) both, var(--rolagem-anim);
+}
+
+/* Normal: Celestial Cyan/Teal com pulsação suave */
+.minimal-toast.rolagem-normal {
+  --rolagem-color: #00e5ff;
+  --rolagem-glow: rgba(0, 229, 255, 0.2);
+  --rolagem-border: rgba(0, 229, 255, 0.4);
+  --rolagem-bg: linear-gradient(135deg, rgba(14, 30, 35, 0.95) 0%, rgba(8, 16, 20, 0.98) 100%);
+  --rolagem-anim: normalDicePulse 3s infinite ease-in-out;
+}
+
+/* Acerto Crítico: Fiery Gold/Orange pulsante agressivo */
+.minimal-toast.rolagem-critica {
+  --rolagem-color: #ff9f43;
+  --rolagem-glow: rgba(255, 159, 67, 0.35);
+  --rolagem-border: rgba(255, 159, 67, 0.75);
+  --rolagem-bg: linear-gradient(135deg, rgba(45, 28, 10, 0.95) 0%, rgba(24, 15, 5, 0.98) 100%);
+  --rolagem-anim: critDicePulse 1.8s infinite ease-in-out;
+}
+
+/* Falha Crítica: Deep Blood-Red com pulsação de perigo */
+.minimal-toast.rolagem-falha {
+  --rolagem-color: #ff4757;
+  --rolagem-glow: rgba(255, 71, 87, 0.3);
+  --rolagem-border: rgba(255, 71, 87, 0.7);
+  --rolagem-bg: linear-gradient(135deg, rgba(40, 10, 15, 0.95) 0%, rgba(20, 5, 8, 0.98) 100%);
+  --rolagem-anim: failDicePulse 2.4s infinite ease-in-out;
+}
+
+.minimal-toast.rolagem .toast-main-content::before {
+  background: var(--rolagem-color);
+  box-shadow: 0 0 12px 2px var(--rolagem-color);
+}
+
+.minimal-toast.rolagem .toast-text {
+  color: var(--rolagem-color);
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-shadow: 0 0 10px var(--rolagem-glow);
+}
+
+.minimal-toast.rolagem .toast-text:hover {
+  color: #fff;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+}
+
+.minimal-toast.rolagem .toast-details .details-content {
+  background: rgba(18, 14, 8, 0.75);
+  border: 1px solid var(--rolagem-border);
+  color: #ffd875;
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  font-size: 12px;
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.5);
+}
+
+@keyframes diceGlowPulse {
+  0% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 15px rgba(255, 193, 7, 0.2);
+    border-color: rgba(255, 193, 7, 0.4);
+  }
+  50% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 35px rgba(255, 193, 7, 0.55), inset 0 0 15px rgba(255, 193, 7, 0.15);
+    border-color: rgba(255, 193, 7, 0.85);
+  }
+  100% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 15px rgba(255, 193, 7, 0.2);
+    border-color: rgba(255, 193, 7, 0.4);
+  }
+}
+
+/* ===== NOTIFICAÇÃO DE AVATAR DO AUTOR ===== */
+.toast-avatar-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1c1b1b;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s;
+}
+
+.toast-avatar-wrapper.inimigo-avatar {
+  border-color: #8b0000 !important;
+  box-shadow: 0 0 6px rgba(139, 0, 0, 0.3) !important;
+}
+
+.toast-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.toast-avatar-placeholder {
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* Customização dos avatares de acordo com o tipo de ação */
+.minimal-toast.rolagem-normal .toast-avatar-wrapper {
+  border-color: #00e5ff;
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+}
+
+.minimal-toast.rolagem-critica .toast-avatar-wrapper {
+  border-color: #ff9f43;
+  box-shadow: 0 0 8px rgba(255, 159, 67, 0.6);
+}
+
+.minimal-toast.rolagem-falha .toast-avatar-wrapper {
+  border-color: #ff4757;
+  box-shadow: 0 0 8px rgba(255, 71, 87, 0.6);
+}
+
+.minimal-toast.ataque .toast-avatar-wrapper {
+  border-color: #ff4757;
+  box-shadow: 0 0 8px rgba(255, 71, 87, 0.5);
+}
+
+.minimal-toast.recuperacao .toast-avatar-wrapper {
+  border-color: #2ed573;
+  box-shadow: 0 0 8px rgba(46, 213, 115, 0.5);
+}
+
+.minimal-toast.item .toast-avatar-wrapper {
+  border-color: #ffa502;
+  box-shadow: 0 0 8px rgba(255, 165, 2, 0.5);
+}
+
+/* Container de info e cabeçalho do autor */
+.toast-content-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+  margin-left: 12px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+
+.toast-autor-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toast-autor-nome {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffc107;
+  letter-spacing: 0.02em;
+}
+
+.minimal-toast.rolagem-normal .toast-autor-nome {
+  color: #00e5ff;
+}
+
+.minimal-toast.rolagem-critica .toast-autor-nome {
+  color: #ff9f43;
+}
+
+.minimal-toast.rolagem-falha .toast-autor-nome {
+  color: #ff4757;
+}
+
+.toast-autor-sub {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ===== DADO GIGANTE E EVIDENTE ===== */
+.toast-dice-result {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: radial-gradient(circle at center, #2e2612 0%, #15120a 100%);
+  border: 2px solid #ffc107;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 12px;
+  box-shadow: 0 0 15px rgba(255, 193, 7, 0.4), inset 0 0 6px rgba(255, 193, 7, 0.25);
+  animation: diceResultPopIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.toast-dice-result.normal {
+  border-color: #00e5ff;
+  background: radial-gradient(circle at center, #102a35 0%, #051015 100%);
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.35), inset 0 0 6px rgba(0, 229, 255, 0.2);
+}
+.toast-dice-result.normal .dice-result-num {
+  color: #00e5ff;
+  text-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
+}
+.toast-dice-result.normal .dice-result-glow-effect {
+  background: rgba(0, 229, 255, 0.15);
+}
+
+.toast-dice-result.critico {
+  border-color: #ff9f43;
+  background: radial-gradient(circle at center, #3c2005 0%, #1c0e02 100%);
+  box-shadow: 0 0 20px rgba(255, 159, 67, 0.5), inset 0 0 8px rgba(255, 159, 67, 0.3);
+}
+.toast-dice-result.critico .dice-result-num {
+  color: #ff9f43;
+  text-shadow: 0 0 10px rgba(255, 159, 67, 0.8);
+}
+.toast-dice-result.critico .dice-result-glow-effect {
+  background: rgba(255, 159, 67, 0.25);
+}
+
+.toast-dice-result.falha {
+  border-color: #ff4757;
+  background: radial-gradient(circle at center, #350810 0%, #150306 100%);
+  box-shadow: 0 0 20px rgba(255, 71, 87, 0.45), inset 0 0 8px rgba(255, 71, 87, 0.25);
+}
+.toast-dice-result.falha .dice-result-num {
+  color: #ff4757;
+  text-shadow: 0 0 8px rgba(255, 71, 87, 0.7);
+}
+.toast-dice-result.falha .dice-result-glow-effect {
+  background: rgba(255, 71, 87, 0.2);
+}
+
+.dice-result-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+  font-weight: 900;
+  color: #ffc107;
+  text-shadow: 0 0 8px rgba(255, 193, 7, 0.7);
+  line-height: 1;
+}
+
+.dice-result-glow-effect {
+  position: absolute;
+  inset: -6px;
+  border-radius: 14px;
+  background: rgba(255, 193, 7, 0.2);
+  filter: blur(8px);
+  z-index: -1;
+  animation: diceResultGlowPulse 1.8s infinite ease-in-out;
+}
+
+@keyframes diceResultPopIn {
+  0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+@keyframes diceResultGlowPulse {
+  0% { opacity: 0.5; filter: blur(6px); }
+  50% { opacity: 1; filter: blur(10px); }
+  100% { opacity: 0.5; filter: blur(6px); }
+}
+
+/* ===== ANIMAÇÕES DE ROLAGEM ===== */
+@keyframes normalDicePulse {
+  0% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 229, 255, 0.15);
+    border-color: rgba(0, 229, 255, 0.35);
+  }
+  50% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(0, 229, 255, 0.4), inset 0 0 10px rgba(0, 229, 255, 0.1);
+    border-color: rgba(0, 229, 255, 0.7);
+  }
+  100% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 229, 255, 0.15);
+    border-color: rgba(0, 229, 255, 0.35);
+  }
+}
+
+@keyframes critDicePulse {
+  0% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 159, 67, 0.3);
+    border-color: rgba(255, 159, 67, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 40px rgba(255, 159, 67, 0.7), inset 0 0 15px rgba(255, 159, 67, 0.2);
+    border-color: rgba(255, 159, 67, 0.95);
+    transform: scale(1.025);
+  }
+  100% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 159, 67, 0.3);
+    border-color: rgba(255, 159, 67, 0.5);
+    transform: scale(1);
+  }
+}
+
+@keyframes failDicePulse {
+  0% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 15px rgba(255, 71, 87, 0.15);
+    border-color: rgba(255, 71, 87, 0.4);
+  }
+  50% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 71, 87, 0.55), inset 0 0 10px rgba(255, 71, 87, 0.15);
+    border-color: rgba(255, 71, 87, 0.85);
+  }
+  100% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 15px rgba(255, 71, 87, 0.15);
+    border-color: rgba(255, 71, 87, 0.4);
   }
 }

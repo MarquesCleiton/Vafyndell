@@ -2,12 +2,15 @@ import {
   Component,
   OnInit,
   AfterViewInit,
-  ViewChildren,
+  ViewChild,
   QueryList,
   ElementRef,
   Input,
+  NgZone,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import cytoscape, { Core, ElementDefinition } from 'cytoscape';
 import dagre from 'cytoscape-dagre';
@@ -40,14 +43,14 @@ export interface HabilidadeJogador {
 @Component({
   selector: 'app-skilltree',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './skilltree.html',
   styleUrls: ['./skilltree.css'],
 })
 export class SkillTree implements OnInit, AfterViewInit {
   @Input() jogadorId?: string; // se informado, trava edição
-  @ViewChildren('cyContainer') cyContainers!: QueryList<ElementRef>;
-  private cyInstances: { [arvoreId: string]: Core } = {};
+  @ViewChild('cyContainer') cyContainer!: ElementRef;
+  private cy: Core | null = null;
 
   caminhos: CaminhoDomain[] = [];
   arvores: ArvoreDomain[] = [];
@@ -56,7 +59,10 @@ export class SkillTree implements OnInit, AfterViewInit {
 
   carregando = true;
   habilidadeSelecionada: HabilidadeDomain | null = null;
-  abaAtiva: string | null = null;
+  caminhoSelecionado: string | null = null;
+  arvoreSelecionada: string | null = null;
+
+  @Input() alturaDinamica: string = 'calc(100dvh - 112px)';
 
   somenteVisualizacao = false;
 
@@ -69,7 +75,7 @@ export class SkillTree implements OnInit, AfterViewInit {
 
   private userEmail: string | null = null;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private ngZone: NgZone, private cdr: ChangeDetectorRef) {}
 
   processando = false;
 
@@ -90,7 +96,8 @@ export class SkillTree implements OnInit, AfterViewInit {
       await this.loadLocalAndSync(this.userEmail);
 
       if (this.caminhos.length > 0) {
-        this.abaAtiva = this.caminhos[0].id;
+        this.caminhoSelecionado = this.caminhos[0].id;
+        this.onCaminhoChange();
       }
     } catch (err) {
       console.error('[SkillTree] ❌ Erro ao carregar:', err);
@@ -100,18 +107,40 @@ export class SkillTree implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.cyContainers.changes.subscribe(() => {
-      if (this.abaAtiva && !this.carregando) {
-        this.renderizarArvores();
-      }
-    });
+    // Inicialização da view.
   }
 
-  get arvoresAtivas(): ArvoreDomain[] {
-    if (!this.abaAtiva) return [];
+  get arvoresDoCaminho(): ArvoreDomain[] {
+    if (!this.caminhoSelecionado) return [];
     return this.arvores.filter(
-      (a) => String(a.caminho) === String(this.abaAtiva)
+      (a) => String(a.caminho) === String(this.caminhoSelecionado)
     );
+  }
+
+  onCaminhoChange() {
+    this.arvoreSelecionada = null;
+    const arvores = this.arvoresDoCaminho;
+    if (arvores.length > 0) {
+      this.arvoreSelecionada = arvores[0].id;
+      this.onArvoreChange();
+    } else {
+      if (this.cy) {
+        this.cy.destroy();
+        this.cy = null;
+      }
+    }
+  }
+
+  getNomeArvoreSelecionada(): string {
+    if (!this.arvoreSelecionada) return '';
+    const arvore = this.arvores.find(a => a.id === this.arvoreSelecionada);
+    return arvore ? arvore.arvore : '';
+  }
+
+  onArvoreChange() {
+    setTimeout(() => {
+      this.renderizarArvore();
+    }, 50);
   }
 
   private normalizeHabJog(list: HabilidadeJogador[]): HabilidadeJogador[] {
@@ -134,7 +163,9 @@ export class SkillTree implements OnInit, AfterViewInit {
       habJogLocal.filter((h) => h.jogador === email)
     );
 
-    this.renderizarArvores();
+    if (this.arvoreSelecionada) {
+      this.renderizarArvore();
+    }
 
     (async () => {
       const [camSync, arvSync, habSync, habJogSync] = await Promise.all([
@@ -160,94 +191,112 @@ export class SkillTree implements OnInit, AfterViewInit {
           habJogAtual.filter((h) => h.jogador === email)
         );
 
-        this.renderizarArvores();
+        if (this.arvoreSelecionada) {
+          this.renderizarArvore();
+        }
       }
     })();
   }
 
-  private renderizarArvores() {
-    if (!this.abaAtiva) return;
+  private renderizarArvore() {
+    if (!this.arvoreSelecionada || !this.cyContainer) return;
 
-    this.cyContainers.forEach((containerRef, idx) => {
-      const arvore = this.arvoresAtivas[idx];
-      if (!arvore) return;
+    const arvoreId = this.arvoreSelecionada;
 
-      const habilidadesDaArvore = this.habilidades.filter(
-        (h) => String(h.arvore) === String(arvore.id)
-      );
+    const habilidadesDaArvore = this.habilidades.filter(
+      (h) => String(h.arvore) === String(arvoreId)
+    );
 
-      const elements: ElementDefinition[] = [];
+    const elements: ElementDefinition[] = [];
 
-      habilidadesDaArvore.forEach((h) => {
-        const acquired = this.temHabilidade(h.id);
+    habilidadesDaArvore.forEach((h) => {
+      const acquired = this.temHabilidade(h.id);
 
-        elements.push({
-          data: {
-            ...h,
-            id: String(h.id),
-            label: `${h.habilidade}`,
-          },
-          classes: acquired ? 'habilidade-acquired' : '',
-        });
-
-        if (
-          h.dependencia &&
-          habilidadesDaArvore.some((x) => String(x.id) === String(h.dependencia))
-        ) {
-          elements.push({
-            data: { source: String(h.dependencia), target: String(h.id) },
-          });
-        }
+      elements.push({
+        data: {
+          ...h,
+          id: String(h.id),
+          label: `${h.habilidade}`,
+        },
+        classes: acquired ? 'habilidade-acquired' : '',
       });
 
-      if (this.cyInstances[arvore.id]) {
-        this.cyInstances[arvore.id].destroy();
+      if (
+        h.dependencia &&
+        habilidadesDaArvore.some((x) => String(x.id) === String(h.dependencia))
+      ) {
+        const sourceAcquired = this.temHabilidade(h.dependencia);
+        
+        elements.push({
+          data: { source: String(h.dependencia), target: String(h.id) },
+          classes: (sourceAcquired && acquired) ? 'habilidade-acquired-edge' : '',
+        });
       }
+    });
 
-      this.cyInstances[arvore.id] = cytoscape({
-        container: containerRef.nativeElement,
-        elements,
-        layout: {
-          name: 'dagre',
-          rankDir: 'TB',
-          nodeSep: 120,
-          rankSep: 100,
-          edgeSep: 30,
-          padding: 40,
-        } as DagreLayoutOptions,
+    if (this.cy) {
+      this.cy.destroy();
+    }
+
+    this.cy = cytoscape({
+      container: this.cyContainer.nativeElement,
+      elements,
+      layout: {
+        name: 'dagre',
+        rankDir: 'TB',
+        nodeSep: 80,
+        rankSep: 100,
+        padding: 50,
+      } as DagreLayoutOptions,
         style: [
           {
             selector: 'node',
             style: {
-              'background-color': '#222',
-              'border-color': '#555',
+              'background-color': '#1c1b1b',
+              'border-color': '#4f4632',
               'border-width': 2,
               label: 'data(label)',
-              color: '#eee',
-              'text-valign': 'center',
+              color: '#d4c5ab',
+              'text-valign': 'bottom',
               'text-halign': 'center',
-              width: '65px',
-              height: '65px',
-              'font-size': '10px',
+              'text-margin-y': 8,
+              'text-background-color': '#0a0a0a',
+              'text-background-opacity': 1,
+              'text-background-shape': 'roundrectangle',
+              'text-background-padding': '4px',
+              width: '64px',
+              height: '64px',
+              'font-size': '11px',
+              'font-family': '"JetBrains Mono", monospace',
+              'font-weight': 'bold',
               'text-wrap': 'wrap',
-              'text-max-width': '90px',
+              'text-max-width': '70px',
+              shape: 'rectangle',
+              'overlay-padding': '6px',
+              'transition-property': 'border-color, border-width, background-color',
+              'transition-duration': '0.2s' as any,
             },
           },
           {
             selector: 'node.habilidade-acquired',
             style: {
-              'background-color': '#28a745',
-              'border-color': '#fff',
+              'border-color': '#ffc107',
               'border-width': 3,
-              color: '#fff',
+              'background-color': '#2a2a2a',
+              color: '#ffc107',
+              'text-background-color': '#1a1814',
+              'background-image': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCI+PHRleHQgeD0iNTAlIiB5PSI1NSUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMzgiIGZpbGw9IiNmZmMxMDciPiYjeDI3MTQ7PC90ZXh0Pjwvc3ZnPg==',
+              'background-fit': 'contain',
+              'background-position-x': '50%',
+              'background-position-y': '50%'
             },
           },
           {
-            selector: 'node.selected',
+            selector: 'node:selected',
             style: {
-              'background-color': '#007bff',
-              'border-color': '#fff',
+              'border-color': '#ffc107',
               'border-width': 3,
+              'background-color': '#2a2a2a',
               color: '#fff',
             },
           },
@@ -255,34 +304,51 @@ export class SkillTree implements OnInit, AfterViewInit {
             selector: 'edge',
             style: {
               width: 2,
-              'line-color': '#666',
-              'curve-style': 'unbundled-bezier',
-              'control-point-distances': [-30, 30],
-              'control-point-weights': [0.5, 0.5],
+              'line-color': '#ffb300',
+              'target-arrow-shape': 'none',
+              'curve-style': 'taxi',
+              'taxi-direction': 'downward',
+              'taxi-turn': '20px' as any,
             },
           },
+          {
+            selector: 'edge.habilidade-acquired-edge',
+            style: {
+              width: 3,
+              'line-color': '#ffc107',
+            }
+          }
         ],
         userPanningEnabled: true,
         userZoomingEnabled: true,
         autoungrabify: true,
       });
 
-      this.cyInstances[arvore.id].on('tap', 'node', (evt) => {
-        const cy = this.cyInstances[arvore.id];
-        cy.nodes().removeClass('selected');
-        evt.target.addClass('selected');
+    this.cy.on('tap', 'node', (evt) => {
+      this.cy?.nodes().removeClass('selected');
+      evt.target.addClass('selected');
 
-        const id = String(evt.target.data('id'));
-        const habilidade =
-          this.habilidades.find((h) => String(h.id) === id) || null;
+      const zoomLevel = 1.2;
+      const nodePos = evt.target.position();
+      const pan = {
+        x: this.cy!.width() / 2 - zoomLevel * nodePos.x,
+        y: this.cy!.height() / 3 - zoomLevel * nodePos.y
+      };
+
+      this.cy?.animate({ 
+        zoom: zoomLevel, 
+        pan: pan 
+      }, { duration: 300 });
+
+      const id = String(evt.target.data('id'));
+      const habilidade =
+        this.habilidades.find((h) => String(h.id) === id) || null;
+      
+      this.ngZone.run(() => {
         this.selecionarHab(habilidade);
+        this.cdr.detectChanges();
       });
     });
-  }
-
-  selecionarAba(caminho: CaminhoDomain) {
-    this.abaAtiva = caminho.id;
-    setTimeout(() => this.renderizarArvores(), 0);
   }
 
   selecionarHab(h: HabilidadeDomain | null) {
@@ -367,7 +433,7 @@ export class SkillTree implements OnInit, AfterViewInit {
         )
       );
 
-      this.renderizarArvores();
+      this.renderizarArvore();
     } finally {
       this.processando = false;
     }
@@ -405,7 +471,7 @@ export class SkillTree implements OnInit, AfterViewInit {
         )
       );
 
-      this.renderizarArvores();
+      this.renderizarArvore();
     } finally {
       this.processando = false;
     }
@@ -413,5 +479,26 @@ export class SkillTree implements OnInit, AfterViewInit {
 
   fecharModal() {
     this.habilidadeSelecionada = null;
+  }
+
+  // ── Controles de Câmera ───────────────────────────────────────────────────
+  zoomIn() {
+    if (!this.cy) return;
+    this.cy.zoom(this.cy.zoom() * 1.2);
+  }
+
+  zoomOut() {
+    if (!this.cy) return;
+    this.cy.zoom(this.cy.zoom() * 0.8);
+  }
+
+  fitCanvas() {
+    if (!this.cy) return;
+    this.cy.fit(undefined, 50);
+  }
+
+  getZoomPercent(): string {
+    if (!this.cy) return '100';
+    return (this.cy.zoom() * 100).toFixed(0);
   }
 }

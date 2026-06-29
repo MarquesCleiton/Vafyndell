@@ -1,7 +1,10 @@
 import { IndexedDBClientV2 } from '../core/db/IndexedDBClientV2';
-import { ScriptClientV3 } from '../core/script/ScriptClientV3';
+import { ScriptClientV4 } from '../core/script/ScriptClientV4';
+import { Subject } from 'rxjs';
 
 export class BaseRepositoryV2<T extends { id: string }> {
+  static onTabUpdated = new Subject<string>();
+
   private static META_STORE = 'Metadados';
   private static dbPromise: Promise<IndexedDBClientV2> | null = null;
 
@@ -32,7 +35,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
   async create(item: Omit<T, 'id'>): Promise<T> {
     console.log(`[BaseRepositoryV2:${this.tab}] ▶️ create →`, item);
 
-    const result = await ScriptClientV3.create({ [this.tab]: [item] });
+    const result = await ScriptClientV4.create({ [this.tab]: [item] });
     console.log(`[BaseRepositoryV2:${this.tab}] ◀️ create result`, result);
 
     const created = (result?.create?.[this.tab] || [])[0];
@@ -42,13 +45,14 @@ export class BaseRepositoryV2<T extends { id: string }> {
     await (await this.getDb()).put(this.store, entity);
 
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 create persistido localmente →`, entity);
+    BaseRepositoryV2.onTabUpdated.next(this.store);
     return entity;
   }
 
   async update(item: T): Promise<T> {
     console.log(`[BaseRepositoryV2:${this.tab}] ▶️ update →`, item);
 
-    const result = await ScriptClientV3.updateById({ [this.tab]: [item] });
+    const result = await ScriptClientV4.updateById({ [this.tab]: [item] });
     console.log(`[BaseRepositoryV2:${this.tab}] ◀️ update result`, result);
 
     const updated = (result?.updateById?.[this.tab] || [])[0];
@@ -58,13 +62,14 @@ export class BaseRepositoryV2<T extends { id: string }> {
     await (await this.getDb()).put(this.store, entity);
 
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 update persistido localmente →`, entity);
+    BaseRepositoryV2.onTabUpdated.next(this.store);
     return entity;
   }
 
   async delete(id: string): Promise<boolean> {
     console.log(`[BaseRepositoryV2:${this.tab}] ▶️ delete → id=${id}`);
 
-    const result = await ScriptClientV3.deleteById({ [this.tab]: [{ id }] });
+    const result = await ScriptClientV4.deleteById({ [this.tab]: [{ id }] });
     console.log(`[BaseRepositoryV2:${this.tab}] ◀️ delete result`, result);
 
     const deleted = (result?.deleteById?.[this.tab] || [])[0];
@@ -75,6 +80,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
 
     await (await this.getDb()).delete(this.store, String(id));
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 delete persistido localmente → id=${id}`);
+    BaseRepositoryV2.onTabUpdated.next(this.store);
     return true;
   }
 
@@ -84,7 +90,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
   async createBatch(items: Omit<T, 'id'>[]): Promise<T[]> {
     console.log(`[BaseRepositoryV2:${this.tab}] ▶️ createBatch →`, items);
 
-    const result = await ScriptClientV3.create({ [this.tab]: items });
+    const result = await ScriptClientV4.create({ [this.tab]: items });
     console.log(`[BaseRepositoryV2:${this.tab}] ◀️ createBatch result`, result);
 
     const arr = result?.create?.[this.tab] || [];
@@ -95,13 +101,14 @@ export class BaseRepositoryV2<T extends { id: string }> {
 
     await (await this.getDb()).bulkPut(this.store, entities);
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 createBatch persistiu ${entities.length} registros`);
+    BaseRepositoryV2.onTabUpdated.next(this.store);
     return entities;
   }
 
   async updateBatch(items: T[]): Promise<T[]> {
     console.log(`[BaseRepositoryV2:${this.tab}] ▶️ updateBatch →`, items);
 
-    const result = await ScriptClientV3.updateById({ [this.tab]: items });
+    const result = await ScriptClientV4.updateById({ [this.tab]: items });
     console.log(`[BaseRepositoryV2:${this.tab}] ◀️ updateBatch result`, result);
 
     const arr = result?.updateById?.[this.tab] || [];
@@ -112,13 +119,14 @@ export class BaseRepositoryV2<T extends { id: string }> {
 
     await (await this.getDb()).bulkPut(this.store, entities);
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 updateBatch persistiu ${entities.length} registros`);
+    BaseRepositoryV2.onTabUpdated.next(this.store);
     return entities;
   }
 
   async deleteBatch(ids: string[]): Promise<boolean> {
     console.log(`[BaseRepositoryV2:${this.tab}] ▶️ deleteBatch →`, ids);
 
-    const result = await ScriptClientV3.deleteById({
+    const result = await ScriptClientV4.deleteById({
       [this.tab]: ids.map((id) => ({ id: String(id) })),
     });
     console.log(`[BaseRepositoryV2:${this.tab}] ◀️ deleteBatch result`, result);
@@ -130,6 +138,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
     await Promise.all(ids.map((id) => db.delete(this.store, String(id))));
 
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 deleteBatch persistido localmente → ${ids.length} registros`);
+    BaseRepositoryV2.onTabUpdated.next(this.store);
     return ok;
   }
 
@@ -154,10 +163,10 @@ export class BaseRepositoryV2<T extends { id: string }> {
         console.log(`[BaseRepositoryV2:${this.tab}] 📂 getById encontrado localmente →`, normalized);
         return normalized;
       }
-      return null; // 🚨 não vai online quando preferLocal = true
+      return null;
     }
 
-    const result = await ScriptClientV3.getById({ [this.tab]: [{ id: String(id) }] });
+    const result = await ScriptClientV4.getById({ [this.tab]: [{ id: String(id) }] });
     console.log(`[BaseRepositoryV2:${this.tab}] ◀️ getById result`, result);
     const achado = result?.[this.tab]?.[0] || null;
     return achado ? this.normalizeId(achado) : null;
@@ -165,7 +174,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
 
   async getAllOnline(): Promise<T[]> {
     console.log(`[BaseRepositoryV2:${this.tab}] 🌐 getAllOnline iniciado`);
-    const result = await ScriptClientV3.getAll(this.tab);
+    const result = await ScriptClientV4.getAll(this.tab);
     console.log(`[BaseRepositoryV2:${this.tab}] ◀️ getAllOnline result`, result);
 
     return (result?.[this.tab] || []).map((it: any) => this.normalizeId(it));
@@ -173,139 +182,162 @@ export class BaseRepositoryV2<T extends { id: string }> {
 
   async forceFetch(): Promise<T[]> {
     console.log(`[BaseRepositoryV2:${this.tab}] 🌐 forceFetch iniciado`);
-    ScriptClientV3.clearCache(); // Limpa cache para garantir dados frescos
-    const result = await ScriptClientV3.getAll([this.tab, 'Metadados']);
-    console.log(`[BaseRepositoryV2:${this.tab}] ◀️ forceFetch result`, result);
+    ScriptClientV4.clearCache(); // Limpa cache para garantir dados frescos
+    
+    // Força fetch passando versão zerada
+    const response = await ScriptClientV4.sync({
+      [this.tab]: { versao: 0, UltimaModificacao: '' }
+    });
+    console.log(`[BaseRepositoryV2:${this.tab}] ◀️ forceFetch result`, response);
 
-    const list = (result?.[this.tab] || []).map((it: any) => this.normalizeId(it));
+    const syncResult = response?.sync || {};
+    const tabUpdates = syncResult.updates?.[this.tab] || [];
+    const tabMeta = syncResult.metadados?.[this.tab];
+
+    const list = tabUpdates.map((it: any) => this.normalizeId(it));
     const db = await this.getDb();
     await db.clear(this.store);
     await db.bulkPut(this.store, list);
 
     console.log(`[BaseRepositoryV2:${this.tab}] 💾 forceFetch persistiu ${list.length} registros`);
 
-    // --- forceFetch ---
-    const meta = result?.['Metadados']?.find((m: any) => m.id === this.tab);
-    if (meta) {
+    if (tabMeta) {
       await db.put(BaseRepositoryV2.META_STORE, {
         id: this.tab,
-        UltimaModificacao: meta.UltimaModificacao,
+        UltimaModificacao: tabMeta.UltimaModificacao,
+        versao: tabMeta.versao,
       } as any);
-      console.log(`[BaseRepositoryV2:${this.tab}] 📝 metadados atualizados →`, meta);
+      console.log(`[BaseRepositoryV2:${this.tab}] 📝 metadados atualizados →`, tabMeta);
     }
 
+    BaseRepositoryV2.onTabUpdated.next(this.store);
     return list;
   }
 
-  // Dentro de BaseRepositoryV2<T>
   static async multiFetch(tabs: string[]): Promise<Record<string, any[]>> {
     console.log(`[BaseRepositoryV2] 🌐 multiFetch iniciado →`, tabs);
-    ScriptClientV3.clearCache(); // Limpa cache para garantir dados frescos
+    ScriptClientV4.clearCache(); // Limpa cache para garantir dados frescos
 
-    const result = await ScriptClientV3.getAll(tabs);
-    console.log(`[BaseRepositoryV2] ◀️ multiFetch result`, result);
+    const forcePayload: Record<string, { versao: number; UltimaModificacao: string }> = {};
+    tabs.forEach(tab => {
+      forcePayload[tab] = { versao: 0, UltimaModificacao: '' };
+    });
+
+    const response = await ScriptClientV4.sync(forcePayload);
+    console.log(`[BaseRepositoryV2] ◀️ multiFetch result`, response);
+
+    const syncResult = response?.sync || {};
+    const updates = syncResult.updates || {};
+    const metadados = syncResult.metadados || {};
 
     const db = await BaseRepositoryV2.getDbStatic();
     const map: Record<string, any[]> = {};
 
     for (const tab of tabs) {
-      const list = (result?.[tab] || []).map((it: any) => ({ ...it, id: String(it.id) }));
+      const list = (updates[tab] || []).map((it: any) => ({ ...it, id: String(it.id) }));
       map[tab] = list;
       await db.clear(tab);
       await db.bulkPut(tab, list);
 
+      const tabMeta = metadados[tab];
+      if (tabMeta) {
+        await db.put(BaseRepositoryV2.META_STORE, {
+          id: tab,
+          UltimaModificacao: tabMeta.UltimaModificacao,
+          versao: tabMeta.versao,
+        } as any);
+      }
+
       console.log(`[BaseRepositoryV2] 💾 multiFetch persistiu ${list.length} registros em ${tab}`);
+      BaseRepositoryV2.onTabUpdated.next(tab);
     }
 
     return map;
   }
 
-
   async sync(): Promise<boolean> {
     console.log(`[BaseRepositoryV2:${this.tab}] 🔄 sync iniciado`);
-    const result = await ScriptClientV3.getAll('Metadados');
-    console.log(`[BaseRepositoryV2:${this.tab}] ◀️ sync result`, result);
-
-    // --- sync ---
-    const onlineMeta = result?.['Metadados']?.find((m: any) => String(m.id) === String(this.tab));
-    if (!onlineMeta) {
-      console.warn(`[BaseRepositoryV2:${this.tab}] ⚠️ Nenhum metadado encontrado online`);
-      return false;
-    }
-
-
-    const db = await this.getDb();
-    const localMeta = await db.get<{ id: string; UltimaModificacao: string }>(
-      BaseRepositoryV2.META_STORE,
-      this.tab
-    );
-
-    const precisaAtualizar = !localMeta || localMeta.UltimaModificacao !== onlineMeta.UltimaModificacao;
-    if (precisaAtualizar) {
-      console.log(`[BaseRepositoryV2:${this.tab}] ⚠️ Atualização necessária → executando forceFetch()`);
-      await this.forceFetch();
-      return true;
-    }
-
-    console.log(`[BaseRepositoryV2:${this.tab}] ✅ Nada para atualizar`);
-    return false;
+    const statusMap = await BaseRepositoryV2.multiSync([this.tab]);
+    return !!statusMap[this.tab];
   }
 
   // =========================================================
   // 📌 Sync consolidado: 1 chamada GAS para N tabs (P1)
   // =========================================================
   /**
-   * Verifica metadados de múltiplas tabs em UMA chamada ao GAS.
-   * Re-fetcha apenas as tabs realmente desatualizadas (também em 1 chamada).
+   * Verifica metadados de múltiplas tabs em UMA chamada ao GAS (V4).
+   * Se houver atualizações, recebe os novos dados e atualiza o banco local.
    * Retorna um mapa { tab -> true (atualizada) | false (já estava ok) }
    */
   static async multiSync(tabs: string[]): Promise<Record<string, boolean>> {
     console.log(`[BaseRepositoryV2] 🔄 multiSync iniciado →`, tabs);
 
-    // 1ª chamada: busca apenas Metadados
-    const result = await ScriptClientV3.getAll('Metadados');
-    const metasOnline: any[] = result?.['Metadados'] || [];
-
     const db = await BaseRepositoryV2.getDbStatic();
-    const tabsDesatualizadas: string[] = [];
+    const localMetas: Record<string, { versao: number; UltimaModificacao: string }> = {};
+
+    for (const tab of tabs) {
+      const localMeta = await db.get<{ id: string; UltimaModificacao: string; versao?: number }>(
+        BaseRepositoryV2.META_STORE, tab
+      );
+      localMetas[tab] = {
+        versao: localMeta?.versao || 0,
+        UltimaModificacao: localMeta?.UltimaModificacao || ''
+      };
+    }
+
+    // 1ª chamada unificada: Envia versões/timestamps locais e recebe as atualizações se houverem
+    const response = await ScriptClientV4.sync(localMetas);
+    console.log(`[BaseRepositoryV2] ◀️ multiSync result`, response);
+
+    const syncResult = response?.sync || {};
+    const notModified = syncResult.notModified;
+    const updates = syncResult.updates || {};
+    const metadados = syncResult.metadados || {};
+
     const statusMap: Record<string, boolean> = {};
 
     for (const tab of tabs) {
-      const onlineMeta = metasOnline.find((m: any) => String(m.id) === tab);
-      if (!onlineMeta) {
-        statusMap[tab] = false;
-        continue;
-      }
+      const tabUpdates = updates[tab];
+      const tabMeta = metadados[tab];
 
-      const localMeta = await db.get<{ id: string; UltimaModificacao: string }>(
-        BaseRepositoryV2.META_STORE, tab
-      );
-
-      const desatualizada =
-        !localMeta || localMeta.UltimaModificacao !== onlineMeta.UltimaModificacao;
-
-      statusMap[tab] = desatualizada;
-      if (desatualizada) tabsDesatualizadas.push(tab);
-    }
-
-    if (tabsDesatualizadas.length > 0) {
-      console.log(`[BaseRepositoryV2] ⚠️ multiSync → re-fetch de:`, tabsDesatualizadas);
-      // 2ª chamada (apenas se necessário): busca todas as tabs desatualizadas juntas
-      await BaseRepositoryV2.multiFetch(tabsDesatualizadas);
-
-      // Salvar os novos metadados locais para evitar re-fetch infinito!
-      for (const tab of tabsDesatualizadas) {
-        const onlineMeta = metasOnline.find((m: any) => String(m.id) === tab);
-        if (onlineMeta) {
+      if (tabUpdates !== undefined) {
+        // Significa que houve alteração (ou foi a primeira vez / inconsistência)
+        console.log(`[BaseRepositoryV2] ⚠️ multiSync → atualizando dados locais de: ${tab}`);
+        
+        const list = tabUpdates.map((it: any) => ({ ...it, id: String(it.id) }));
+        await db.clear(tab);
+        await db.bulkPut(tab, list);
+        
+        if (tabMeta) {
           await db.put(BaseRepositoryV2.META_STORE, {
             id: tab,
-            UltimaModificacao: onlineMeta.UltimaModificacao,
+            UltimaModificacao: tabMeta.UltimaModificacao,
+            versao: tabMeta.versao
           } as any);
-          console.log(`[BaseRepositoryV2] 📝 metadados atualizados pós-multiSync para ${tab} →`, onlineMeta);
+          console.log(`[BaseRepositoryV2] 📝 metadados locais atualizados para ${tab} →`, tabMeta);
+        }
+        statusMap[tab] = true;
+        BaseRepositoryV2.onTabUpdated.next(tab);
+      } else {
+        statusMap[tab] = false;
+        // Mesmo sem atualizações na tabela, garante que salvamos o metadado do servidor localmente se tiver vindo
+        if (tabMeta) {
+          const localMeta = await db.get<{ id: string; UltimaModificacao: string; versao?: number }>(
+            BaseRepositoryV2.META_STORE, tab
+          );
+          if (!localMeta || localMeta.versao !== tabMeta.versao || localMeta.UltimaModificacao !== tabMeta.UltimaModificacao) {
+            await db.put(BaseRepositoryV2.META_STORE, {
+              id: tab,
+              UltimaModificacao: tabMeta.UltimaModificacao,
+              versao: tabMeta.versao
+            } as any);
+          }
         }
       }
-    } else {
-      console.log(`[BaseRepositoryV2] ✅ multiSync → nada para atualizar`);
+    }
+
+    if (notModified) {
+      console.log(`[BaseRepositoryV2] ✅ multiSync → todas as abas já estavam atualizadas (notModified)`);
     }
 
     return statusMap;
@@ -321,7 +353,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
   }): Promise<any> {
     console.log(`[BaseRepositoryV2] ▶️ batch iniciado →`, payload);
 
-    const result = await ScriptClientV3.batch(payload);
+    const result = await ScriptClientV4.batch(payload);
     console.log(`[BaseRepositoryV2] ◀️ batch result`, result);
 
     const db = await BaseRepositoryV2.getDbStatic();
@@ -339,6 +371,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
         }));
         await db.bulkPut(tab, entities);
         console.log(`[BaseRepositoryV2] 💾 batch/create persistiu ${entities.length} em ${tab}`);
+        BaseRepositoryV2.onTabUpdated.next(tab);
       }
     }
 
@@ -354,6 +387,7 @@ export class BaseRepositoryV2<T extends { id: string }> {
         }));
         await db.bulkPut(tab, entities);
         console.log(`[BaseRepositoryV2] 💾 batch/update persistiu ${entities.length} em ${tab}`);
+        BaseRepositoryV2.onTabUpdated.next(tab);
       }
     }
 
@@ -362,10 +396,10 @@ export class BaseRepositoryV2<T extends { id: string }> {
         const ids = (result?.deleteById?.[tab] || []).map((r: any) => r.id);
         for (const id of ids) await db.delete(tab, String(id));
         console.log(`[BaseRepositoryV2] 💾 batch/delete removeu ${ids.length} de ${tab}`);
+        BaseRepositoryV2.onTabUpdated.next(tab);
       }
     }
 
     return result;
   }
-
 }

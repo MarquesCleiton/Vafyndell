@@ -47,7 +47,7 @@
   width: 100%;
   max-width: 960px;
   margin: 0 auto;
-  padding: 16px 16px 32px;
+  padding: 16px 16px 120px; /* Espaço inferior extra para rolar e não sobrepor o botão flutuante de dados no mobile */
 }
 
 /* ── Abas ────────────────────────────────────────────────── */
@@ -577,7 +577,7 @@
 /* ── Desktop: ajuste com sidenav ─────────────────────────── */
 @media (min-width: 992px) {
   .campo-container {
-    padding: 20px 24px 40px;
+    padding: 20px 24px 80px; /* Espaço inferior extra para o desktop */
   }
 
   .combatentes-grid {
@@ -600,4 +600,602 @@
   .action-btn {
     min-height: 38px;
   }
+
+  .dice-floating-btn {
+    bottom: 24px; /* Posicionado no canto normal em telas maiores (sem barra inferior) */
+  }
 }
+
+/* ============================================================
+   🎲 DADOS ROLLER - PREMIUM STYLING
+   ============================================================ */
+
+/* Botão Flutuante */
+.dice-floating-btn {
+  position: fixed;
+  bottom: 80px; /* Posicionado acima da barra de navegação inferior em celulares */
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--primary);
+  color: #131313;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(255, 193, 7, 0.45);
+  z-index: 99;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s;
+}
+
+.dice-floating-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 24px rgba(255, 193, 7, 0.6);
+}
+
+.dice-floating-icon {
+  width: 28px;
+  height: 28px;
+}
+
+/* Modal Overlay */
+.dice-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Modal Card */
+.dice-modal-card {
+  position: relative;
+  background: radial-gradient(circle at center, #1e1e1e 0%, #121212 100%);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  width: 90%;
+  max-width: 440px;
+  padding: 32px 24px 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 193, 7, 0.1);
+  box-sizing: border-box;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+/* Botão Fechar */
+.dice-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: var(--on-surface-dim);
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.dice-modal-close:hover {
+  color: var(--primary);
+}
+
+/* Cabeçalho */
+.dice-modal-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.dice-modal-title {
+  font-family: 'EB Garamond', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--primary);
+  text-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
+  margin: 0 0 6px 0;
+  letter-spacing: 0.02em;
+}
+
+.dice-modal-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--on-surface-dim);
+  font-style: italic;
+  margin: 0;
+  opacity: 0.8;
+}
+
+/* Anel de Dados */
+.dice-ring-container {
+  position: relative;
+  width: 100%;
+  height: 340px;
+  margin: 0 auto;
+}
+
+/* Wrappers e Posicionamento dos dados em círculo */
+.dice-card-wrapper {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, -50%);
+  transition: all 0.3s;
+}
+
+/* Coordenadas absolutas das posições */
+.die-d100 { left: 50%; top: 50%; }
+.die-d2   { left: 50%; top: 12%; }
+.die-d4   { left: 80%; top: 28%; }
+.die-d6   { left: 90%; top: 50%; }
+.die-d8   { left: 72%; top: 76%; }
+.die-d10  { left: 28%; top: 76%; }
+.die-d12  { left: 10%; top: 50%; }
+.die-d20  { left: 20%; top: 28%; }
+
+/* Card individual do dado */
+.dice-card {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  background: #1a1a19;
+  border: 1px solid rgba(156, 143, 120, 0.25);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  color: var(--on-surface-dim);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.dice-card:hover {
+  border-color: var(--primary);
+  transform: scale(1.05);
+  color: var(--on-surface);
+}
+
+.dice-card.has-count {
+  background: radial-gradient(circle at center, #2e2612 0%, #1c180e 100%);
+  border-color: var(--primary);
+  box-shadow: 0 0 15px rgba(255, 193, 7, 0.25), inset 0 0 4px rgba(255, 193, 7, 0.1);
+  color: var(--primary);
+}
+
+/* D100 Centralizado maior */
+.center-die {
+  width: 78px;
+  height: 78px;
+  border-radius: 18px;
+  gap: 5px;
+}
+
+.center-die .dice-svg-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.center-die .dice-name {
+  font-size: 11px;
+}
+
+/* Ícones e Textos dos dados */
+.dice-svg-icon {
+  width: 22px;
+  height: 22px;
+  transition: transform 0.2s;
+}
+
+.dice-card:hover .dice-svg-icon {
+  transform: rotate(15deg);
+}
+
+.dice-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+}
+
+/* Badges de Contagem */
+.dice-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #131313;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+  animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Botão de menos */
+.dice-minus-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #252423;
+  color: var(--on-surface-dim);
+  border: 1px solid rgba(156, 143, 120, 0.3);
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-top: 6px;
+  opacity: 0;
+  transform: translateY(-5px);
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+.dice-minus-btn.visible {
+  opacity: 0.8;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.dice-minus-btn:hover {
+  background: #dc2626;
+  border-color: #ef4444;
+  color: #fff;
+  opacity: 1 !important;
+}
+
+/* Seção de Presets */
+.dice-presets-section {
+  margin-top: 10px;
+  border-top: 1px dashed rgba(79, 70, 50, 0.4);
+  padding-top: 14px;
+  text-align: center;
+}
+
+.dice-presets-label {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--outline);
+  letter-spacing: 0.15em;
+  margin-bottom: 8px;
+}
+
+.dice-presets-row {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.dice-summary-badge {
+  background: #171615;
+  color: var(--primary);
+  border: 1px solid rgba(255, 193, 7, 0.25);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  display: inline-block;
+  animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.dice-summary-vazio {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: var(--outline);
+  font-style: italic;
+  padding: 6px;
+}
+
+/* Rodapé do Modal */
+.dice-modal-footer {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.dice-btn-limpar {
+  flex: 1;
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  padding: 12px;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.dice-btn-limpar:hover {
+  background: rgba(255, 193, 7, 0.05);
+  border-color: var(--primary);
+}
+
+.dice-btn-rolar {
+  flex: 2;
+  background: var(--primary);
+  color: #131313;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255, 193, 7, 0.3);
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dice-btn-rolar:hover:not(:disabled) {
+  background: #fabd00;
+  box-shadow: 0 4px 18px rgba(255, 193, 7, 0.5);
+}
+
+.dice-btn-rolar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   ✨ RESULTADOS APRIMORADOS
+   ============================================================ */
+.dice-results-container {
+  --results-color: var(--primary);
+  --results-glow: rgba(255, 193, 7, 0.55);
+  --results-border: var(--border-dim);
+  --results-radial: radial-gradient(circle at center, rgba(255, 193, 7, 0.08) 0%, transparent 70%);
+  --results-anim: none;
+
+  position: relative;
+  text-align: center;
+  padding: 16px 8px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 14px;
+  border: 1px solid var(--results-border);
+}
+
+.dice-results-container.normal {
+  --results-color: #00e5ff;
+  --results-glow: rgba(0, 229, 255, 0.5);
+  --results-border: rgba(0, 229, 255, 0.3);
+  --results-radial: radial-gradient(circle at center, rgba(0, 229, 255, 0.1) 0%, transparent 70%);
+  --results-anim: resultsBreatheNormal 3s infinite ease-in-out;
+}
+
+.dice-results-container.critico {
+  --results-color: #ff9f43;
+  --results-glow: rgba(255, 159, 67, 0.8);
+  --results-border: rgba(255, 159, 67, 0.6);
+  --results-radial: radial-gradient(circle at center, rgba(255, 159, 67, 0.18) 0%, transparent 70%);
+  --results-anim: resultsHeartbeatCrit 1.8s infinite ease-in-out;
+}
+
+.dice-results-container.falha {
+  --results-color: #ff4757;
+  --results-glow: rgba(255, 71, 87, 0.6);
+  --results-border: rgba(255, 71, 87, 0.5);
+  --results-radial: radial-gradient(circle at center, rgba(255, 71, 87, 0.15) 0%, transparent 70%);
+  --results-anim: resultsBreatheFail 2.4s infinite ease-in-out;
+}
+
+.dice-results-glow {
+  position: absolute;
+  inset: 0;
+  background: var(--results-radial);
+  pointer-events: none;
+}
+
+.dice-sum-display {
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dice-sum-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--outline);
+}
+
+.dice-sum-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 60px;
+  font-weight: 700;
+  color: var(--results-color);
+  line-height: 1;
+  text-shadow: 0 0 25px var(--results-glow);
+  margin-top: 8px;
+  animation: var(--results-anim);
+}
+
+.dice-breakdown-list {
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #171615;
+  border: 1px solid rgba(79, 70, 50, 0.3);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.breakdown-die {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.breakdown-die-badge {
+  background: var(--border-dim);
+  color: var(--on-surface-dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.breakdown-die-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+
+.breakdown-formula {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breakdown-rolls {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: var(--on-surface-dim);
+}
+
+.breakdown-equals {
+  color: var(--outline);
+  font-size: 12px;
+}
+
+.breakdown-total {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.result-footer {
+  margin-top: 20px;
+}
+
+/* Scrollbar styling */
+.dice-breakdown-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.dice-breakdown-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dice-breakdown-list::-webkit-scrollbar-thumb {
+  background: var(--border-dim);
+  border-radius: 10px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes popIn {
+  0% { transform: scale(0); opacity: 0; }
+  80% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.breakdown-critico {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+}
+
+.breakdown-critico.sucesso {
+  color: #ffc107;
+  text-shadow: 0 0 8px rgba(255, 193, 7, 0.4);
+}
+
+.breakdown-critico.falha {
+  color: #ef4444;
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+/* Animações de Resultado */
+@keyframes resultsBreatheNormal {
+  0%, 100% {
+    text-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    text-shadow: 0 0 30px rgba(0, 229, 255, 0.7);
+    transform: scale(1.02);
+  }
+}
+
+@keyframes resultsHeartbeatCrit {
+  0%, 100% {
+    text-shadow: 0 0 20px rgba(255, 159, 67, 0.5);
+    transform: scale(1);
+  }
+  30% {
+    text-shadow: 0 0 45px rgba(255, 159, 67, 0.95);
+    transform: scale(1.08);
+  }
+  60% {
+    text-shadow: 0 0 30px rgba(255, 159, 67, 0.7);
+    transform: scale(1.03);
+  }
+}
+
+@keyframes resultsBreatheFail {
+  0%, 100% {
+    text-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    text-shadow: 0 0 25px rgba(255, 71, 87, 0.65);
+    transform: scale(0.97);
+    opacity: 1;
+  }
+}
+

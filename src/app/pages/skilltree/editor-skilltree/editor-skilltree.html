@@ -1,0 +1,245 @@
+<div class="editor-wrapper">
+
+  <!-- ══════════════════ TOOLBAR ══════════════════ -->
+  <div class="editor-toolbar">
+    <div class="toolbar-left">
+      <span class="toolbar-title">🗺️ Editor de Skills</span>
+
+      <!-- Caminho -->
+      <select class="select-dark" [(ngModel)]="caminhoSelecionado" (ngModelChange)="onCaminhoChange()"
+        [disabled]="salvando">
+        <option [ngValue]="null">Selecione o Caminho…</option>
+        <option *ngFor="let c of caminhos" [ngValue]="c.id">{{ c.caminho }}</option>
+      </select>
+
+      <ng-container *ngIf="!criandoNovoCaminho && !editandoCaminho">
+        <button class="btn-toolbar btn-nova-arvore" (click)="iniciarNovoCaminho()" [disabled]="salvando" title="Novo Caminho">➕ Caminho</button>
+        <button class="btn-toolbar btn-editar-arvore" (click)="iniciarEdicaoCaminho()" *ngIf="caminhoSelecionado" [disabled]="salvando" title="Editar Caminho">✏️ Editar</button>
+        <button class="btn-toolbar btn-excluir-arvore" (click)="excluirCaminho()" *ngIf="caminhoSelecionado" [disabled]="salvando" title="Excluir Caminho">🗑️ Excluir</button>
+      </ng-container>
+
+      <div class="nova-arvore-inline" *ngIf="criandoNovoCaminho || editandoCaminho">
+        <input class="input-inline" [(ngModel)]="novoCaminhoNome" placeholder="Nome do caminho…"
+          (keydown.enter)="criandoNovoCaminho ? confirmarNovoCaminho() : confirmarEdicaoCaminho()" 
+          (keydown.escape)="criandoNovoCaminho ? cancelarNovoCaminho() : cancelarEdicaoCaminho()" autofocus />
+        <button class="btn-icon btn-confirm" (click)="criandoNovoCaminho ? confirmarNovoCaminho() : confirmarEdicaoCaminho()">✔</button>
+        <button class="btn-icon btn-cancel" (click)="criandoNovoCaminho ? cancelarNovoCaminho() : cancelarEdicaoCaminho()">✖</button>
+      </div>
+
+      <div class="toolbar-divider" style="width: 1px; height: 24px; background: #332f28; margin: 0 4px;" *ngIf="!criandoNovoCaminho && !editandoCaminho"></div>
+
+      <!-- Árvore -->
+      <select class="select-dark" [(ngModel)]="arvoreSelecionada" (ngModelChange)="onArvoreChange()"
+        [disabled]="!caminhoSelecionado || salvando">
+        <option [ngValue]="null">Selecione a Árvore…</option>
+        <option *ngFor="let a of arvoresDoCaminho" [ngValue]="a.id">{{ a.arvore }}</option>
+      </select>
+
+      <!-- Botão nova árvore -->
+      <button class="btn-toolbar btn-nova-arvore" (click)="iniciarNovaArvore()"
+        [disabled]="!caminhoSelecionado || salvando" title="Nova Árvore">
+        ➕ Nova Árvore
+      </button>
+
+      <!-- Botão editar árvore -->
+      <button class="btn-toolbar btn-editar-arvore" (click)="iniciarEdicaoArvore()"
+        *ngIf="arvoreSelecionada && !criandoNovaArvore && !editandoArvore"
+        [disabled]="salvando" title="Editar Nome da Árvore">
+        ✏️ Editar
+      </button>
+
+      <!-- Botão excluir árvore -->
+      <button class="btn-toolbar btn-excluir-arvore" (click)="excluirArvore()"
+        *ngIf="arvoreSelecionada && !criandoNovaArvore && !editandoArvore"
+        [disabled]="salvando" title="Excluir Árvore Atual">
+        🗑️ Excluir
+      </button>
+
+      <!-- Input nome nova/edição árvore -->
+      <div class="nova-arvore-inline" *ngIf="criandoNovaArvore || editandoArvore">
+        <input class="input-inline" [(ngModel)]="novaArvoreNome" placeholder="Nome da árvore…"
+          (keydown.enter)="criandoNovaArvore ? confirmarNovaArvore() : confirmarEdicaoArvore()" 
+          (keydown.escape)="criandoNovaArvore ? cancelarNovaArvore() : cancelarEdicaoArvore()" autofocus />
+        <button class="btn-icon btn-confirm" (click)="criandoNovaArvore ? confirmarNovaArvore() : confirmarEdicaoArvore()" title="Confirmar">✔</button>
+        <button class="btn-icon btn-cancel" (click)="criandoNovaArvore ? cancelarNovaArvore() : cancelarEdicaoArvore()" title="Cancelar">✖</button>
+      </div>
+    </div>
+
+    <div class="toolbar-right">
+      <!-- Badge de mudanças pendentes -->
+      <span class="badge-pending" *ngIf="temMudancasPendentes">
+        ● Mudanças não salvas
+      </span>
+
+      <!-- Botão Salvar -->
+      <button class="btn-toolbar btn-save" (click)="salvarTudo()"
+        [disabled]="!temMudancasPendentes || salvando">
+        <span *ngIf="!salvando">💾 Salvar</span>
+        <span *ngIf="salvando" class="saving-spinner">
+          <span class="spinner-sm"></span> Salvando…
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════ ÁREA PRINCIPAL ══════════════════ -->
+  <div class="editor-main">
+
+    <!-- ── CANVAS ─────────────────────────────────────────── -->
+    <div class="canvas-area" [class.panel-open]="nodeSelecionado">
+
+      <!-- Estado vazio / instrução -->
+      <div class="canvas-empty" *ngIf="!arvoreSelecionada && !carregando">
+        <div class="empty-icon">🌳</div>
+        <h3>Selecione um Caminho e uma Árvore</h3>
+        <p>Escolha nos seletores acima para começar a editar o grafo de habilidades.</p>
+      </div>
+
+      <!-- Loading -->
+      <div class="canvas-empty" *ngIf="carregando">
+        <div class="spinner-lg"></div>
+        <p>Carregando dados…</p>
+      </div>
+
+      <!-- Canvas Cytoscape -->
+      <div #cyCanvas class="cy-canvas" [class.hidden]="!arvoreSelecionada"></div>
+
+      <!-- ═══ OVERLAY de botões flutuantes sobre o nó selecionado ═══ -->
+      <div class="node-actions-ring"
+           *ngIf="nodeSelecionado && arvoreSelecionada"
+           [style.opacity]="isDraggingLink ? 0 : 1"
+           [style.pointer-events]="isDraggingLink ? 'none' : 'auto'"
+           [style.left.px]="overlayX"
+           [style.top.px]="overlayY">
+        
+        <!-- Botão Deletar (Top-Left) -->
+        <button class="ring-btn delete-btn" (click)="deletarNoSelecionado()" title="Deletar habilidade">
+          🗑️
+        </button>
+        
+        <!-- Botão Editar (Middle-Left) -->
+        <!-- Como o painel já abre ao selecionar, podemos apenas destacar ou focar no painel.
+             Mas o usuário pediu "opções de editar, adicionar, excluir". 
+             Vamos manter o botão Editar para dar um scroll/foco no painel caso esteja em mobile, 
+             ou simplesmente manter como indicativo visual. -->
+        <button class="ring-btn edit-btn" (click)="abrirPainelEdicao()" title="Editar habilidade (Painel Lateral)">
+          📄
+        </button>
+
+        <!-- Botão Adicionar Filho (Bottom-Left) -->
+        <button class="ring-btn add-btn" (click)="adicionarFilhoDeNo(nodeSelecionado.id)" title="Adicionar filha abaixo">
+          ➕
+        </button>
+
+        <!-- Botão Conectar (Bottom-Right) -->
+        <button class="ring-btn link-btn" (mousedown)="startLinkDrag($event)" (touchstart)="startLinkDrag($event)" title="Arraste para conectar a outra habilidade">
+          🔗
+        </button>
+      </div>
+
+      <!-- ── BOTTOM CONTROLS (Floating) ─────────────────────── -->
+      <div class="bottom-controls" *ngIf="arvoreSelecionada">
+        <!-- Control Panel (Zoom / Fit / Layout) -->
+        <div class="control-panel">
+          <button class="control-btn" (click)="zoomOut()" title="Diminuir Zoom">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+          </button>
+          
+          <span class="zoom-level">{{ getZoomPercent() }}%</span>
+          
+          <button class="control-btn" (click)="zoomIn()" title="Aumentar Zoom">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+          </button>
+          
+          <div class="control-divider"></div>
+          
+          <button class="control-btn" (click)="fitCanvas()" title="Ajustar à tela">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v6h6M20 10V4h-6M4 10V4h6M20 14v6h-6"></path></svg>
+          </button>
+          
+          <button class="control-btn" (click)="reorganizarLayout()" title="Reorganizar Árvore">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
+          </button>
+        </div>
+
+        <!-- Add Button (Bottom Right) -->
+        <button class="main-add-btn" (click)="adicionarNo()" title="Adicionar Nó Raiz" [disabled]="salvando">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+      </div>
+
+      <!-- Dica de modo connect (quando há source selecionado) -->
+      <div class="connect-tip" *ngIf="modo === 'connect' && arvoreSelecionada">
+        <span *ngIf="connectSourceId">
+          🔗 Clique no nó <strong>destino</strong> para conectar.
+        </span>
+        <span *ngIf="!connectSourceId">
+          🔗 Passe o mouse sobre um nó e clique em <strong>Link</strong>.
+        </span>
+        <button class="connect-cancel-btn" (click)="setModo('select')">× Cancelar</button>
+      </div>
+
+      <!-- Dica de delete de aresta -->
+      <div class="edge-tip" *ngIf="modo === 'select' && arvoreSelecionada">
+        💡 Passe o mouse sobre um nó para ver as ações. Clique em uma <strong>aresta</strong> para removê-la.
+      </div>
+    </div>
+
+    <!-- ── PAINEL LATERAL ──────────────────────────────────── -->
+    <div class="side-panel" [class.visible]="painelAberto && nodeSelecionado !== null" *ngIf="painelAberto && nodeSelecionado">
+      <div class="panel-header">
+        <h4 class="panel-title">✏️ Editar Habilidade</h4>
+        <button class="btn-close-panel" (click)="fecharPainel()" title="Fechar">✖</button>
+      </div>
+
+      <div class="panel-body">
+        <!-- Nome -->
+        <div class="field-group">
+          <label class="field-label">🏷️ Nome</label>
+          <input class="field-input" type="text" [(ngModel)]="nodeSelecionado.habilidade"
+            (ngModelChange)="onEditNode()" placeholder="Nome da habilidade…" />
+        </div>
+
+        <!-- Requisitos -->
+        <div class="field-group">
+          <label class="field-label">📌 Requisitos</label>
+          <textarea class="field-textarea" rows="3" [(ngModel)]="nodeSelecionado.requisitos"
+            (ngModelChange)="onEditNode()" placeholder="Pré-requisitos para aprender esta habilidade…"></textarea>
+        </div>
+
+        <!-- Descrição -->
+        <div class="field-group">
+          <label class="field-label">📝 Descrição</label>
+          <textarea class="field-textarea" rows="4" [(ngModel)]="nodeSelecionado.descricao"
+            (ngModelChange)="onEditNode()" placeholder="Descrição dos efeitos desta habilidade…"></textarea>
+        </div>
+
+        <!-- Dependência atual -->
+        <div class="field-group" *ngIf="nodeSelecionado.dependencia">
+          <label class="field-label">🔗 Depende de</label>
+          <div class="dep-badge">
+            {{ todasHabilidades | depNome: nodeSelecionado.dependencia }}
+          </div>
+        </div>
+        <div class="field-group" *ngIf="!nodeSelecionado.dependencia">
+          <label class="field-label">🔗 Dependência</label>
+          <div class="dep-badge dep-none">Nenhuma (nó raiz)</div>
+        </div>
+      </div>
+
+      <div class="panel-footer">
+        <button class="btn-delete-node" (click)="deletarNoSelecionado()">
+          🗑️ Deletar Nó
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════ TOAST ══════════════════ -->
+  <div class="editor-toast" [class.visible]="toastVisible" [class.toast-success]="toastTipo === 'success'"
+    [class.toast-error]="toastTipo === 'error'">
+    {{ toastMsg }}
+  </div>
+
+</div>
