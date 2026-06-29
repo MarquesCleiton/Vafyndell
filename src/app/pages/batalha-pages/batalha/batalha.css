@@ -711,6 +711,7 @@
   opacity: 0.8;
 }
 
+
 /* Anel de Dados */
 .dice-ring-container {
   position: relative;
@@ -1197,5 +1198,51 @@
     transform: scale(0.97);
     opacity: 1;
   }
+}
+
+/* ── Animação de Lançador de Dados ── */
+.dice-animation-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 12px;
+  border: 1px dashed var(--border);
+  margin: 20px 0;
+  text-align: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.rolling-dice-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  display: inline-block;
+  animation: shakeAndSpin 1.5s infinite ease-in-out;
+}
+
+.rolling-text {
+  font-family: 'EB Garamond', serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--primary);
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
+  margin: 0;
+}
+
+@keyframes shakeAndSpin {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  10% { transform: translate(-2px, -2px) rotate(-15deg); }
+  20% { transform: translate(2px, 2px) rotate(20deg); }
+  30% { transform: translate(-3px, 1px) rotate(-25deg); }
+  40% { transform: translate(3px, -1px) rotate(30deg); }
+  50% { transform: translate(-2px, 2px) rotate(-20deg); }
+  60% { transform: translate(2px, -2px) rotate(15deg); }
+  70% { transform: translate(-1px, -1px) rotate(-5deg); }
+  80% { transform: translate(1px, 1px) rotate(0deg); }
+  90% { transform: translate(0, 0) rotate(360deg); }
+  100% { transform: translate(0, 0) rotate(360deg); }
 }
 
