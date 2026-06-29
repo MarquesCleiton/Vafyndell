@@ -148,13 +148,19 @@ export class App implements OnInit {
           if (!userLogado?.email) return;
 
           // Filtrar somente registros que NÃO estão em knownIds
-          const novos = todos.filter(r => !this.knownIds.has(r.id));
+          let novos = todos.filter(r => !this.knownIds.has(r.id));
 
           if (novos.length > 0) {
             console.log(`[App] 🔔 Encontrados ${novos.length} novos registros para notificação.`);
             
-            // Adicionar ao Set de conhecidos
+            // Adicionar ao Set de conhecidos TODOS os novos, para não processá-los novamente
             novos.forEach(r => this.knownIds.add(r.id));
+
+            // Limita sempre aos últimos 5 para evitar poluição visual,
+            // principalmente quando o cache está vazio e ele baixa todos os registros de uma vez.
+            if (novos.length > 5) {
+              novos = novos.slice(-5);
+            }
 
             // Buscar personagens locais para resolver as imagens dos autores das ações
             const repoPersonagens = new BaseRepositoryV2<JogadorDomain>('Personagem');
