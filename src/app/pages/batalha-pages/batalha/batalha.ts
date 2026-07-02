@@ -52,6 +52,15 @@ export class Batalha implements OnInit, OnDestroy {
   rolando = false;
   rolandoAnimacao = false;
 
+  // Animações de resultado
+  numerosRolando = false;
+  numeroAtual = 0;
+  modalShake = false;
+  mostrarOverlayCritico = false;
+  mostrarOverlayFalha = false;
+  particlesCritico: { tx: number; ty: number; clr: string; dur: number; delay: number; size: number }[] = [];
+  shardsFalha: { x: number; w: number; h: number; rot: number; dur: number; delay: number }[] = [];
+
   // Campo de batalha
   jogadores: JogadorDomain[] = [];
   jogadoresFiltrados: JogadorDomain[] = [];
@@ -490,6 +499,16 @@ export class Batalha implements OnInit, OnDestroy {
           detalhes,
           estado: temCriticoD20 ? 'critico' : (temFalhaD20 ? 'falha' : 'normal')
         };
+
+        // Animação slot machine no número
+        this.triggerSlotMachine(somaTotal, 800);
+
+        // Disparar overlays épicos após o slot machine
+        if (temCriticoD20) {
+          setTimeout(() => this.triggerCriticoOverlay(), 300);
+        } else if (temFalhaD20) {
+          setTimeout(() => this.triggerFalhaOverlay(), 200);
+        }
         
         // Puxar histórico local (que já deve ter recebido pelo pooling global)
         await this.carregarHistorico();
@@ -501,5 +520,72 @@ export class Batalha implements OnInit, OnDestroy {
       alert('❌ Erro ao salvar resultado da rolagem.');
       this.rolando = false;
     }
+  }
+
+  // ==========================================================
+  // 🎰 ANIMAÇÕES DE DADOS
+  // ==========================================================
+
+  /** Animação de slot machine: exibe números aleatórios rapidamente, depois revela o valor final. */
+  private triggerSlotMachine(valorFinal: number, duracaoMs: number) {
+    this.numerosRolando = true;
+    this.numeroAtual = Math.floor(Math.random() * valorFinal) + 1;
+
+    const intervalo = 60; // ms entre cada troca
+    const passos = Math.floor(duracaoMs / intervalo);
+    let passo = 0;
+
+    const timer = setInterval(() => {
+      passo++;
+      // Desacelera no final: nos últimos 30% dos passos, atualiza a cada 2 passos
+      const naFinalReta = passo > passos * 0.7;
+      if (!naFinalReta || passo % 2 === 0) {
+        this.numeroAtual = Math.floor(Math.random() * (valorFinal + 10)) + 1;
+      }
+
+      if (passo >= passos) {
+        clearInterval(timer);
+        this.numerosRolando = false;
+        // Garante que o valor exibido é o correto
+        this.numeroAtual = valorFinal;
+      }
+    }, intervalo);
+  }
+
+  /** Overlay de Acerto Crítico: flash dourado + partículas + stamp épico. */
+  private triggerCriticoOverlay() {
+    const cores = ['#ffd700', '#ffc107', '#ff9f43', '#fff176', '#ffca28', '#ffffff'];
+    this.particlesCritico = Array.from({ length: 28 }, () => {
+      const angle = Math.random() * Math.PI * 2;
+      const dist  = 80 + Math.random() * 220;
+      return {
+        tx:    Math.cos(angle) * dist,
+        ty:    Math.sin(angle) * dist,
+        clr:   cores[Math.floor(Math.random() * cores.length)],
+        dur:   0.6 + Math.random() * 0.7,
+        delay: Math.random() * 0.25,
+        size:  4 + Math.random() * 10,
+      };
+    });
+
+    this.mostrarOverlayCritico = true;
+    setTimeout(() => { this.mostrarOverlayCritico = false; }, 2400);
+  }
+
+  /** Overlay de Falha Crítica: vignette vermelha + shards caindo + tremor no modal. */
+  private triggerFalhaOverlay() {
+    this.shardsFalha = Array.from({ length: 20 }, () => ({
+      x:     Math.random() * 100,
+      w:     4 + Math.random() * 10,
+      h:     12 + Math.random() * 24,
+      rot:   -30 + Math.random() * 60,
+      dur:   0.9 + Math.random() * 0.8,
+      delay: Math.random() * 0.4,
+    }));
+
+    this.mostrarOverlayFalha = true;
+    this.modalShake = true;
+    setTimeout(() => { this.modalShake = false; }, 550);
+    setTimeout(() => { this.mostrarOverlayFalha = false; }, 2500);
   }
 }

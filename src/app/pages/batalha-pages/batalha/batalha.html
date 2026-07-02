@@ -347,7 +347,7 @@
 
   <!-- ======= MODAL DE LANÇAMENTO DE DADOS ======= -->
   <div class="dice-modal-overlay" *ngIf="modalDadosAberto" (click)="fecharModalDados()">
-    <div class="dice-modal-card" (click)="$event.stopPropagation()">
+    <div class="dice-modal-card" [class.shake-falha]="modalShake" (click)="$event.stopPropagation()">
       
       <!-- Botão Fechar -->
       <button class="dice-modal-close" (click)="fecharModalDados()">×</button>
@@ -494,7 +494,11 @@
           
           <div class="dice-sum-display">
             <span class="dice-sum-title">SOMA TOTAL</span>
-            <div class="dice-sum-value">{{ resultadoRolagem.soma }}</div>
+            <div class="dice-sum-value"
+                 [class.rolling]="numerosRolando"
+                 [class.revealed]="!numerosRolando">
+              {{ numerosRolando ? numeroAtual : resultadoRolagem.soma }}
+            </div>
           </div>
 
           <div class="dice-breakdown-list">
@@ -528,4 +532,48 @@
     </div>
   </div>
 
+</div>
+
+<!-- ======= OVERLAY: SUCESSO CRÍTICO ======= -->
+<div class="critico-overlay" *ngIf="mostrarOverlayCritico">
+  <div class="critico-flash"></div>
+  <div class="critico-shockwave"></div>
+  <div class="critico-shockwave"></div>
+  <div class="critico-shockwave"></div>
+  <div
+    class="critico-particle"
+    *ngFor="let p of particlesCritico"
+    [style.--tx]="p.tx + 'px'"
+    [style.--ty]="p.ty + 'px'"
+    [style.--clr]="p.clr"
+    [style.--dur]="p.dur + 's'"
+    [style.--delay]="p.delay + 's'"
+    [style.width.px]="p.size"
+    [style.height.px]="p.size"
+  ></div>
+  <div class="critico-stamp">
+    <span class="critico-stamp-icon">🌟</span>
+    <span class="critico-stamp-text">Acerto<br>Crítico!</span>
+    <span class="critico-stamp-sub">★ D20 = 20 ★</span>
+  </div>
+</div>
+
+<!-- ======= OVERLAY: FALHA CRÍTICA ======= -->
+<div class="falha-overlay" *ngIf="mostrarOverlayFalha">
+  <div class="falha-vignette"></div>
+  <div
+    class="falha-shard"
+    *ngFor="let s of shardsFalha"
+    [style.--x]="s.x + '%'"
+    [style.--w]="s.w + 'px'"
+    [style.--h]="s.h + 'px'"
+    [style.--rot]="s.rot + 'deg'"
+    [style.--dur]="s.dur + 's'"
+    [style.--delay]="s.delay + 's'"
+  ></div>
+  <div class="falha-stamp">
+    <span class="falha-stamp-icon">💀</span>
+    <span class="falha-stamp-text">Falha<br>Crítica!</span>
+    <span class="falha-stamp-sub">☠ D20 = 1 ☠</span>
+  </div>
 </div>
