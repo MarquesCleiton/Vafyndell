@@ -61,6 +61,10 @@ export class Batalha implements OnInit, OnDestroy {
   particlesCritico: { tx: number; ty: number; clr: string; dur: number; delay: number; size: number }[] = [];
   shardsFalha: { x: number; w: number; h: number; rot: number; dur: number; delay: number }[] = [];
 
+  // Banner de crítico de outros jogadores
+  bannerCritico: string | null = null;
+  private registrosVistos = new Set<string>();
+
   // Campo de batalha
   jogadores: JogadorDomain[] = [];
   jogadoresFiltrados: JogadorDomain[] = [];
@@ -101,6 +105,7 @@ export class Batalha implements OnInit, OnDestroy {
         const atualizados = await this.repoRegistros.getLocal();
         const filtrados = atualizados.filter(r => r.tipo === 'batalha' || r.tipo === 'recuperacao');
         this.processarSecoesHistorico(filtrados);
+        this.detectarCriticosDeOutrosJogadores(filtrados);
         console.log('[Batalha] ✅ Histórico atualizado reativamente');
       }
     });
@@ -210,6 +215,9 @@ export class Batalha implements OnInit, OnDestroy {
       const locais = await this.repoRegistros.getLocal();
       const filtrados = locais.filter(r => r.tipo === 'batalha' || r.tipo === 'recuperacao');
       this.processarSecoesHistorico(filtrados);
+
+      // Marca todos os registros existentes como "já vistos" para evitar animações retroativas
+      filtrados.forEach(r => this.registrosVistos.add(r.id));
 
       // Dispara a sincronia em segundo plano
       this.repoRegistros.sync();
@@ -505,9 +513,9 @@ export class Batalha implements OnInit, OnDestroy {
 
         // Disparar overlays épicos após o slot machine
         if (temCriticoD20) {
-          setTimeout(() => this.triggerCriticoOverlay(), 300);
+          setTimeout(() => this.triggerCriticoOverlay(nomePersonagem), 300);
         } else if (temFalhaD20) {
-          setTimeout(() => this.triggerFalhaOverlay(), 200);
+          setTimeout(() => this.triggerFalhaOverlay(nomePersonagem), 200);
         }
         
         // Puxar histórico local (que já deve ter recebido pelo pooling global)
@@ -553,7 +561,7 @@ export class Batalha implements OnInit, OnDestroy {
   }
 
   /** Overlay de Acerto Crítico: flash dourado + partículas + stamp épico. */
-  private triggerCriticoOverlay() {
+  private triggerCriticoOverlay(nomePersonagem?: string) {
     const cores = ['#ffd700', '#ffc107', '#ff9f43', '#fff176', '#ffca28', '#ffffff'];
     this.particlesCritico = Array.from({ length: 28 }, () => {
       const angle = Math.random() * Math.PI * 2;
@@ -568,12 +576,19 @@ export class Batalha implements OnInit, OnDestroy {
       };
     });
 
+    if (nomePersonagem) {
+      this.bannerCritico = `🌟 ${nomePersonagem} acertou um CRÍTICO!`;
+    }
+    
+    // Tocar som de sucesso
+    this.tocarSom('/sounds/Successful.mp3');
+
     this.mostrarOverlayCritico = true;
-    setTimeout(() => { this.mostrarOverlayCritico = false; }, 2400);
+    setTimeout(() => { this.mostrarOverlayCritico = false; this.bannerCritico = null; }, 2400);
   }
 
   /** Overlay de Falha Crítica: vignette vermelha + shards caindo + tremor no modal. */
-  private triggerFalhaOverlay() {
+  private triggerFalhaOverlay(nomePersonagem?: string) {
     this.shardsFalha = Array.from({ length: 20 }, () => ({
       x:     Math.random() * 100,
       w:     4 + Math.random() * 10,
@@ -583,9 +598,69 @@ export class Batalha implements OnInit, OnDestroy {
       delay: Math.random() * 0.4,
     }));
 
+    if (nomePersonagem) {
+      this.bannerCritico = `💀 ${nomePersonagem} teve uma FALHA CRÍTICA!`;
+    }
+
+    // Tocar som de falha
+    this.tocarSom('/sounds/Fail.mp3');
+
     this.mostrarOverlayFalha = true;
     this.modalShake = true;
     setTimeout(() => { this.modalShake = false; }, 550);
-    setTimeout(() => { this.mostrarOverlayFalha = false; }, 2500);
+    setTimeout(() => { this.mostrarOverlayFalha = false; this.bannerCritico = null; }, 2500);
+  }
+
+  /**
+   * Toca um arquivo de som de forma segura
+   */
+  private tocarSom(caminho: string) {
+    try {
+      const som = new Audio(caminho);
+      som.play().catch(err => {
+        console.warn(`[Batalha] Não foi possível reproduzir o som ${caminho}:`, err);
+      });
+    } catch (err) {
+      console.error(`[Batalha] Erro ao reproduzir o som ${caminho}:`, err);
+    }
+  }
+
+  /**
+   * Detecta novos registros de ACERTO CRÍTICO ou FALHA CRÍTICA de outros jogadores
+   * e dispara os overlays épicos para todos os jogadores na tela.
+   */
+  private detectarCriticosDeOutrosJogadores(registros: RegistroDomain[]) {
+    const user = AuthService.getUser();
+    const emailProprio = user?.email ?? null;
+
+    const novosComCritico = registros.filter(r => {
+      // Apenas registros ainda não vistos
+      if (this.registrosVistos.has(r.id)) return false;
+      // Apenas rolaens com crítico/falha
+      return r.acao === 'rolagem' && r.detalhes &&
+        (r.detalhes.includes('ACERTO CRÍTICO') || r.detalhes.includes('FALHA CRÍTICA'));
+    });
+
+    // Marca todos os atuais como vistos
+    registros.forEach(r => this.registrosVistos.add(r.id));
+
+    for (const reg of novosComCritico) {
+      // Ignora o próprio jogador (ele já vê a animação no modal)
+      if (emailProprio && reg.jogador === emailProprio) continue;
+
+      // Extrai nome do personagem do texto do registro
+      const match = reg.detalhes?.match(/🎲\s(.+?)\srolou/);
+      const nomePersonagem = match ? match[1] : 'Alguém';
+
+      const ehCritico = reg.detalhes!.includes('ACERTO CRÍTICO');
+      console.log(`[Batalha] 🔔 Crítico detectado de ${nomePersonagem}: ${ehCritico ? 'ACERTO' : 'FALHA'}`);
+
+      if (ehCritico) {
+        setTimeout(() => this.triggerCriticoOverlay(nomePersonagem), 200);
+      } else {
+        setTimeout(() => this.triggerFalhaOverlay(nomePersonagem), 200);
+      }
+      break; // Dispara apenas o primeiro crítico detectado para não sobrepor
+    }
   }
 }

@@ -556,6 +556,7 @@
     <span class="critico-stamp-text">Acerto<br>Crítico!</span>
     <span class="critico-stamp-sub">★ D20 = 20 ★</span>
   </div>
+  <div class="critico-banner" *ngIf="bannerCritico">{{ bannerCritico }}</div>
 </div>
 
 <!-- ======= OVERLAY: FALHA CRÍTICA ======= -->
@@ -576,4 +577,5 @@
     <span class="falha-stamp-text">Falha<br>Crítica!</span>
     <span class="falha-stamp-sub">☠ D20 = 1 ☠</span>
   </div>
+  <div class="falha-banner" *ngIf="bannerCritico">{{ bannerCritico }}</div>
 </div>
