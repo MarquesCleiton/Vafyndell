@@ -562,6 +562,8 @@ export class Batalha implements OnInit, OnDestroy {
 
   /** Overlay de Acerto Crítico: flash dourado + partículas + stamp épico. */
   private triggerCriticoOverlay(nomePersonagem?: string) {
+    this.mostrarOverlayCritico = true;
+
     const cores = ['#ffd700', '#ffc107', '#ff9f43', '#fff176', '#ffca28', '#ffffff'];
     this.particlesCritico = Array.from({ length: 28 }, () => {
       const angle = Math.random() * Math.PI * 2;
@@ -580,15 +582,17 @@ export class Batalha implements OnInit, OnDestroy {
       this.bannerCritico = `🌟 ${nomePersonagem} acertou um CRÍTICO!`;
     }
     
-    // Tocar som de sucesso
-    this.tocarSom('/sounds/Successful.mp3');
+    // Tocar som de sucesso (caminho relativo para respeitar o base-href)
+    this.tocarSom('sounds/Successful.mp3');
 
-    this.mostrarOverlayCritico = true;
     setTimeout(() => { this.mostrarOverlayCritico = false; this.bannerCritico = null; }, 2400);
   }
 
   /** Overlay de Falha Crítica: vignette vermelha + shards caindo + tremor no modal. */
   private triggerFalhaOverlay(nomePersonagem?: string) {
+    this.mostrarOverlayFalha = true;
+    this.modalShake = true;
+
     this.shardsFalha = Array.from({ length: 20 }, () => ({
       x:     Math.random() * 100,
       w:     4 + Math.random() * 10,
@@ -602,11 +606,9 @@ export class Batalha implements OnInit, OnDestroy {
       this.bannerCritico = `💀 ${nomePersonagem} teve uma FALHA CRÍTICA!`;
     }
 
-    // Tocar som de falha
-    this.tocarSom('/sounds/Fail.mp3');
+    // Tocar som de falha (caminho relativo para respeitar o base-href)
+    this.tocarSom('sounds/Fail.mp3');
 
-    this.mostrarOverlayFalha = true;
-    this.modalShake = true;
     setTimeout(() => { this.modalShake = false; }, 550);
     setTimeout(() => { this.mostrarOverlayFalha = false; this.bannerCritico = null; }, 2500);
   }
@@ -616,6 +618,9 @@ export class Batalha implements OnInit, OnDestroy {
    */
   private tocarSom(caminho: string) {
     try {
+      if (typeof window === 'undefined' || typeof Audio === 'undefined') {
+        return;
+      }
       const som = new Audio(caminho);
       som.play().catch(err => {
         console.warn(`[Batalha] Não foi possível reproduzir o som ${caminho}:`, err);
